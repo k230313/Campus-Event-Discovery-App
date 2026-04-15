@@ -69,6 +69,13 @@ This document gives a basic guide for what the team should focus on each week un
 - prepare the project for submission or deployment
 - finalize documentation
 
+## Week 12: Final Demonstration
+
+- prepare the final presentation
+- demonstrate the working system
+- explain the main features
+- show the documentation and project progress
+
 ## Final Goal
 
 By the end of the project, the team should have:
