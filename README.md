@@ -19,6 +19,7 @@ Students can miss important campus events because information is often scattered
 - [Software Requirements Specification](./Docs/SRS%20Report.md)
 - [Database and API Design](./Docs/Week5-Database-and-API-Design.md)
 - [GitHub Team Guide](./Docs/GitHub-Team-Guide.md)
+- [Project Weekly Plan](./Docs/Project-Weekly-Plan.md)
 
 ## Notes
 
