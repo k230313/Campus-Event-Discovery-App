@@ -14,10 +14,10 @@ Students can miss important campus events because information is often scattered
 
 ## Documentation
 
-- Problem Statement
-- Market Research
-- Software Requirements Specification
-- Database and API Design
+- [Problem Statement](./Docs/Problem%20Statement.md)
+- [Market Research](./Docs/Market%20Research.md)
+- [Software Requirements Specification](./Docs/SRS%20Report.md)
+- [Database and API Design](./Docs/Week5-Database-and-API-Design.md)
 
 ## Notes
 
