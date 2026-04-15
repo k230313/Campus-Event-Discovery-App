@@ -18,6 +18,7 @@ Students can miss important campus events because information is often scattered
 - [Market Research](./Docs/Market%20Research.md)
 - [Software Requirements Specification](./Docs/SRS%20Report.md)
 - [Database and API Design](./Docs/Week5-Database-and-API-Design.md)
+- [GitHub Team Guide](./Docs/GitHub-Team-Guide.md)
 
 ## Notes
 
