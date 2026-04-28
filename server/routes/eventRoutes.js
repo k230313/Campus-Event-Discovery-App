@@ -1,50 +1,50 @@
 const express = require("express");
 const router = express.Router();
+const pool = require("../config/db");
 const { eventFields } = require("../models/eventModel");
 const validateEvent = require("../validation/eventValidation");
 
-const events = [
-  {
-    id: 1,
-    title: "Tech Talk",
-    description: "Industry speaker session",
-    date: "2026-04-20",
-    location: "Main Hall",
-    category: "Academic"
-  },
-  {
-    id: 2,
-    title: "Career Fair",
-    description: "Meet employers on campus",
-    date: "2026-04-22",
-    location: "Student Center",
-    category: "Career"
+router.get("/", async (req, res) => {
+  try {
+    const [rows] = await pool.query("SELECT * FROM events ORDER BY date ASC");
+    return res.json(rows);
+  } catch (error) {
+    console.error("GET /api/events error:", error);
+    return res.status(500).json({ error: "Failed to fetch events" });
   }
-];
-
-router.get("/", (req, res) => {
-  res.json(events);
 });
 
 router.get("/schema", (req, res) => {
   res.json(eventFields);
 });
 
-router.post("/", (req, res) => {
+router.post("/", async (req, res) => {
   const { isValid, errors } = validateEvent(req.body);
 
   if (!isValid) {
     return res.status(400).json({ errors });
   }
 
-  const newEvent = {
-    id: events.length + 1,
-    ...req.body
-  };
+  const { title, description, date, location, category } = req.body;
 
-  events.push(newEvent);
+  try {
+    const [result] = await pool.query(
+      "INSERT INTO events (title, description, date, location, category) VALUES (?, ?, ?, ?, ?)",
+      [title, description, date, location, category]
+    );
 
-  return res.status(201).json(newEvent);
+    return res.status(201).json({
+      id: result.insertId,
+      title,
+      description,
+      date,
+      location,
+      category
+    });
+  } catch (error) {
+    console.error("POST /api/events error:", error);
+    return res.status(500).json({ error: "Failed to create event" });
+  }
 });
 
 module.exports = router;

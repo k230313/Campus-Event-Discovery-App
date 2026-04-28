@@ -1,0 +1,11 @@
+CREATE DATABASE IF NOT EXISTS campus_event_db;
+USE campus_event_db;
+
+CREATE TABLE IF NOT EXISTS events (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  description TEXT NOT NULL,
+  date DATE NOT NULL,
+  location VARCHAR(255) NOT NULL,
+  category VARCHAR(100) NOT NULL
+);
