@@ -1,30 +1,30 @@
 # GitHub Team Guide
 
-This guide explains how team members can set up GitHub, set up Visual Studio Code, work on the project, and share changes safely.
+This guide shows the simplest way for team members to set up the project on their own computer, pull updates, and avoid accidentally pushing the wrong changes.
 
-## 1. What This Project Uses
+## 1. What You Need
 
-Before you start, install these:
+Install these first:
 
 - [Git](https://git-scm.com/downloads)
-- [Visual Studio Code](https://code.visualstudio.com/)
 - [Node.js](https://nodejs.org/)
-- A GitHub account
+- [Visual Studio Code](https://code.visualstudio.com/)
+- a GitHub account
 
-## 2. Create a GitHub Account
+Optional for backend work:
 
-1. Go to [GitHub](https://github.com/).
-2. Click `Sign up`.
-3. Create your account using your email.
-4. Verify your email if GitHub asks you to.
-5. Tell the team leader your GitHub username so you can be added to the repository.
+- [XAMPP](https://www.apachefriends.org/)
+- [Postman](https://www.postman.com/downloads/)
 
-## 3. Install Git
+## 2. Join the Repository
 
-1. Download Git from [git-scm.com](https://git-scm.com/downloads).
-2. Install it using the default settings.
-3. Open `Command Prompt` or `PowerShell`.
-4. Check that Git is installed:
+1. Create a GitHub account if you do not already have one.
+2. Send your GitHub username to the team leader.
+3. Wait until you are added to the repository.
+
+## 3. Install Git and Check It
+
+Open `PowerShell` or `Command Prompt` and run:
 
 ```bash
 git --version
@@ -32,74 +32,29 @@ git --version
 
 If you see a version number, Git is working.
 
-## 4. Install Node.js
+## 4. Install Node.js and Check It
 
-1. Download Node.js from [nodejs.org](https://nodejs.org/).
-2. Install the `LTS` version.
-3. Check that Node.js is installed:
+Run:
 
 ```bash
 node -v
 npm -v
 ```
 
-If you see version numbers, Node.js and npm are working.
+If you see version numbers, Node.js is working.
 
-## 5. Install Visual Studio Code
+## 5. Set Up Git One Time
 
-1. Download VS Code from [code.visualstudio.com](https://code.visualstudio.com/).
-2. Install it.
-3. Open VS Code.
-
-Recommended VS Code extensions:
-
-- `ESLint`
-- `Prettier - Code formatter`
-- `GitLens` (optional but helpful)
-
-## 6. Sign In to GitHub in VS Code
-
-1. Open VS Code.
-2. Click the `Accounts` icon in the bottom left or top right area.
-3. Sign in with GitHub.
-4. Authorize VS Code if GitHub asks for permission.
-
-This helps with source control and repository access.
-
-## 7. Configure Git One Time
-
-Each team member should run these commands once in terminal:
+Run these once:
 
 ```bash
 git config --global user.name "Your Name"
 git config --global user.email "your-email@example.com"
 ```
 
-Check the result:
+## 6. Download the Project
 
-```bash
-git config --global --list
-```
-
-## 8. Get the Project on Your Computer
-
-There are 2 common ways.
-
-### Option A: Clone with VS Code
-
-1. Open the GitHub repository in your browser.
-2. Click the green `Code` button.
-3. Copy the repository URL.
-4. Open VS Code.
-5. Press `Ctrl + Shift + P`.
-6. Search for `Git: Clone`.
-7. Paste the repository URL.
-8. Choose where to save the project.
-9. Open the folder when VS Code asks.
-
-### Option B: Clone with Terminal
-
-Run:
+In terminal, run:
 
 ```bash
 git clone <repository-url>
@@ -107,70 +62,61 @@ cd Campus-Event-Discovery-App
 code .
 ```
 
-## 9. Install Project Dependencies
+This will:
 
-Open the project folder in VS Code.
+- copy the project to your computer
+- open it in VS Code
 
-Install backend dependencies:
+## 7. Install Project Files
+
+Open terminal in VS Code.
+
+Install backend packages:
 
 ```bash
 cd server
 npm install
 ```
 
-Install frontend dependencies:
+Install frontend packages:
 
 ```bash
 cd ../client
 npm install
 ```
 
-## 10. Basic Folder Overview
+## 8. Basic Project Folders
 
-- `Docs/` = reports and documentation
+- `Docs/` = documentation
 - `server/` = backend code
 - `client/` = frontend code
-- `README.md` = project overview
 
-## 11. Daily Workflow for Team Members
+## 9. Before You Start Working
 
-This is the safest workflow to follow every time.
+Always pull the latest version first.
 
-### Important: What a branch is
-
-A branch is not a new folder.
-
-A branch is a separate Git version of the project. It lets you work on a feature without changing `main` directly.
-
-This means:
-
-- `main` stays safer
-- each person can work on their own task
-- feature work is easier to review
-
-For this team project, if you are assigned a feature, bug fix, or documentation update, you should make your own branch first.
-
-### Step 1: Open the project
-
-Open the project folder in VS Code.
-
-### Step 2: Pull the latest changes first
-
-Before doing any work, always update your local copy:
+Run:
 
 ```bash
+git checkout main
 git pull origin main
 ```
 
-This downloads the newest changes from GitHub.
+This updates your local project with the newest changes from GitHub.
 
-### Step 3: Create or update your feature branch
+## 10. Very Important: Do Not Work Directly on `main`
 
-Do not work directly on `main` unless the team leader tells you to.
+Do not code directly on the `main` branch.
 
-If you are assigned a feature, create your own branch before coding.
+Always make your own branch first.
 
-Create a branch:
+A branch is not a folder.
+
+A branch is a separate Git version of the project so your work does not change `main` right away.
+
+## 11. Make Your Own Branch
+
+If you are assigned a feature or task, create your own branch:
 
 ```bash
 git checkout -b your-branch-name
@@ -179,206 +125,169 @@ git checkout -b your-branch-name
 Example:
 
 ```bash
-git checkout -b add-event-card-ui
+git checkout -b feature/event-card
 ```
 
-If the branch already exists:
-
-```bash
-git checkout your-branch-name
-```
-
-Examples:
-
-- `feature/event-filter`
-- `feature/event-details-page`
-- `fix/date-validation`
-- `docs/readme-update`
-
-You can check your current branch with:
+To check your current branch:
 
 ```bash
 git branch
 ```
 
-The branch with `*` beside it is your current branch.
+The branch with `*` is the one you are on.
 
-### Step 4: Make your code changes
+## 12. Do Your Work
 
-Examples:
+Make only the changes for your assigned task.
 
-- add a feature
-- fix a bug
-- improve documentation
-- update UI
+Try not to edit unrelated files.
 
-### Step 5: Check what changed
+## 13. Check Your Changes
+
+Before saving your work with Git, run:
 
 ```bash
 git status
 ```
 
-This shows which files were changed.
+This shows:
 
-### Step 6: Stage your changes
+- which files changed
+- which branch you are on
 
-To stage all changed files:
+## 14. Save Your Work Safely
+
+### Stage your changes
 
 ```bash
 git add .
 ```
 
-Or stage one file only:
+### Commit your changes
 
 ```bash
-git add README.md
+git commit -m "Describe your change"
 ```
 
-### Step 7: Commit your changes
-
-Write a short message that explains what you changed.
+Example:
 
 ```bash
-git commit -m "Add event validation"
+git commit -m "Add event details page"
 ```
 
-Good commit message examples:
+Important:
 
-- `Add event creation route`
-- `Fix event date validation`
-- `Update README documentation`
+- `commit` saves changes only on your own computer
+- it does not send anything to GitHub yet
 
-### Step 8: Push your branch
+## 15. How Not to Accidentally Push
+
+Before using `push`, always check:
+
+```bash
+git branch
+git status
+```
+
+Make sure:
+
+- you are not on `main`
+- you are on your own branch
+- the files changed are only for your task
+
+If you are on `main`, stop and do not push.
+
+## 16. Push Only Your Branch
+
+When your work is ready, push your branch:
 
 ```bash
 git push origin your-branch-name
 ```
 
-## 12. Important Team Rule
+Example:
 
-Team members can:
+```bash
+git push origin feature/event-card
+```
 
-- pull changes
-- create branches
-- code
-- commit changes
-- push their branch
+Do not push to `main`.
 
-Team members should not:
+## 17. Team Rule for This Project
 
+You can:
+
+- pull from `main`
+- make your own branch
+- work on your task
+- commit your work
+- push your branch
+
+You should not:
+
+- work directly on `main`
+- push unfinished random changes
 - merge into `main` without approval
-- push random unfinished work to `main`
-- overwrite other people's code
 
-## 13. Approval Workflow
+## 18. Safe Workflow to Follow Every Time
 
-Use this simple rule:
+Use this order:
 
-1. Pull the latest `main` first.
-2. Work on your own branch.
-3. Commit your changes.
-4. Push your branch to GitHub.
-5. Tell the team leader what you changed.
-6. Wait for approval before merging.
+1. `git checkout main`
+2. `git pull origin main`
+3. `git checkout -b your-branch-name`
+4. do your work
+5. `git status`
+6. `git add .`
+7. `git commit -m "Your message"`
+8. `git push origin your-branch-name`
+9. wait for approval before merge
 
-If your team uses Pull Requests, follow this:
+## 19. If You Only Need to Pull and Not Code
 
-1. Push your branch.
-2. Open a Pull Request on GitHub.
-3. Add a short summary of your changes.
-4. Wait for review and approval.
-5. Only merge after approval.
-
-## 14. How to Pull New Changes Later
-
-If someone else updated the project:
+Run:
 
 ```bash
 git checkout main
 git pull origin main
 ```
 
-If you are working on your own branch and want the latest `main` updates:
+That is enough if you are only updating your local copy.
+
+## 20. If You Are Scared You Might Push the Wrong Thing
+
+Do this before every push:
 
 ```bash
-git checkout main
-git pull origin main
-git checkout your-branch-name
-git merge main
-```
-
-If there is a merge conflict, ask before deleting or replacing code.
-
-## 15. How to See Changes in VS Code
-
-In VS Code:
-
-1. Click the `Source Control` icon on the left sidebar.
-2. You will see changed files.
-3. Click a file to compare changes.
-4. Use the `+` button to stage files.
-5. Type a commit message.
-6. Click `Commit`.
-
-VS Code is fine to use, but team members should still understand the terminal commands.
-
-## 16. Basic Commands Cheat Sheet
-
-```bash
+git branch
 git status
-git pull origin main
-git checkout -b my-branch
-git checkout my-branch
-git add .
-git commit -m "Describe your change"
-git push origin my-branch
 ```
 
-## 17. Good Habits
+Ask yourself:
 
-- Pull before starting work
-- Use your own branch for every assigned task
-- Commit often with clear messages
-- Keep changes small and focused
-- Ask before changing someone else's work
-- Wait for approval before merge
+- Am I on my own branch?
+- Did I change only the files for my task?
+- Did I commit the correct work?
 
-## 18. Common Mistakes to Avoid
+If you are unsure, ask before pushing.
 
-- Working directly on `main`
-- Forgetting to pull first
-- Writing unclear commit messages like `update stuff`
-- Editing too many unrelated files at once
-- Merging without approval
+## 21. Commands You Should Avoid
 
-## 19. If Something Goes Wrong
-
-If you are unsure:
-
-- stop making random changes
-- run `git status`
-- take a screenshot if needed
-- ask the team leader before trying risky fixes
-
-Do not use dangerous commands unless you understand them.
-
-Examples to avoid:
+Do not use these unless the team leader tells you to:
 
 ```bash
-git reset --hard
 git push --force
+git reset --hard
 ```
 
-## 20. Suggested Team Process
+These can remove work or overwrite other people's changes.
 
-For this project, the recommended process is:
+## 22. Simple Summary
 
-1. Team leader updates `main`
-2. Team members pull the latest version
-3. Team members create their own branch
-4. Team members make changes
-5. Team members commit and push
-6. Team leader reviews the work
-7. Team leader approves merge
-
-This keeps the project safer and easier to manage.
+- pull from `main`
+- create your own branch
+- do your work there
+- check `git status`
+- commit your work
+- push your branch only
+- wait for approval before merge
