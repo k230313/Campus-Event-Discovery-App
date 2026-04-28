@@ -21,6 +21,7 @@ Core project documentation in order:
 3. [Software Requirements Specification](./Docs/SRS%20Report.md)
 4. [Week 5 Database and API Design](./Docs/Week5-Database-and-API-Design.md)
 5. [Week 6 Backend Development](./Docs/Week6-Backend-Development.md)
+6. [Week 7 Backend CRUD](./Docs/Week7-Backend-CRUD.md)
 
 Supporting documents:
 
