@@ -14,13 +14,18 @@ Students can miss important campus events because information is often scattered
 
 ## Documentation
 
-- [Problem Statement](./Docs/Problem%20Statement.md)
-- [Market Research](./Docs/Market%20Research.md)
-- [Software Requirements Specification](./Docs/SRS%20Report.md)
-- [Database and API Design](./Docs/Week5-Database-and-API-Design.md)
-- [Week 6 Backend Development](./Docs/Week6-Backend-Development.md)
-- [GitHub Team Guide](./Docs/GitHub-Team-Guide.md)
+Core project documentation in order:
+
+1. [Problem Statement](./Docs/Problem%20Statement.md)
+2. [Market Research](./Docs/Market%20Research.md)
+3. [Software Requirements Specification](./Docs/SRS%20Report.md)
+4. [Week 5 Database and API Design](./Docs/Week5-Database-and-API-Design.md)
+5. [Week 6 Backend Development](./Docs/Week6-Backend-Development.md)
+
+Supporting documents:
+
 - [Project Weekly Plan](./Docs/Project-Weekly-Plan.md)
+- [GitHub Team Guide](./Docs/GitHub-Team-Guide.md)
 
 ## Notes
 
