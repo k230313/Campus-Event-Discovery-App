@@ -1,6 +1,7 @@
 const express = require("express");
 const pool = require("../config/db");
 const { requireAuth, requireRole } = require("../middleware/auth");
+const { generalWriteRateLimit } = require("../middleware/security");
 
 const router = express.Router();
 
@@ -21,7 +22,7 @@ router.get("/", requireAuth, requireRole("student"), async (req, res) => {
   }
 });
 
-router.post("/", requireAuth, requireRole("student"), async (req, res) => {
+router.post("/", requireAuth, requireRole("student"), generalWriteRateLimit, async (req, res) => {
   const { eventId } = req.body;
 
   if (!eventId) {
@@ -58,7 +59,7 @@ router.post("/", requireAuth, requireRole("student"), async (req, res) => {
   }
 });
 
-router.delete("/:eventId", requireAuth, requireRole("student"), async (req, res) => {
+router.delete("/:eventId", requireAuth, requireRole("student"), generalWriteRateLimit, async (req, res) => {
   try {
     await pool.query(
       "DELETE FROM bookmarks WHERE student_id = ? AND event_id = ?",

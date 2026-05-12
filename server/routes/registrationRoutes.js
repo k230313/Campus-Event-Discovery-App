@@ -1,6 +1,7 @@
 const express = require("express");
 const pool = require("../config/db");
 const { requireAuth, requireRole } = require("../middleware/auth");
+const { registrationRateLimit } = require("../middleware/security");
 
 const router = express.Router();
 
@@ -27,7 +28,7 @@ router.get("/", requireAuth, requireRole("student"), async (req, res) => {
   }
 });
 
-router.post("/", requireAuth, requireRole("student"), async (req, res) => {
+router.post("/", requireAuth, requireRole("student"), registrationRateLimit, async (req, res) => {
   const { eventId } = req.body;
 
   if (!eventId) {
@@ -87,7 +88,7 @@ router.post("/", requireAuth, requireRole("student"), async (req, res) => {
   }
 });
 
-router.delete("/:eventId", requireAuth, requireRole("student"), async (req, res) => {
+router.delete("/:eventId", requireAuth, requireRole("student"), registrationRateLimit, async (req, res) => {
   try {
     await pool.query(
       `UPDATE registrations

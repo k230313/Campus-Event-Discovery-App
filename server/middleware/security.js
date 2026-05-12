@@ -1,4 +1,5 @@
 const loginAttempts = new Map();
+const requestWindows = new Map();
 
 const MAX_ATTEMPTS = 10;
 const WINDOW_MS = 15 * 60 * 1000;
@@ -80,9 +81,60 @@ function clearAuthRateLimit(req) {
   loginAttempts.delete(key);
 }
 
+function createRateLimit({ windowMs, maxRequests, keyPrefix, message }) {
+  return (req, res, next) => {
+    const ip = req.ip || req.socket?.remoteAddress || "unknown";
+    const userId = req.user?.id ? `user:${req.user.id}` : `ip:${ip}`;
+    const key = `${keyPrefix}:${req.method}:${req.path}:${userId}`;
+    const now = Date.now();
+    const entry = requestWindows.get(key);
+
+    if (!entry || now - entry.firstRequestAt > windowMs) {
+      requestWindows.set(key, { count: 1, firstRequestAt: now });
+      next();
+      return;
+    }
+
+    if (entry.count >= maxRequests) {
+      const retryAfterSeconds = Math.ceil((windowMs - (now - entry.firstRequestAt)) / 1000);
+      res.setHeader("Retry-After", String(retryAfterSeconds));
+      res.status(429).json({ error: message });
+      return;
+    }
+
+    entry.count += 1;
+    requestWindows.set(key, entry);
+    next();
+  };
+}
+
+const adminRateLimit = createRateLimit({
+  windowMs: 5 * 60 * 1000,
+  maxRequests: 60,
+  keyPrefix: "admin",
+  message: "Too many admin requests. Try again later.",
+});
+
+const generalWriteRateLimit = createRateLimit({
+  windowMs: 5 * 60 * 1000,
+  maxRequests: 40,
+  keyPrefix: "write",
+  message: "Too many write requests. Try again later.",
+});
+
+const registrationRateLimit = createRateLimit({
+  windowMs: 5 * 60 * 1000,
+  maxRequests: 20,
+  keyPrefix: "registration",
+  message: "Too many registration requests. Try again later.",
+});
+
 module.exports = {
   corsOptions,
   securityHeaders,
   authRateLimit,
+  adminRateLimit,
   clearAuthRateLimit,
+  generalWriteRateLimit,
+  registrationRateLimit,
 };

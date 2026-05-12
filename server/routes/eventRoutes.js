@@ -4,6 +4,7 @@ const pool = require("../config/db");
 const { eventFields } = require("../models/eventModel");
 const validateEvent = require("../validation/eventValidation");
 const { requireAuth, requireRole } = require("../middleware/auth");
+const { adminRateLimit, generalWriteRateLimit } = require("../middleware/security");
 
 const eventSelect = `
   SELECT
@@ -122,7 +123,7 @@ router.get("/schema", (req, res) => {
   res.json(eventFields);
 });
 
-router.patch("/:id/status", requireAuth, requireRole("admin"), async (req, res) => {
+router.patch("/:id/status", requireAuth, requireRole("admin"), adminRateLimit, async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
   const allowedStatuses = ["draft", "pending", "published", "rejected", "cancelled"];
@@ -170,7 +171,7 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-router.post("/", requireAuth, requireRole("organizer", "admin"), async (req, res) => {
+router.post("/", requireAuth, requireRole("organizer", "admin"), generalWriteRateLimit, async (req, res) => {
   const { isValid, errors } = validateEvent(req.body);
 
   if (!isValid) {
@@ -233,7 +234,7 @@ router.post("/", requireAuth, requireRole("organizer", "admin"), async (req, res
   }
 });
 
-router.put("/:id", requireAuth, requireRole("organizer", "admin"), async (req, res) => {
+router.put("/:id", requireAuth, requireRole("organizer", "admin"), generalWriteRateLimit, async (req, res) => {
   const { id } = req.params;
   const { isValid, errors } = validateEvent(req.body);
 
@@ -307,7 +308,7 @@ router.put("/:id", requireAuth, requireRole("organizer", "admin"), async (req, r
   }
 });
 
-router.delete("/:id", requireAuth, requireRole("organizer", "admin"), async (req, res) => {
+router.delete("/:id", requireAuth, requireRole("organizer", "admin"), generalWriteRateLimit, async (req, res) => {
   const { id } = req.params;
 
   try {

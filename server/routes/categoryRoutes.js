@@ -1,6 +1,7 @@
 const express = require("express");
 const pool = require("../config/db");
 const { requireAuth, requireRole } = require("../middleware/auth");
+const { adminRateLimit } = require("../middleware/security");
 
 const router = express.Router();
 
@@ -27,7 +28,7 @@ router.get("/", async (_req, res) => {
   }
 });
 
-router.post("/", requireAuth, requireRole("admin"), async (req, res) => {
+router.post("/", requireAuth, requireRole("admin"), adminRateLimit, async (req, res) => {
   const { name } = req.body;
 
   if (!name || !String(name).trim()) {
@@ -58,7 +59,7 @@ router.post("/", requireAuth, requireRole("admin"), async (req, res) => {
   }
 });
 
-router.put("/:id", requireAuth, requireRole("admin"), async (req, res) => {
+router.put("/:id", requireAuth, requireRole("admin"), adminRateLimit, async (req, res) => {
   const { name } = req.body;
 
   if (!name || !String(name).trim()) {
@@ -101,7 +102,7 @@ router.put("/:id", requireAuth, requireRole("admin"), async (req, res) => {
   }
 });
 
-router.delete("/:id", requireAuth, requireRole("admin"), async (req, res) => {
+router.delete("/:id", requireAuth, requireRole("admin"), adminRateLimit, async (req, res) => {
   try {
     const [countRows] = await pool.query(
       "SELECT COUNT(*) AS count FROM events WHERE category_id = ?",

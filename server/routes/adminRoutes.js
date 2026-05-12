@@ -1,10 +1,11 @@
 const express = require("express");
 const pool = require("../config/db");
 const { requireAuth, requireRole } = require("../middleware/auth");
+const { adminRateLimit } = require("../middleware/security");
 
 const router = express.Router();
 
-router.get("/overview", requireAuth, requireRole("admin"), async (_req, res) => {
+router.get("/overview", requireAuth, requireRole("admin"), adminRateLimit, async (_req, res) => {
   try {
     const [[userCounts]] = await pool.query(
       `SELECT
