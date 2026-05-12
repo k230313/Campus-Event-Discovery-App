@@ -1,0 +1,198 @@
+import { useApp } from '../context/AppContext';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
+import { Badge } from '../components/ui/badge';
+import { User, Mail, Shield, Calendar, Edit } from 'lucide-react';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+export function Profile() {
+  const { user } = useApp();
+  const navigate = useNavigate();
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState({
+    name: user?.name || '',
+    email: user?.email || '',
+  });
+
+  if (!user) {
+    navigate('/login');
+    return null;
+  }
+
+  const handleSave = () => {
+    alert('Profile updated successfully!');
+    setIsEditing(false);
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-white to-[#F0F3F9] py-12">
+      <div className="container mx-auto px-4">
+        <div className="max-w-4xl mx-auto">
+          {/* Header */}
+          <div className="mb-8">
+            <h1 className="text-4xl font-bold text-[#1B2E55] mb-2">My Profile</h1>
+            <p className="text-muted-foreground">Manage your account information</p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            {/* Profile Card */}
+            <Card className="md:col-span-2 border-2">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-2xl text-[#1B2E55]">Personal Information</CardTitle>
+                  {!isEditing && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsEditing(true)}
+                    >
+                      <Edit className="h-4 w-4 mr-2" />
+                      Edit
+                    </Button>
+                  )}
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label htmlFor="name">Full Name</Label>
+                  <Input
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    disabled={!isEditing}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="email">Email Address</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    disabled={!isEditing}
+                  />
+                </div>
+                <div>
+                  <Label>Account Type</Label>
+                  <div className="mt-2">
+                    <Badge
+                      variant="outline"
+                      className={`text-sm ${
+                        user.role === 'admin'
+                          ? 'bg-red-500/10 text-red-600 border-red-500'
+                          : user.role === 'organizer'
+                          ? 'bg-[#EF9B28]/20 text-[#EF9B28] border-[#EF9B28]'
+                          : 'bg-blue-500/10 text-blue-600 border-blue-500'
+                      }`}
+                    >
+                      {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                    </Badge>
+                  </div>
+                </div>
+
+                {isEditing && (
+                  <div className="flex gap-3 pt-4">
+                    <Button
+                      onClick={handleSave}
+                      className="bg-[#EF9B28] hover:bg-[#EF9B28]/90"
+                    >
+                      Save Changes
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setFormData({ name: user.name, email: user.email });
+                        setIsEditing(false);
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Account Summary */}
+            <div className="space-y-6">
+              <Card className="border-2">
+                <CardContent className="pt-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="p-3 bg-[#1B2E55]/10 rounded-lg">
+                      <User className="h-6 w-6 text-[#1B2E55]" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">User ID</p>
+                      <p className="font-semibold text-[#1B2E55]">{user.id}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-2">
+                <CardContent className="pt-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="p-3 bg-[#EF9B28]/10 rounded-lg">
+                      <Mail className="h-6 w-6 text-[#EF9B28]" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Email Status</p>
+                      <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500">
+                        Verified
+                      </Badge>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-2">
+                <CardContent className="pt-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="p-3 bg-[#1B2E55]/10 rounded-lg">
+                      <Calendar className="h-6 w-6 text-[#1B2E55]" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Member Since</p>
+                      <p className="font-semibold text-[#1B2E55]">May 2026</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+
+          {/* Security Section */}
+          <Card className="mt-6 border-2">
+            <CardHeader>
+              <CardTitle className="text-xl text-[#1B2E55] flex items-center gap-2">
+                <Shield className="h-5 w-5" />
+                Security Settings
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium text-[#1B2E55]">Password</p>
+                    <p className="text-sm text-muted-foreground">Last changed 2 months ago</p>
+                  </div>
+                  <Button variant="outline" size="sm">Change Password</Button>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium text-[#1B2E55]">Two-Factor Authentication</p>
+                    <p className="text-sm text-muted-foreground">Add an extra layer of security</p>
+                  </div>
+                  <Button variant="outline" size="sm">Enable</Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}
+

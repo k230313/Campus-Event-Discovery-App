@@ -4,9 +4,77 @@ const pool = require("../config/db");
 const { eventFields } = require("../models/eventModel");
 const validateEvent = require("../validation/eventValidation");
 
+const eventSelect = `
+  SELECT
+    e.event_id AS id,
+    e.title,
+    e.description,
+    DATE_FORMAT(e.event_date, '%Y-%m-%d') AS date,
+    TIME_FORMAT(e.start_time, '%H:%i:%s') AS startTime,
+    TIME_FORMAT(e.end_time, '%H:%i:%s') AS endTime,
+    e.location,
+    c.name AS category,
+    CAST(e.organiser_id AS CHAR) AS organizerId,
+    u.full_name AS organizerName,
+    e.banner_image_url AS image,
+    e.status,
+    0 AS viewCount,
+    (
+      SELECT COUNT(*)
+      FROM registrations r
+      WHERE r.event_id = e.event_id
+        AND r.status = 'registered'
+    ) AS rsvpCount,
+    NULL AS volunteersNeeded,
+    NULL AS volunteersRegistered,
+    e.capacity AS seatingCapacity,
+    (
+      SELECT COUNT(*)
+      FROM registrations r
+      WHERE r.event_id = e.event_id
+        AND r.status = 'registered'
+    ) AS seatsBooked,
+    0 AS foodProvided,
+    NULL AS foodOptions,
+    e.notes,
+    DATE_FORMAT(e.created_at, '%Y-%m-%dT%H:%i:%sZ') AS createdAt
+  FROM events e
+  INNER JOIN categories c ON c.category_id = e.category_id
+  INNER JOIN users u ON u.user_id = e.organiser_id
+`;
+
+async function resolveCategoryId(categoryName) {
+  const [rows] = await pool.query(
+    "SELECT category_id FROM categories WHERE name = ? LIMIT 1",
+    [categoryName]
+  );
+
+  if (!rows.length) {
+    throw new Error("Unknown category");
+  }
+
+  return rows[0].category_id;
+}
+
+async function resolveOrganizerId(organizerId) {
+  if (organizerId) {
+    return Number(organizerId);
+  }
+
+  const [rows] = await pool.query(
+    "SELECT user_id FROM users WHERE role = 'organiser' ORDER BY user_id ASC LIMIT 1"
+  );
+
+  if (!rows.length) {
+    throw new Error("No organiser user available");
+  }
+
+  return rows[0].user_id;
+}
+
 router.get("/", async (req, res) => {
   try {
-    const [rows] = await pool.query("SELECT * FROM events ORDER BY date ASC");
+    const [rows] = await pool.query(`${eventSelect} ORDER BY e.event_date ASC, e.start_time ASC`);
     return res.json(rows);
   } catch (error) {
     console.error("GET /api/events error:", error);
@@ -22,7 +90,7 @@ router.get("/:id", async (req, res) => {
   const { id } = req.params;
 
   try {
-    const [rows] = await pool.query("SELECT * FROM events WHERE id = ?", [id]);
+    const [rows] = await pool.query(`${eventSelect} WHERE e.event_id = ? LIMIT 1`, [id]);
 
     if (rows.length === 0) {
       return res.status(404).json({ error: "Event not found" });
@@ -42,25 +110,50 @@ router.post("/", async (req, res) => {
     return res.status(400).json({ errors });
   }
 
-  const { title, description, date, location, category } = req.body;
+  const {
+    title,
+    description,
+    date,
+    startTime,
+    endTime,
+    location,
+    category,
+    image,
+    capacity,
+    registrationRequired,
+    notes,
+    organizerId,
+    status
+  } = req.body;
 
   try {
+    const categoryId = await resolveCategoryId(category);
+    const resolvedOrganizerId = await resolveOrganizerId(organizerId);
     const [result] = await pool.query(
-      "INSERT INTO events (title, description, date, location, category) VALUES (?, ?, ?, ?, ?)",
-      [title, description, date, location, category]
+      `INSERT INTO events
+        (organiser_id, category_id, title, description, event_date, start_time, end_time, location, banner_image_url, capacity, registration_required, status, notes)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        resolvedOrganizerId,
+        categoryId,
+        title,
+        description,
+        date,
+        startTime.length === 5 ? `${startTime}:00` : startTime,
+        endTime.length === 5 ? `${endTime}:00` : endTime,
+        location,
+        image || null,
+        capacity || null,
+        registrationRequired ? 1 : 0,
+        status || "draft",
+        notes || null
+      ]
     );
-
-    return res.status(201).json({
-      id: result.insertId,
-      title,
-      description,
-      date,
-      location,
-      category
-    });
+    const [rows] = await pool.query(`${eventSelect} WHERE e.event_id = ? LIMIT 1`, [result.insertId]);
+    return res.status(201).json(rows[0]);
   } catch (error) {
     console.error("POST /api/events error:", error);
-    return res.status(500).json({ error: "Failed to create event" });
+    return res.status(500).json({ error: error.message === "Unknown category" ? error.message : "Failed to create event" });
   }
 });
 
@@ -72,29 +165,53 @@ router.put("/:id", async (req, res) => {
     return res.status(400).json({ errors });
   }
 
-  const { title, description, date, location, category } = req.body;
+  const {
+    title,
+    description,
+    date,
+    startTime,
+    endTime,
+    location,
+    category,
+    image,
+    capacity,
+    registrationRequired,
+    notes,
+    status
+  } = req.body;
 
   try {
+    const categoryId = await resolveCategoryId(category);
     const [result] = await pool.query(
-      "UPDATE events SET title = ?, description = ?, date = ?, location = ?, category = ? WHERE id = ?",
-      [title, description, date, location, category, id]
+      `UPDATE events
+       SET category_id = ?, title = ?, description = ?, event_date = ?, start_time = ?, end_time = ?, location = ?, banner_image_url = ?, capacity = ?, registration_required = ?, status = ?, notes = ?
+       WHERE event_id = ?`,
+      [
+        categoryId,
+        title,
+        description,
+        date,
+        startTime.length === 5 ? `${startTime}:00` : startTime,
+        endTime.length === 5 ? `${endTime}:00` : endTime,
+        location,
+        image || null,
+        capacity || null,
+        registrationRequired ? 1 : 0,
+        status || "draft",
+        notes || null,
+        id
+      ]
     );
 
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: "Event not found" });
     }
 
-    return res.json({
-      id: Number(id),
-      title,
-      description,
-      date,
-      location,
-      category
-    });
+    const [rows] = await pool.query(`${eventSelect} WHERE e.event_id = ? LIMIT 1`, [id]);
+    return res.json(rows[0]);
   } catch (error) {
     console.error("PUT /api/events/:id error:", error);
-    return res.status(500).json({ error: "Failed to update event" });
+    return res.status(500).json({ error: error.message === "Unknown category" ? error.message : "Failed to update event" });
   }
 });
 
@@ -102,7 +219,7 @@ router.delete("/:id", async (req, res) => {
   const { id } = req.params;
 
   try {
-    const [result] = await pool.query("DELETE FROM events WHERE id = ?", [id]);
+    const [result] = await pool.query("DELETE FROM events WHERE event_id = ?", [id]);
 
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: "Event not found" });

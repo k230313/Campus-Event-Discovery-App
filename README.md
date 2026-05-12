@@ -23,6 +23,7 @@ Core project documentation in order:
 5. [Week 6 Backend Development](./Docs/Week6-Backend-Development.md)
 6. [Week 7 Backend CRUD](./Docs/Week7-Backend-CRUD.md)
 7. [Week 8 Frontend Version 1](./Docs/Week8-Frontend-Version-1.md)
+8. [Week 9 Frontend Version 2 Integration](./Docs/Week9-Frontend-Backend-Integration.md)
 
 Supporting documents:
 
