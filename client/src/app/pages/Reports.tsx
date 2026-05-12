@@ -20,9 +20,8 @@ export function Reports() {
   useEffect(() => {
     async function loadOverview() {
       try {
-        const token = localStorage.getItem('ceda_auth_token');
         const response = await fetch('/api/admin/overview', {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
+          credentials: 'include',
         });
 
         if (!response.ok) {

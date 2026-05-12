@@ -25,11 +25,6 @@ export function ManageUsers() {
   const [users, setUsers] = useState<Array<EditingUser & { joinedDate: string }>>([]);
   const [loading, setLoading] = useState(true);
 
-  const authHeaders = () => {
-    const token = localStorage.getItem('ceda_auth_token');
-    return token ? { Authorization: `Bearer ${token}` } : {};
-  };
-
   if (!user || user.role !== 'admin') {
     navigate('/');
     return null;
@@ -39,7 +34,7 @@ export function ManageUsers() {
     async function loadUsers() {
       try {
         const response = await fetch('/api/users', {
-          headers: authHeaders(),
+          credentials: 'include',
         });
 
         if (!response.ok) {
@@ -80,7 +75,8 @@ export function ManageUsers() {
     try {
       const response = await fetch(`/api/users/${editingUser.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', ...authHeaders() },
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(editingUser),
       });
 
@@ -101,7 +97,7 @@ export function ManageUsers() {
       try {
         const response = await fetch(`/api/users/${userId}`, {
           method: 'DELETE',
-          headers: authHeaders(),
+          credentials: 'include',
         });
 
         if (!response.ok) {

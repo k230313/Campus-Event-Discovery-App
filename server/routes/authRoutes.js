@@ -1,7 +1,8 @@
 const express = require("express");
 const pool = require("../config/db");
 const { hashPassword, verifyPassword } = require("../utils/passwords");
-const { createAuthToken, verifyAuthToken } = require("../utils/authTokens");
+const { createAuthToken } = require("../utils/authTokens");
+const { AUTH_COOKIE_NAME, requireAuth } = require("../middleware/auth");
 const { authRateLimit, clearAuthRateLimit } = require("../middleware/security");
 
 const router = express.Router();
@@ -30,6 +31,29 @@ async function loadUserById(userId) {
   );
 
   return rows[0] || null;
+}
+
+function getAuthCookieOptions() {
+  return {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  };
+}
+
+function setAuthCookie(res, token) {
+  res.cookie(AUTH_COOKIE_NAME, token, getAuthCookieOptions());
+}
+
+function clearAuthCookie(res) {
+  res.clearCookie(AUTH_COOKIE_NAME, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+  });
 }
 
 router.post("/register", authRateLimit, async (req, res) => {
@@ -74,8 +98,9 @@ router.post("/register", authRateLimit, async (req, res) => {
 
     const user = await loadUserById(result.insertId);
     const token = createAuthToken({ userId: user.user_id });
+    setAuthCookie(res, token);
     clearAuthRateLimit(req);
-    return res.status(201).json({ token, user: serializeUser(user) });
+    return res.status(201).json({ user: serializeUser(user) });
   } catch (error) {
     console.error("POST /api/auth/register error:", error);
     return res.status(500).json({ error: "Failed to register user" });
@@ -107,25 +132,22 @@ router.post("/login", authRateLimit, async (req, res) => {
     }
 
     const token = createAuthToken({ userId: user.user_id });
+    setAuthCookie(res, token);
     clearAuthRateLimit(req);
-    return res.json({ token, user: serializeUser(user) });
+    return res.json({ user: serializeUser(user) });
   } catch (error) {
     console.error("POST /api/auth/login error:", error);
     return res.status(500).json({ error: "Failed to log in" });
   }
 });
 
-router.get("/me", async (req, res) => {
-  const authHeader = req.headers.authorization || "";
-  const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
-  const payload = verifyAuthToken(token);
-
-  if (!payload?.userId) {
+router.get("/me", requireAuth, async (req, res) => {
+  if (!req.user) {
     return res.status(401).json({ error: "Unauthorized" });
   }
 
   try {
-    const user = await loadUserById(payload.userId);
+    const user = await loadUserById(req.user.id);
     if (!user) {
       return res.status(401).json({ error: "Unauthorized" });
     }
@@ -135,6 +157,11 @@ router.get("/me", async (req, res) => {
     console.error("GET /api/auth/me error:", error);
     return res.status(500).json({ error: "Failed to load current user" });
   }
+});
+
+router.post("/logout", (_req, res) => {
+  clearAuthCookie(res);
+  return res.status(204).send();
 });
 
 module.exports = router;

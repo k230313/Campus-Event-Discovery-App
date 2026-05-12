@@ -23,8 +23,8 @@ interface AppContextType {
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
-const AUTH_TOKEN_KEY = 'ceda_auth_token';
 const USER_STORAGE_KEY = 'ceda_user';
+const LEGACY_AUTH_TOKEN_KEY = 'ceda_auth_token';
 
 function normalizeEvent(apiEvent: any): Event {
   return {
@@ -62,9 +62,11 @@ function normalizeUser(apiUser: any): User {
   };
 }
 
-function getAuthHeaders(): Record<string, string> {
-  const token = localStorage.getItem(AUTH_TOKEN_KEY);
-  return token ? { Authorization: `Bearer ${token}` } : {};
+function buildRequestOptions(init?: RequestInit): RequestInit {
+  return {
+    credentials: 'include',
+    ...init,
+  };
 }
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
@@ -77,7 +79,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const savedUser = localStorage.getItem(USER_STORAGE_KEY);
     const savedBookmarks = localStorage.getItem('ceda_bookmarks');
     const savedRsvps = localStorage.getItem('ceda_rsvps');
-    const savedToken = localStorage.getItem(AUTH_TOKEN_KEY);
 
     if (savedUser) {
       setUser(JSON.parse(savedUser));
@@ -91,27 +92,24 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setRSVPs(JSON.parse(savedRsvps));
     }
 
-    if (savedToken) {
-      fetch('/api/auth/me', {
-        headers: getAuthHeaders(),
+    localStorage.removeItem(LEGACY_AUTH_TOKEN_KEY);
+
+    fetch('/api/auth/me', buildRequestOptions())
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error('Failed to restore session');
+        }
+        return response.json();
       })
-        .then(async (response) => {
-          if (!response.ok) {
-            throw new Error('Failed to restore session');
-          }
-          return response.json();
-        })
-        .then((data) => {
-          const nextUser = normalizeUser(data.user);
-          setUser(nextUser);
-          localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(nextUser));
-        })
-        .catch(() => {
-          setUser(null);
-          localStorage.removeItem(AUTH_TOKEN_KEY);
-          localStorage.removeItem(USER_STORAGE_KEY);
-        });
-    }
+      .then((data) => {
+        const nextUser = normalizeUser(data.user);
+        setUser(nextUser);
+        localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(nextUser));
+      })
+      .catch(() => {
+        setUser(null);
+        localStorage.removeItem(USER_STORAGE_KEY);
+      });
   }, []);
 
   async function loadEvents() {
@@ -151,8 +149,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       try {
         if (user.role === 'student') {
           const [bookmarkResponse, registrationResponse] = await Promise.all([
-            fetch('/api/bookmarks', { headers: getAuthHeaders() }),
-            fetch('/api/registrations', { headers: getAuthHeaders() }),
+            fetch('/api/bookmarks', buildRequestOptions()),
+            fetch('/api/registrations', buildRequestOptions()),
           ]);
 
           if (bookmarkResponse.ok) {
@@ -182,11 +180,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
-      const response = await fetch('/api/auth/login', {
+      const response = await fetch('/api/auth/login', buildRequestOptions({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
-      });
+      }));
 
       if (!response.ok) {
         return null;
@@ -195,7 +193,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const data = await response.json();
       const nextUser = normalizeUser(data.user);
       setUser(nextUser);
-      localStorage.setItem(AUTH_TOKEN_KEY, data.token);
       localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(nextUser));
       return nextUser;
     } catch (error) {
@@ -205,8 +202,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = () => {
+    fetch('/api/auth/logout', buildRequestOptions({ method: 'POST' })).catch((error) => {
+      console.error('Logout request failed:', error);
+    });
     setUser(null);
-    localStorage.removeItem(AUTH_TOKEN_KEY);
+    localStorage.removeItem(LEGACY_AUTH_TOKEN_KEY);
     localStorage.removeItem(USER_STORAGE_KEY);
   };
 
@@ -221,11 +221,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
-      const response = await fetch('/api/auth/register', {
+      const response = await fetch('/api/auth/register', buildRequestOptions({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, password, role }),
-      });
+      }));
 
       if (!response.ok) {
         return null;
@@ -234,7 +234,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const data = await response.json();
       const nextUser = normalizeUser(data.user);
       setUser(nextUser);
-      localStorage.setItem(AUTH_TOKEN_KEY, data.token);
       localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(nextUser));
       return nextUser;
     } catch (error) {
@@ -247,11 +246,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (!user || user.role !== 'student' || bookmarks.some((b) => b.eventId === eventId && b.userId === user.id)) return;
 
     try {
-      const response = await fetch('/api/bookmarks', {
+      const response = await fetch('/api/bookmarks', buildRequestOptions({
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ eventId }),
-      });
+      }));
 
       if (!response.ok) {
         throw new Error('Failed to save bookmark');
@@ -268,10 +267,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (!user || user.role !== 'student') return;
 
     try {
-      const response = await fetch(`/api/bookmarks/${eventId}`, {
+      const response = await fetch(`/api/bookmarks/${eventId}`, buildRequestOptions({
         method: 'DELETE',
-        headers: getAuthHeaders(),
-      });
+      }));
 
       if (!response.ok) {
         throw new Error('Failed to remove bookmark');
@@ -295,11 +293,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (!user || user.role !== 'student' || rsvps.some((r) => r.eventId === eventId && r.userId === user.id)) return;
 
     try {
-      const response = await fetch('/api/registrations', {
+      const response = await fetch('/api/registrations', buildRequestOptions({
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ eventId, attendeeType, options }),
-      });
+      }));
 
       if (!response.ok) {
         throw new Error('Failed to register for event');
@@ -331,10 +329,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (!existing) return;
 
     try {
-      const response = await fetch(`/api/registrations/${eventId}`, {
+      const response = await fetch(`/api/registrations/${eventId}`, buildRequestOptions({
         method: 'DELETE',
-        headers: getAuthHeaders(),
-      });
+      }));
 
       if (!response.ok) {
         throw new Error('Failed to unregister from event');
@@ -382,11 +379,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     };
 
     try {
-      const response = await fetch('/api/events', {
+      const response = await fetch('/api/events', buildRequestOptions({
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
-      });
+      }));
 
       if (!response.ok) {
         throw new Error('Failed to create event');
@@ -406,9 +403,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const merged = { ...current, ...updates };
 
     try {
-      const response = await fetch(`/api/events/${eventId}`, {
+      const response = await fetch(`/api/events/${eventId}`, buildRequestOptions({
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title: merged.title,
           description: merged.description,
@@ -423,7 +420,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           notes: merged.notes,
           status: merged.status,
         }),
-      });
+      }));
 
       if (!response.ok) {
         throw new Error('Failed to update event');
@@ -439,10 +436,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const deleteEvent = async (eventId: string) => {
     try {
-      const response = await fetch(`/api/events/${eventId}`, {
+      const response = await fetch(`/api/events/${eventId}`, buildRequestOptions({
         method: 'DELETE',
-        headers: getAuthHeaders(),
-      });
+      }));
       if (!response.ok) {
         throw new Error('Failed to delete event');
       }
@@ -457,11 +453,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const updateEventStatus = async (eventId: string, status: Event['status']) => {
     try {
-      const response = await fetch(`/api/events/${eventId}/status`, {
+      const response = await fetch(`/api/events/${eventId}/status`, buildRequestOptions({
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status }),
-      });
+      }));
 
       if (!response.ok) {
         throw new Error('Failed to update event status');

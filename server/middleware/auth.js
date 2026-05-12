@@ -1,13 +1,30 @@
 const pool = require("../config/db");
 const { verifyAuthToken } = require("../utils/authTokens");
+const AUTH_COOKIE_NAME = "ceda_auth";
 
 function toClientRole(dbRole) {
   return dbRole === "organiser" ? "organizer" : dbRole;
 }
 
-async function attachUser(req, _res, next) {
+function getAuthTokenFromRequest(req) {
   const authHeader = req.headers.authorization || "";
-  const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
+  if (authHeader.startsWith("Bearer ")) {
+    return authHeader.slice(7);
+  }
+
+  const cookieHeader = req.headers.cookie || "";
+  const cookies = cookieHeader.split(";").map((value) => value.trim());
+  const authCookie = cookies.find((entry) => entry.startsWith(`${AUTH_COOKIE_NAME}=`));
+
+  if (!authCookie) {
+    return null;
+  }
+
+  return decodeURIComponent(authCookie.slice(AUTH_COOKIE_NAME.length + 1));
+}
+
+async function attachUser(req, _res, next) {
+  const token = getAuthTokenFromRequest(req);
 
   if (!token) {
     req.user = null;
@@ -66,7 +83,9 @@ function requireRole(...roles) {
 }
 
 module.exports = {
+  AUTH_COOKIE_NAME,
   attachUser,
+  getAuthTokenFromRequest,
   requireAuth,
   requireRole,
 };

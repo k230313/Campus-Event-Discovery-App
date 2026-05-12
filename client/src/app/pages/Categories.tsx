@@ -17,11 +17,6 @@ export function Categories() {
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
 
-  const authHeaders = () => {
-    const token = localStorage.getItem('ceda_auth_token');
-    return token ? { Authorization: `Bearer ${token}` } : {};
-  };
-
   if (!user || user.role !== 'admin') {
     navigate('/');
     return null;
@@ -51,7 +46,8 @@ export function Categories() {
     try {
       const response = await fetch('/api/categories', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...authHeaders() },
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: newCategory.trim() }),
       });
 
@@ -73,7 +69,8 @@ export function Categories() {
     try {
       const response = await fetch(`/api/categories/${categoryId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', ...authHeaders() },
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: editingName.trim() }),
       });
 
@@ -98,7 +95,7 @@ export function Categories() {
     try {
       const response = await fetch(`/api/categories/${category.id}`, {
         method: 'DELETE',
-        headers: authHeaders(),
+        credentials: 'include',
       });
 
       if (!response.ok) {
