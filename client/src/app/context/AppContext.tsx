@@ -6,7 +6,7 @@ interface AppContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<User | null>;
   logout: () => void;
-  register: (name: string, email: string, password: string, role: 'student' | 'organizer') => Promise<User | null>;
+  register: (name: string, email: string, password: string, role: 'student' | 'organizer', turnstileToken: string) => Promise<User | null>;
   events: Event[];
   bookmarks: Bookmark[];
   rsvps: RSVP[];
@@ -214,9 +214,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     name: string,
     email: string,
     password: string,
-    role: 'student' | 'organizer'
+    role: 'student' | 'organizer',
+    turnstileToken: string
   ): Promise<User | null> => {
-    if (!name || !email || !password) {
+    if (!name || !email || !password || !turnstileToken) {
       return null;
     }
 
@@ -224,7 +225,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const response = await fetch('/api/auth/register', buildRequestOptions({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password, role }),
+        body: JSON.stringify({ name, email, password, role, turnstileToken }),
       }));
 
       if (!response.ok) {

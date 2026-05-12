@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { UserPlus } from 'lucide-react';
 import { Button } from '../components/ui/button';
@@ -9,6 +9,7 @@ import { RadioGroup, RadioGroupItem } from '../components/ui/radio-group';
 import { useApp } from '../context/AppContext';
 
 export function Register() {
+  const TURNSTILE_SITE_KEY = '0x4AAAAAADN5Ecy-ORG9dtgF';
   const navigate = useNavigate();
   const { register } = useApp();
   const [name, setName] = useState('');
@@ -18,6 +19,46 @@ export function Register() {
   const [role, setRole] = useState<'student' | 'organizer'>('student');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [turnstileToken, setTurnstileToken] = useState('');
+  const turnstileContainerRef = useRef<HTMLDivElement | null>(null);
+  const turnstileWidgetIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    const maybeRenderWidget = () => {
+      const turnstile = (window as any).turnstile;
+
+      if (!turnstile || !turnstileContainerRef.current || turnstileWidgetIdRef.current) {
+        return;
+      }
+
+      turnstileWidgetIdRef.current = turnstile.render(turnstileContainerRef.current, {
+        sitekey: TURNSTILE_SITE_KEY,
+        callback: (token: string) => {
+          setTurnstileToken(token);
+          setError('');
+        },
+        'expired-callback': () => {
+          setTurnstileToken('');
+        },
+        'error-callback': () => {
+          setTurnstileToken('');
+          setError('Captcha verification failed. Please try again.');
+        },
+      });
+    };
+
+    maybeRenderWidget();
+    const intervalId = window.setInterval(maybeRenderWidget, 500);
+
+    return () => {
+      window.clearInterval(intervalId);
+      const turnstile = (window as any).turnstile;
+      if (turnstile && turnstileWidgetIdRef.current !== null) {
+        turnstile.remove(turnstileWidgetIdRef.current);
+        turnstileWidgetIdRef.current = null;
+      }
+    };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,15 +74,25 @@ export function Register() {
       return;
     }
 
+    if (!turnstileToken) {
+      setError('Please complete the captcha challenge');
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      const nextUser = await register(name, email, password, role);
+      const nextUser = await register(name, email, password, role, turnstileToken);
       if (nextUser) {
         const destination = nextUser.role === 'organizer' ? '/dashboard' : '/my-events';
         navigate(destination);
       } else {
         setError('Registration failed. Please try again.');
+        const turnstile = (window as any).turnstile;
+        if (turnstile && turnstileWidgetIdRef.current !== null) {
+          turnstile.reset(turnstileWidgetIdRef.current);
+        }
+        setTurnstileToken('');
       }
     } catch (err) {
       setError('An error occurred during registration');
@@ -137,6 +188,11 @@ export function Register() {
                   </Label>
                 </div>
               </RadioGroup>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Verification</Label>
+              <div ref={turnstileContainerRef} />
             </div>
           </CardContent>
 

@@ -33,6 +33,33 @@ async function loadUserById(userId) {
   return rows[0] || null;
 }
 
+async function verifyTurnstileToken(token, remoteIp) {
+  const secret = process.env.TURNSTILE_SECRET_KEY;
+
+  if (!secret) {
+    throw new Error("TURNSTILE_SECRET_KEY is not configured");
+  }
+
+  const response = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: new URLSearchParams({
+      secret,
+      response: token,
+      remoteip: remoteIp || "",
+    }),
+  });
+
+  if (!response.ok) {
+    return false;
+  }
+
+  const data = await response.json();
+  return Boolean(data.success);
+}
+
 function getAuthCookieOptions() {
   return {
     httpOnly: true,
@@ -57,10 +84,10 @@ function clearAuthCookie(res) {
 }
 
 router.post("/register", authRateLimit, async (req, res) => {
-  const { name, email, password, role } = req.body;
+  const { name, email, password, role, turnstileToken } = req.body;
 
-  if (!name || !email || !password || !role) {
-    return res.status(400).json({ error: "Name, email, password, and role are required" });
+  if (!name || !email || !password || !role || !turnstileToken) {
+    return res.status(400).json({ error: "Name, email, password, role, and captcha verification are required" });
   }
 
   if (!["student", "organizer"].includes(role)) {
@@ -80,6 +107,15 @@ router.post("/register", authRateLimit, async (req, res) => {
   }
 
   try {
+    const turnstileValid = await verifyTurnstileToken(
+      String(turnstileToken),
+      req.ip || req.socket?.remoteAddress || ""
+    );
+
+    if (!turnstileValid) {
+      return res.status(400).json({ error: "Captcha verification failed" });
+    }
+
     const normalizedEmail = String(email).trim().toLowerCase();
     const [existingRows] = await pool.query(
       "SELECT user_id FROM users WHERE email = ? LIMIT 1",
