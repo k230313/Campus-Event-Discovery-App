@@ -56,7 +56,7 @@ export function MyBookmarks() {
                       variant="ghost"
                       size="sm"
                       className="absolute top-2 right-2 text-red-500 hover:text-red-600 hover:bg-red-50"
-                      onClick={() => removeBookmark(user.id, event.id)}
+                      onClick={() => removeBookmark(event.id)}
                     >
                       <X className="h-4 w-4" />
                     </Button>

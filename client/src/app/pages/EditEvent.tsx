@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../co
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Switch } from '../components/ui/switch';
 import { useApp } from '../context/AppContext';
-import { EventCategory } from '../types';
+import { Category, EventCategory } from '../types';
 
 export function EditEvent() {
   const { eventId } = useParams<{ eventId: string }>();
@@ -25,6 +25,7 @@ export function EditEvent() {
   const [endTime, setEndTime] = useState('');
   const [location, setLocation] = useState('');
   const [category, setCategory] = useState<EventCategory>('Academic');
+  const [categories, setCategories] = useState<Category[]>([]);
   const [image, setImage] = useState('');
   const [volunteersNeeded, setVolunteersNeeded] = useState<number | undefined>();
   const [seatingCapacity, setSeatingCapacity] = useState<number | undefined>();
@@ -52,6 +53,21 @@ export function EditEvent() {
       setStatus(event.status);
     }
   }, [event]);
+
+  useEffect(() => {
+    async function loadCategories() {
+      try {
+        const response = await fetch('/api/categories');
+        if (!response.ok) throw new Error('Failed to load categories');
+        const data = await response.json();
+        setCategories(data);
+      } catch (error) {
+        console.error('Failed to load categories:', error);
+      }
+    }
+
+    loadCategories();
+  }, []);
 
   if (!user || user.role !== 'organizer') {
     navigate('/login');
@@ -160,12 +176,9 @@ export function EditEvent() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Academic">Academic</SelectItem>
-                      <SelectItem value="Social">Social</SelectItem>
-                      <SelectItem value="Career">Career</SelectItem>
-                      <SelectItem value="Club">Club</SelectItem>
-                      <SelectItem value="Workshop">Workshop</SelectItem>
-                      <SelectItem value="Other">Other</SelectItem>
+                      {categories.map((entry) => (
+                        <SelectItem key={entry.id} value={entry.name}>{entry.name}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>

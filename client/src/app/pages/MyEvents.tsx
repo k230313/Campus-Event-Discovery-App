@@ -28,7 +28,7 @@ export function MyEvents() {
   const handleUnregister = (eventId: string, eventTitle: string) => {
     if (confirm(`Are you sure you want to unregister from "${eventTitle}"?`)) {
       setUnregisteringEventId(eventId);
-      removeRSVP(user.id, eventId);
+      removeRSVP(eventId);
       setTimeout(() => setUnregisteringEventId(null), 500);
     }
   };

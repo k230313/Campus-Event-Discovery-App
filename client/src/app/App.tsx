@@ -30,6 +30,7 @@ import { NotFound } from './pages/NotFound';
 import { Unauthorized } from './pages/Unauthorized';
 import { Settings } from './pages/Settings';
 import { RegistrationConfirmation } from './pages/RegistrationConfirmation';
+import { ProtectedRoute } from './components/ProtectedRoute';
 
 export default function App() {
   return (
@@ -55,23 +56,23 @@ export default function App() {
               <Route path="/registration-confirmation" element={<RegistrationConfirmation />} />
 
               {/* Student Routes */}
-              <Route path="/my-bookmarks" element={<MyBookmarks />} />
-              <Route path="/my-events" element={<MyEvents />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/settings" element={<Settings />} />
+              <Route path="/my-bookmarks" element={<ProtectedRoute allowedRoles={['student']}><MyBookmarks /></ProtectedRoute>} />
+              <Route path="/my-events" element={<ProtectedRoute allowedRoles={['student']}><MyEvents /></ProtectedRoute>} />
+              <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+              <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
 
               {/* Organizer Routes */}
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/create-event" element={<CreateEvent />} />
-              <Route path="/edit-event/:eventId" element={<EditEvent />} />
-              <Route path="/manage-events" element={<ManageEvents />} />
+              <Route path="/dashboard" element={<ProtectedRoute allowedRoles={['organizer', 'student']}><Dashboard /></ProtectedRoute>} />
+              <Route path="/create-event" element={<ProtectedRoute allowedRoles={['organizer']}><CreateEvent /></ProtectedRoute>} />
+              <Route path="/edit-event/:eventId" element={<ProtectedRoute allowedRoles={['organizer', 'admin']}><EditEvent /></ProtectedRoute>} />
+              <Route path="/manage-events" element={<ProtectedRoute allowedRoles={['organizer']}><ManageEvents /></ProtectedRoute>} />
 
               {/* Admin Routes */}
-              <Route path="/admin-dashboard" element={<AdminDashboard />} />
-              <Route path="/manage-users" element={<ManageUsers />} />
-              <Route path="/admin-manage-events" element={<AdminManageEvents />} />
-              <Route path="/categories" element={<Categories />} />
-              <Route path="/reports" element={<Reports />} />
+              <Route path="/admin-dashboard" element={<ProtectedRoute allowedRoles={['admin']}><AdminDashboard /></ProtectedRoute>} />
+              <Route path="/manage-users" element={<ProtectedRoute allowedRoles={['admin']}><ManageUsers /></ProtectedRoute>} />
+              <Route path="/admin-manage-events" element={<ProtectedRoute allowedRoles={['admin']}><AdminManageEvents /></ProtectedRoute>} />
+              <Route path="/categories" element={<ProtectedRoute allowedRoles={['admin']}><Categories /></ProtectedRoute>} />
+              <Route path="/reports" element={<ProtectedRoute allowedRoles={['admin']}><Reports /></ProtectedRoute>} />
 
               {/* 404 - Catch all route */}
               <Route path="*" element={<NotFound />} />

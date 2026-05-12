@@ -6,28 +6,109 @@ import { Label } from '../components/ui/label';
 import { Badge } from '../components/ui/badge';
 import { Tag, Plus, Edit, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { Category } from '../types';
 
 export function Categories() {
   const { user, events } = useApp();
   const navigate = useNavigate();
   const [newCategory, setNewCategory] = useState('');
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState('');
+
+  const authHeaders = () => {
+    const token = localStorage.getItem('ceda_auth_token');
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
 
   if (!user || user.role !== 'admin') {
     navigate('/');
     return null;
   }
 
-  const categories = ['Academic', 'Social', 'Career', 'Club', 'Workshop', 'Other'];
+  useEffect(() => {
+    async function loadCategories() {
+      try {
+        const response = await fetch('/api/categories');
+        if (!response.ok) {
+          throw new Error('Failed to load categories');
+        }
 
-  const getCategoryCount = (category: string) => {
-    return events.filter((e) => e.category === category).length;
+        const data = await response.json();
+        setCategories(data);
+      } catch (error) {
+        console.error('Failed to load categories:', error);
+      }
+    }
+
+    loadCategories();
+  }, []);
+
+  const handleAddCategory = async () => {
+    if (!newCategory.trim()) return;
+
+    try {
+      const response = await fetch('/api/categories', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
+        body: JSON.stringify({ name: newCategory.trim() }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to add category');
+      }
+
+      const created = await response.json();
+      setCategories((current) => [...current, created].sort((a, b) => a.name.localeCompare(b.name)));
+      setNewCategory('');
+    } catch (error) {
+      alert('Failed to add category');
+    }
   };
 
-  const handleAddCategory = () => {
-    if (newCategory.trim()) {
-      alert(`Category "${newCategory}" added successfully!`);
-      setNewCategory('');
+  const handleSaveEdit = async (categoryId: string) => {
+    if (!editingName.trim()) return;
+
+    try {
+      const response = await fetch(`/api/categories/${categoryId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
+        body: JSON.stringify({ name: editingName.trim() }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update category');
+      }
+
+      const updated = await response.json();
+      setCategories((current) => current.map((category) => category.id === categoryId ? updated : category).sort((a, b) => a.name.localeCompare(b.name)));
+      setEditingCategoryId(null);
+      setEditingName('');
+    } catch (error) {
+      alert('Failed to update category');
+    }
+  };
+
+  const handleDeleteCategory = async (category: Category) => {
+    if (!window.confirm(`Delete category "${category.name}"?`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/categories/${category.id}`, {
+        method: 'DELETE',
+        headers: authHeaders(),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => null);
+        throw new Error(data?.error || 'Failed to delete category');
+      }
+
+      setCategories((current) => current.filter((entry) => entry.id !== category.id));
+    } catch (error: any) {
+      alert(error.message || 'Failed to delete category');
     }
   };
 
@@ -79,7 +160,7 @@ export function Categories() {
                 <div className="space-y-3">
                   {categories.map((category) => (
                     <div
-                      key={category}
+                      key={category.id}
                       className="flex items-center justify-between p-4 bg-[#F0F3F9] rounded-lg hover:bg-[#EF9B28]/10 transition-colors"
                     >
                       <div className="flex items-center gap-4">
@@ -87,18 +168,42 @@ export function Categories() {
                           <Tag className="h-5 w-5 text-white" />
                         </div>
                         <div>
-                          <p className="font-semibold text-[#1B2E55]">{category}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {getCategoryCount(category)} events
-                          </p>
+                          {editingCategoryId === category.id ? (
+                            <Input
+                              value={editingName}
+                              onChange={(e) => setEditingName(e.target.value)}
+                              className="max-w-xs"
+                            />
+                          ) : (
+                            <p className="font-semibold text-[#1B2E55]">{category.name}</p>
+                          )}
+                          <p className="text-sm text-muted-foreground">{category.eventCount || 0} events</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Badge variant="outline">{getCategoryCount(category)}</Badge>
-                        <Button variant="ghost" size="sm">
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="sm" className="text-red-600">
+                        <Badge variant="outline">{category.eventCount || 0}</Badge>
+                        {editingCategoryId === category.id ? (
+                          <>
+                            <Button variant="ghost" size="sm" onClick={() => handleSaveEdit(category.id)}>
+                              Save
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={() => { setEditingCategoryId(null); setEditingName(''); }}>
+                              Cancel
+                            </Button>
+                          </>
+                        ) : (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setEditingCategoryId(category.id);
+                              setEditingName(category.name);
+                            }}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        )}
+                        <Button variant="ghost" size="sm" className="text-red-600" onClick={() => handleDeleteCategory(category)}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
@@ -117,12 +222,12 @@ export function Categories() {
             <CardContent>
               <div className="space-y-4">
                 {categories.map((category) => {
-                  const count = getCategoryCount(category);
+                  const count = category.eventCount || 0;
                   const percentage = events.length > 0 ? (count / events.length) * 100 : 0;
                   return (
-                    <div key={category}>
+                    <div key={category.id}>
                       <div className="flex items-center justify-between mb-2">
-                        <span className="font-medium text-[#1B2E55]">{category}</span>
+                        <span className="font-medium text-[#1B2E55]">{category.name}</span>
                         <span className="text-sm text-muted-foreground">
                           {count} events ({percentage.toFixed(1)}%)
                         </span>

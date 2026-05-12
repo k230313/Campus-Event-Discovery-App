@@ -1,41 +1,67 @@
 import { useApp } from '../context/AppContext';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
-import { BarChart, TrendingUp, Users, Calendar, Download, FileText } from 'lucide-react';
+import { BarChart, Users, Calendar, Download, FileText, Bookmark, Clock3 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { AdminOverview } from '../types/admin';
 
 export function Reports() {
-  const { user, events } = useApp();
+  const { user } = useApp();
   const navigate = useNavigate();
+  const [overview, setOverview] = useState<AdminOverview | null>(null);
+  const [loading, setLoading] = useState(true);
 
   if (!user || user.role !== 'admin') {
     navigate('/');
     return null;
   }
 
-  const totalEvents = events.length;
-  const totalRSVPs = events.reduce((sum, e) => sum + e.rsvpCount, 0);
-  const totalViews = events.reduce((sum, e) => sum + e.viewCount, 0);
-  const avgRSVPsPerEvent = totalEvents > 0 ? (totalRSVPs / totalEvents).toFixed(1) : 0;
+  useEffect(() => {
+    async function loadOverview() {
+      try {
+        const token = localStorage.getItem('ceda_auth_token');
+        const response = await fetch('/api/admin/overview', {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to load report data');
+        }
+
+        const data = await response.json();
+        setOverview(data);
+      } catch (error) {
+        console.error('Failed to load report data:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadOverview();
+  }, []);
+
+  const totals = overview?.totals;
+  const totalEvents = totals?.totalEvents ?? 0;
+  const totalRegistrations = totals?.totalRegistrations ?? 0;
+  const avgRegistrationsPerEvent = totalEvents > 0 ? (totalRegistrations / totalEvents).toFixed(1) : '0.0';
 
   const handleExport = (type: string) => {
-    alert(`Exporting ${type} report...`);
+    alert(`${type} export is not implemented yet. Use the on-screen summary for testing.`);
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-[#F0F3F9] py-12">
       <div className="container mx-auto px-4">
         <div className="max-w-7xl mx-auto">
-          {/* Header */}
           <div className="mb-8">
             <h1 className="text-4xl font-bold text-[#1B2E55] mb-2 flex items-center gap-3">
               <BarChart className="h-10 w-10 text-[#EF9B28]" />
               Reports & Analytics
             </h1>
-            <p className="text-muted-foreground">Comprehensive platform insights and analytics</p>
+            <p className="text-muted-foreground">Current summary based on live database records</p>
           </div>
 
-          {/* Key Metrics */}
           <div className="grid md:grid-cols-4 gap-6 mb-8">
             <Card className="border-2">
               <CardContent className="pt-6">
@@ -46,10 +72,7 @@ export function Reports() {
                   </div>
                   <Calendar className="h-12 w-12 text-[#1B2E55]/20" />
                 </div>
-                <p className="text-xs text-green-600 flex items-center gap-1">
-                  <TrendingUp className="h-3 w-3" />
-                  ↑ 15% from last month
-                </p>
+                <p className="text-xs text-muted-foreground">{totals?.publishedEvents ?? 0} published, {totals?.pendingEvents ?? 0} pending</p>
               </CardContent>
             </Card>
 
@@ -57,15 +80,12 @@ export function Reports() {
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <p className="text-sm text-muted-foreground mb-1">Total RSVPs</p>
-                    <p className="text-4xl font-bold text-[#1B2E55]">{totalRSVPs}</p>
+                    <p className="text-sm text-muted-foreground mb-1">Total Registrations</p>
+                    <p className="text-4xl font-bold text-[#1B2E55]">{totalRegistrations}</p>
                   </div>
                   <Users className="h-12 w-12 text-[#EF9B28]/20" />
                 </div>
-                <p className="text-xs text-green-600 flex items-center gap-1">
-                  <TrendingUp className="h-3 w-3" />
-                  ↑ 22% from last month
-                </p>
+                <p className="text-xs text-muted-foreground">{totals?.totalUsers ?? 0} total users</p>
               </CardContent>
             </Card>
 
@@ -73,15 +93,12 @@ export function Reports() {
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <p className="text-sm text-muted-foreground mb-1">Avg RSVPs/Event</p>
-                    <p className="text-4xl font-bold text-[#1B2E55]">{avgRSVPsPerEvent}</p>
+                    <p className="text-sm text-muted-foreground mb-1">Avg Registrations/Event</p>
+                    <p className="text-4xl font-bold text-[#1B2E55]">{avgRegistrationsPerEvent}</p>
                   </div>
                   <BarChart className="h-12 w-12 text-[#EF9B28]/20" />
                 </div>
-                <p className="text-xs text-green-600 flex items-center gap-1">
-                  <TrendingUp className="h-3 w-3" />
-                  ↑ 8% from last month
-                </p>
+                <p className="text-xs text-muted-foreground">{totals?.draftEvents ?? 0} drafts, {totals?.rejectedEvents ?? 0} rejected</p>
               </CardContent>
             </Card>
 
@@ -89,124 +106,73 @@ export function Reports() {
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <p className="text-sm text-muted-foreground mb-1">Total Views</p>
-                    <p className="text-4xl font-bold text-[#1B2E55]">{totalViews}</p>
+                    <p className="text-sm text-muted-foreground mb-1">Total Bookmarks</p>
+                    <p className="text-4xl font-bold text-[#1B2E55]">{totals?.totalBookmarks ?? 0}</p>
                   </div>
-                  <TrendingUp className="h-12 w-12 text-[#1B2E55]/20" />
+                  <Bookmark className="h-12 w-12 text-[#1B2E55]/20" />
                 </div>
-                <p className="text-xs text-green-600 flex items-center gap-1">
-                  <TrendingUp className="h-3 w-3" />
-                  ↑ 18% from last month
-                </p>
+                <p className="text-xs text-muted-foreground">{totals?.cancelledEvents ?? 0} cancelled events</p>
               </CardContent>
             </Card>
           </div>
 
-          {/* Report Types */}
           <div className="grid md:grid-cols-2 gap-6 mb-8">
             <Card className="border-2">
               <CardHeader>
                 <CardTitle className="text-xl text-[#1B2E55]">Available Reports</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <div className="flex items-center justify-between p-4 bg-[#F0F3F9] rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <FileText className="h-5 w-5 text-[#1B2E55]" />
-                    <div>
-                      <p className="font-medium text-[#1B2E55]">Event Summary Report</p>
-                      <p className="text-sm text-muted-foreground">All events with statistics</p>
+                {[
+                  ['Event Summary Report', 'Current event and status summary'],
+                  ['User Engagement Report', 'Registrations and bookmarks summary'],
+                  ['Category Performance', 'Events by category'],
+                  ['Operational Snapshot', 'Pending, draft, rejected, and cancelled counts'],
+                ].map(([title, description]) => (
+                  <div key={title} className="flex items-center justify-between p-4 bg-[#F0F3F9] rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <FileText className="h-5 w-5 text-[#1B2E55]" />
+                      <div>
+                        <p className="font-medium text-[#1B2E55]">{title}</p>
+                        <p className="text-sm text-muted-foreground">{description}</p>
+                      </div>
                     </div>
+                    <Button variant="outline" size="sm" onClick={() => handleExport(title)}>
+                      <Download className="h-4 w-4 mr-2" />
+                      Export
+                    </Button>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleExport('Event Summary')}
-                  >
-                    <Download className="h-4 w-4 mr-2" />
-                    Export
-                  </Button>
-                </div>
-
-                <div className="flex items-center justify-between p-4 bg-[#F0F3F9] rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <FileText className="h-5 w-5 text-[#1B2E55]" />
-                    <div>
-                      <p className="font-medium text-[#1B2E55]">User Engagement Report</p>
-                      <p className="text-sm text-muted-foreground">RSVP and attendance data</p>
-                    </div>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleExport('User Engagement')}
-                  >
-                    <Download className="h-4 w-4 mr-2" />
-                    Export
-                  </Button>
-                </div>
-
-                <div className="flex items-center justify-between p-4 bg-[#F0F3F9] rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <FileText className="h-5 w-5 text-[#1B2E55]" />
-                    <div>
-                      <p className="font-medium text-[#1B2E55]">Category Performance</p>
-                      <p className="text-sm text-muted-foreground">Events by category analysis</p>
-                    </div>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleExport('Category Performance')}
-                  >
-                    <Download className="h-4 w-4 mr-2" />
-                    Export
-                  </Button>
-                </div>
-
-                <div className="flex items-center justify-between p-4 bg-[#F0F3F9] rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <FileText className="h-5 w-5 text-[#1B2E55]" />
-                    <div>
-                      <p className="font-medium text-[#1B2E55]">Monthly Trends</p>
-                      <p className="text-sm text-muted-foreground">Month-over-month comparison</p>
-                    </div>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleExport('Monthly Trends')}
-                  >
-                    <Download className="h-4 w-4 mr-2" />
-                    Export
-                  </Button>
-                </div>
+                ))}
               </CardContent>
             </Card>
 
             <Card className="border-2">
               <CardHeader>
-                <CardTitle className="text-xl text-[#1B2E55]">Top Events (by RSVPs)</CardTitle>
+                <CardTitle className="text-xl text-[#1B2E55]">Top Events (by registrations)</CardTitle>
               </CardHeader>
               <CardContent>
+                {loading && <p className="text-sm text-muted-foreground mb-4">Loading report data...</p>}
                 <div className="space-y-4">
-                  {events
-                    .sort((a, b) => b.rsvpCount - a.rsvpCount)
-                    .slice(0, 5)
-                    .map((event, index) => (
-                      <div key={event.id} className="flex items-center gap-4">
-                        <div className="flex-shrink-0 w-8 h-8 bg-[#EF9B28] rounded-full flex items-center justify-center text-white font-bold">
-                          {index + 1}
-                        </div>
-                        <div className="flex-1">
-                          <p className="font-medium text-[#1B2E55] text-sm">{event.title}</p>
-                          <p className="text-xs text-muted-foreground">{event.category}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-bold text-[#1B2E55]">{event.rsvpCount}</p>
-                          <p className="text-xs text-muted-foreground">RSVPs</p>
-                        </div>
+                  {(overview?.topEvents || []).map((event, index) => (
+                    <div key={event.id} className="flex items-center gap-4">
+                      <div className="flex-shrink-0 w-8 h-8 bg-[#EF9B28] rounded-full flex items-center justify-center text-white font-bold">
+                        {index + 1}
                       </div>
-                    ))}
+                      <div className="flex-1">
+                        <p className="font-medium text-[#1B2E55] text-sm">{event.title}</p>
+                        <p className="text-xs text-muted-foreground">{event.category}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-[#1B2E55]">{event.rsvpCount}</p>
+                        <p className="text-xs text-muted-foreground">registrations</p>
+                      </div>
+                    </div>
+                  ))}
+                  {!loading && (overview?.topEvents || []).length === 0 && (
+                    <div className="text-sm text-muted-foreground flex items-center gap-2">
+                      <Clock3 className="h-4 w-4" />
+                      No registration data available yet.
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -216,4 +182,3 @@ export function Reports() {
     </div>
   );
 }
-

@@ -3,6 +3,7 @@ const router = express.Router();
 const pool = require("../config/db");
 const { eventFields } = require("../models/eventModel");
 const validateEvent = require("../validation/eventValidation");
+const { requireAuth, requireRole } = require("../middleware/auth");
 
 const eventSelect = `
   SELECT
@@ -72,6 +73,15 @@ async function resolveOrganizerId(organizerId) {
   return rows[0].user_id;
 }
 
+async function getEventOwnerId(eventId) {
+  const [rows] = await pool.query(
+    "SELECT organiser_id FROM events WHERE event_id = ? LIMIT 1",
+    [eventId]
+  );
+
+  return rows[0]?.organiser_id || null;
+}
+
 router.get("/", async (req, res) => {
   try {
     const [rows] = await pool.query(`${eventSelect} ORDER BY e.event_date ASC, e.start_time ASC`);
@@ -84,6 +94,33 @@ router.get("/", async (req, res) => {
 
 router.get("/schema", (req, res) => {
   res.json(eventFields);
+});
+
+router.patch("/:id/status", requireAuth, requireRole("admin"), async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+  const allowedStatuses = ["draft", "pending", "published", "rejected", "cancelled"];
+
+  if (!allowedStatuses.includes(status)) {
+    return res.status(400).json({ error: "Invalid status" });
+  }
+
+  try {
+    const [result] = await pool.query(
+      "UPDATE events SET status = ?, approved_by = ? WHERE event_id = ?",
+      [status, req.user.id, id]
+    );
+
+    if (!result.affectedRows) {
+      return res.status(404).json({ error: "Event not found" });
+    }
+
+    const [rows] = await pool.query(`${eventSelect} WHERE e.event_id = ? LIMIT 1`, [id]);
+    return res.json(rows[0]);
+  } catch (error) {
+    console.error("PATCH /api/events/:id/status error:", error);
+    return res.status(500).json({ error: "Failed to update event status" });
+  }
 });
 
 router.get("/:id", async (req, res) => {
@@ -103,7 +140,7 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-router.post("/", async (req, res) => {
+router.post("/", requireAuth, requireRole("organizer", "admin"), async (req, res) => {
   const { isValid, errors } = validateEvent(req.body);
 
   if (!isValid) {
@@ -128,7 +165,9 @@ router.post("/", async (req, res) => {
 
   try {
     const categoryId = await resolveCategoryId(category);
-    const resolvedOrganizerId = await resolveOrganizerId(organizerId);
+    const resolvedOrganizerId = req.user.role === "admin"
+      ? await resolveOrganizerId(organizerId)
+      : req.user.id;
     const [result] = await pool.query(
       `INSERT INTO events
         (organiser_id, category_id, title, description, event_date, start_time, end_time, location, banner_image_url, capacity, registration_required, status, notes)
@@ -157,7 +196,7 @@ router.post("/", async (req, res) => {
   }
 });
 
-router.put("/:id", async (req, res) => {
+router.put("/:id", requireAuth, requireRole("organizer", "admin"), async (req, res) => {
   const { id } = req.params;
   const { isValid, errors } = validateEvent(req.body);
 
@@ -181,6 +220,15 @@ router.put("/:id", async (req, res) => {
   } = req.body;
 
   try {
+    const ownerId = await getEventOwnerId(id);
+    if (!ownerId) {
+      return res.status(404).json({ error: "Event not found" });
+    }
+
+    if (req.user.role !== "admin" && Number(ownerId) !== Number(req.user.id)) {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+
     const categoryId = await resolveCategoryId(category);
     const [result] = await pool.query(
       `UPDATE events
@@ -215,10 +263,19 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", requireAuth, requireRole("organizer", "admin"), async (req, res) => {
   const { id } = req.params;
 
   try {
+    const ownerId = await getEventOwnerId(id);
+    if (!ownerId) {
+      return res.status(404).json({ error: "Event not found" });
+    }
+
+    if (req.user.role !== "admin" && Number(ownerId) !== Number(req.user.id)) {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+
     const [result] = await pool.query("DELETE FROM events WHERE event_id = ?", [id]);
 
     if (result.affectedRows === 0) {

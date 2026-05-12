@@ -21,9 +21,14 @@ export function Login() {
     setIsLoading(true);
 
     try {
-      const success = await login(email, password);
-      if (success) {
-        navigate('/dashboard');
+      const nextUser = await login(email, password);
+      if (nextUser) {
+        const destination = nextUser.role === 'admin'
+          ? '/admin-dashboard'
+          : nextUser.role === 'organizer'
+          ? '/dashboard'
+          : '/my-events';
+        navigate(destination);
       } else {
         setError('Invalid email or password');
       }
@@ -111,12 +116,6 @@ export function Login() {
               <Link to="/register" className="text-[#1B2E55] font-semibold hover:underline">
                 Register here
               </Link>
-            </div>
-
-            <div className="pt-4 border-t">
-              <p className="text-xs text-center text-muted-foreground">
-                Demo: Use any email and password to log in
-              </p>
             </div>
           </CardFooter>
         </form>

@@ -3,12 +3,12 @@ import { Card, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { Input } from '../components/ui/input';
-import { Calendar, Search, Edit, Trash2, Eye, CheckCircle, XCircle } from 'lucide-react';
+import { Calendar, Search, Edit, Trash2, Eye, CheckCircle, XCircle, Ban, Clock3 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 
 export function AdminManageEvents() {
-  const { user, events, deleteEvent } = useApp();
+  const { user, events, deleteEvent, updateEventStatus } = useApp();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -27,6 +27,10 @@ export function AdminManageEvents() {
     if (confirm(`Are you sure you want to delete "${eventTitle}"? This action cannot be undone.`)) {
       deleteEvent(eventId);
     }
+  };
+
+  const handleStatusChange = async (eventId: string, status: 'draft' | 'pending' | 'published' | 'rejected' | 'cancelled') => {
+    await updateEventStatus(eventId, status);
   };
 
   return (
@@ -71,12 +75,16 @@ export function AdminManageEvents() {
                           className={
                             event.status === 'published'
                               ? 'bg-green-500/10 text-green-600 border-green-500'
+                              : event.status === 'pending'
+                              ? 'bg-blue-500/10 text-blue-600 border-blue-500'
                               : event.status === 'draft'
                               ? 'bg-yellow-500/10 text-yellow-600 border-yellow-500'
-                              : 'bg-red-500/10 text-red-600 border-red-500'
+                              : event.status === 'rejected'
+                              ? 'bg-red-500/10 text-red-600 border-red-500'
+                              : 'bg-gray-500/10 text-gray-600 border-gray-500'
                           }
                         >
-                          {event.status === 'published' ? <CheckCircle className="h-3 w-3 mr-1" /> : <XCircle className="h-3 w-3 mr-1" />}
+                          {event.status === 'published' ? <CheckCircle className="h-3 w-3 mr-1" /> : event.status === 'pending' ? <Clock3 className="h-3 w-3 mr-1" /> : event.status === 'cancelled' ? <Ban className="h-3 w-3 mr-1" /> : <XCircle className="h-3 w-3 mr-1" />}
                           {event.status}
                         </Badge>
                       </div>
@@ -88,30 +96,54 @@ export function AdminManageEvents() {
                       </div>
                     </div>
 
-                    <div className="md:col-span-2 flex gap-2">
-                      <Button
-                        variant="outline"
-                        className="flex-1"
-                        onClick={() => navigate(`/events/${event.id}`)}
-                      >
-                        <Eye className="h-4 w-4 mr-2" />
-                        View
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="flex-1"
-                        onClick={() => navigate(`/edit-event/${event.id}`)}
-                      >
-                        <Edit className="h-4 w-4 mr-2" />
-                        Edit
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="text-red-600 hover:bg-red-50"
-                        onClick={() => handleDelete(event.id, event.title)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                    <div className="md:col-span-2 space-y-2">
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          className="flex-1"
+                          onClick={() => navigate(`/events/${event.id}`)}
+                        >
+                          <Eye className="h-4 w-4 mr-2" />
+                          View
+                        </Button>
+                        <Button
+                          variant="outline"
+                          className="flex-1"
+                          onClick={() => navigate(`/edit-event/${event.id}`)}
+                        >
+                          <Edit className="h-4 w-4 mr-2" />
+                          Edit
+                        </Button>
+                        <Button
+                          variant="outline"
+                          className="text-red-600 hover:bg-red-50"
+                          onClick={() => handleDelete(event.id, event.title)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {event.status !== 'published' && (
+                          <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white" onClick={() => handleStatusChange(event.id, 'published')}>
+                            Approve
+                          </Button>
+                        )}
+                        {event.status !== 'pending' && (
+                          <Button size="sm" variant="outline" onClick={() => handleStatusChange(event.id, 'pending')}>
+                            Mark Pending
+                          </Button>
+                        )}
+                        {event.status !== 'rejected' && (
+                          <Button size="sm" variant="outline" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => handleStatusChange(event.id, 'rejected')}>
+                            Reject
+                          </Button>
+                        )}
+                        {event.status !== 'cancelled' && (
+                          <Button size="sm" variant="outline" className="text-gray-700 hover:bg-gray-100" onClick={() => handleStatusChange(event.id, 'cancelled')}>
+                            Cancel
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </CardContent>

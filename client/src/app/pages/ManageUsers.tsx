@@ -6,7 +6,7 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Users, Search, Shield, UserX, Mail, Edit2, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface EditingUser {
   id: string;
@@ -22,28 +22,49 @@ export function ManageUsers() {
   const [searchTerm, setSearchTerm] = useState('');
   const [editingUser, setEditingUser] = useState<EditingUser | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
+  const [users, setUsers] = useState<Array<EditingUser & { joinedDate: string }>>([]);
+  const [loading, setLoading] = useState(true);
+
+  const authHeaders = () => {
+    const token = localStorage.getItem('ceda_auth_token');
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
 
   if (!user || user.role !== 'admin') {
     navigate('/');
     return null;
   }
 
-  // Mock users data
-  const mockUsers = [
-    { id: '1', name: 'Navroop Kaur', email: 'navroop@kent.edu.au', role: 'student', status: 'active', joinedDate: '2026-01-15' },
-    { id: '2', name: 'John Smith', email: 'john@kent.edu.au', role: 'organizer', status: 'active', joinedDate: '2026-02-20' },
-    { id: '3', name: 'Sarah Johnson', email: 'sarah@kent.edu.au', role: 'student', status: 'active', joinedDate: '2026-03-10' },
-    { id: '4', name: 'Admin User', email: 'admin@kent.edu.au', role: 'admin', status: 'active', joinedDate: '2025-12-01' },
-    { id: '5', name: 'Mike Brown', email: 'mike@kent.edu.au', role: 'student', status: 'inactive', joinedDate: '2025-11-05' },
-  ];
+  useEffect(() => {
+    async function loadUsers() {
+      try {
+        const response = await fetch('/api/users', {
+          headers: authHeaders(),
+        });
 
-  const filteredUsers = mockUsers.filter(
+        if (!response.ok) {
+          throw new Error('Failed to fetch users');
+        }
+
+        const data = await response.json();
+        setUsers(data);
+      } catch (error) {
+        console.error('Failed to load users:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadUsers();
+  }, []);
+
+  const filteredUsers = users.filter(
     (u) =>
       u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       u.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleEditUser = (u: typeof mockUsers[0]) => {
+  const handleEditUser = (u: typeof users[number]) => {
     setEditingUser({
       id: u.id,
       name: u.name,
@@ -53,15 +74,45 @@ export function ManageUsers() {
     });
   };
 
-  const handleSaveUser = () => {
-    alert(`User "${editingUser?.name}" updated successfully!`);
-    setEditingUser(null);
+  const handleSaveUser = async () => {
+    if (!editingUser) return;
+
+    try {
+      const response = await fetch(`/api/users/${editingUser.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
+        body: JSON.stringify(editingUser),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update user');
+      }
+
+      const updatedUser = await response.json();
+      setUsers((current) => current.map((entry) => entry.id === updatedUser.id ? updatedUser : entry));
+      setEditingUser(null);
+    } catch (error) {
+      alert('Failed to update user');
+    }
   };
 
-  const handleDeleteUser = (userId: string, userName: string) => {
+  const handleDeleteUser = async (userId: string, userName: string) => {
     if (showDeleteConfirm === userId) {
-      alert(`User "${userName}" has been deleted.`);
-      setShowDeleteConfirm(null);
+      try {
+        const response = await fetch(`/api/users/${userId}`, {
+          method: 'DELETE',
+          headers: authHeaders(),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to delete user');
+        }
+
+        setUsers((current) => current.filter((entry) => entry.id !== userId));
+        setShowDeleteConfirm(null);
+      } catch (error) {
+        alert(`Failed to delete "${userName}".`);
+      }
     } else {
       setShowDeleteConfirm(userId);
     }
@@ -85,14 +136,14 @@ export function ManageUsers() {
             <Card className="border-2">
               <CardContent className="pt-6">
                 <p className="text-sm text-muted-foreground mb-1">Total Users</p>
-                <p className="text-3xl font-bold text-[#1B2E55]">{mockUsers.length}</p>
+                <p className="text-3xl font-bold text-[#1B2E55]">{users.length}</p>
               </CardContent>
             </Card>
             <Card className="border-2">
               <CardContent className="pt-6">
                 <p className="text-sm text-muted-foreground mb-1">Students</p>
                 <p className="text-3xl font-bold text-blue-600">
-                  {mockUsers.filter((u) => u.role === 'student').length}
+                  {users.filter((u) => u.role === 'student').length}
                 </p>
               </CardContent>
             </Card>
@@ -100,7 +151,7 @@ export function ManageUsers() {
               <CardContent className="pt-6">
                 <p className="text-sm text-muted-foreground mb-1">Organizers</p>
                 <p className="text-3xl font-bold text-[#EF9B28]">
-                  {mockUsers.filter((u) => u.role === 'organizer').length}
+                  {users.filter((u) => u.role === 'organizer').length}
                 </p>
               </CardContent>
             </Card>
@@ -108,7 +159,7 @@ export function ManageUsers() {
               <CardContent className="pt-6">
                 <p className="text-sm text-muted-foreground mb-1">Active</p>
                 <p className="text-3xl font-bold text-green-600">
-                  {mockUsers.filter((u) => u.status === 'active').length}
+                  {users.filter((u) => u.status === 'active').length}
                 </p>
               </CardContent>
             </Card>
@@ -133,6 +184,7 @@ export function ManageUsers() {
           <Card className="border-2">
             <CardContent className="pt-6">
               <div className="space-y-4">
+                {loading && <p className="text-sm text-muted-foreground">Loading users...</p>}
                 {filteredUsers.map((u) => (
                   <div key={u.id} className="flex items-center justify-between py-4 border-b last:border-0">
                     <div className="flex items-center gap-4">

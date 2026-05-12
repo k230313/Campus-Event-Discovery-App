@@ -7,6 +7,12 @@ export interface User {
   role: 'student' | 'organizer' | 'admin';
 }
 
+export interface Category {
+  id: string;
+  name: string;
+  eventCount?: number;
+}
+
 export interface Event {
   id: string;
   title: string;
@@ -19,7 +25,7 @@ export interface Event {
   organizerId: string;
   organizerName: string;
   image?: string;
-  status: 'draft' | 'published' | 'cancelled';
+  status: 'draft' | 'pending' | 'published' | 'rejected' | 'cancelled';
   viewCount: number;
   rsvpCount: number;
   volunteersNeeded?: number;
@@ -32,13 +38,7 @@ export interface Event {
   createdAt: string;
 }
 
-export type EventCategory =
-  | 'Academic'
-  | 'Social'
-  | 'Career'
-  | 'Club'
-  | 'Workshop'
-  | 'Other';
+export type EventCategory = string;
 
 export interface Bookmark {
   userId: string;

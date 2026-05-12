@@ -15,7 +15,7 @@ export function Register() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [role, setRole] = useState<'student' | 'organizer' | 'admin'>('student');
+  const [role, setRole] = useState<'student' | 'organizer'>('student');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -36,9 +36,10 @@ export function Register() {
     setIsLoading(true);
 
     try {
-      const success = await register(name, email, password, role);
-      if (success) {
-        navigate('/dashboard');
+      const nextUser = await register(name, email, password, role);
+      if (nextUser) {
+        const destination = nextUser.role === 'organizer' ? '/dashboard' : '/my-events';
+        navigate(destination);
       } else {
         setError('Registration failed. Please try again.');
       }
@@ -122,7 +123,7 @@ export function Register() {
 
             <div className="space-y-2">
               <Label>I am a:</Label>
-              <RadioGroup value={role} onValueChange={(value) => setRole(value as 'student' | 'organizer' | 'admin')}>
+              <RadioGroup value={role} onValueChange={(value) => setRole(value as 'student' | 'organizer')}>
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="student" id="student" />
                   <Label htmlFor="student" className="font-normal cursor-pointer">
@@ -133,12 +134,6 @@ export function Register() {
                   <RadioGroupItem value="organizer" id="organizer" />
                   <Label htmlFor="organizer" className="font-normal cursor-pointer">
                     Organizer - I want to create and manage events
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="admin" id="admin" />
-                  <Label htmlFor="admin" className="font-normal cursor-pointer">
-                    Admin - Platform administrator with full access
                   </Label>
                 </div>
               </RadioGroup>

@@ -4,33 +4,27 @@ import { mockEvents } from '../data/mockData';
 
 interface AppContextType {
   user: User | null;
-  login: (email: string, password: string) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<User | null>;
   logout: () => void;
-  register: (name: string, email: string, password: string, role: 'student' | 'organizer' | 'admin') => Promise<boolean>;
+  register: (name: string, email: string, password: string, role: 'student' | 'organizer') => Promise<User | null>;
   events: Event[];
   bookmarks: Bookmark[];
   rsvps: RSVP[];
-  addBookmark: (eventId: string) => void;
-  removeBookmark: (eventId: string) => void;
+  addBookmark: (eventId: string) => Promise<void>;
+  removeBookmark: (eventId: string) => Promise<void>;
   isBookmarked: (eventId: string) => boolean;
-  addRSVP: (eventId: string, attendeeType: 'attendee' | 'volunteer', options?: { foodOption?: string; seatNumber?: number }) => void;
-  removeRSVP: (userId: string, eventId: string) => void;
+  addRSVP: (eventId: string, attendeeType: 'attendee' | 'volunteer', options?: { foodOption?: string; seatNumber?: number }) => Promise<void>;
+  removeRSVP: (eventId: string) => Promise<void>;
   hasRSVP: (eventId: string) => boolean;
   createEvent: (event: Omit<Event, 'id' | 'organizerId' | 'organizerName' | 'viewCount' | 'rsvpCount' | 'createdAt'>) => Promise<void>;
   updateEvent: (eventId: string, updates: Partial<Event>) => Promise<void>;
+  updateEventStatus: (eventId: string, status: Event['status']) => Promise<void>;
   deleteEvent: (eventId: string) => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
-
-function inferRole(email: string): User['role'] {
-  const lower = email.toLowerCase();
-  if (lower.includes('admin')) return 'admin';
-  if (lower.includes('organizer') || lower.includes('organiser') || lower.includes('staff') || lower.includes('services')) {
-    return 'organizer';
-  }
-  return 'student';
-}
+const AUTH_TOKEN_KEY = 'ceda_auth_token';
+const USER_STORAGE_KEY = 'ceda_user';
 
 function normalizeEvent(apiEvent: any): Event {
   return {
@@ -59,13 +53,18 @@ function normalizeEvent(apiEvent: any): Event {
   };
 }
 
-function makeDemoUser(name: string, email: string, role?: User['role']): User {
+function normalizeUser(apiUser: any): User {
   return {
-    id: role === 'admin' ? '1' : role === 'organizer' ? '2' : '3',
-    name,
-    email,
-    role: role || inferRole(email),
+    id: String(apiUser.id),
+    name: apiUser.name,
+    email: apiUser.email,
+    role: apiUser.role,
   };
+}
+
+function getAuthHeaders(): Record<string, string> {
+  const token = localStorage.getItem(AUTH_TOKEN_KEY);
+  return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
@@ -75,9 +74,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [rsvps, setRSVPs] = useState<RSVP[]>([]);
 
   useEffect(() => {
-    const savedUser = localStorage.getItem('ceda_user');
+    const savedUser = localStorage.getItem(USER_STORAGE_KEY);
     const savedBookmarks = localStorage.getItem('ceda_bookmarks');
     const savedRsvps = localStorage.getItem('ceda_rsvps');
+    const savedToken = localStorage.getItem(AUTH_TOKEN_KEY);
 
     if (savedUser) {
       setUser(JSON.parse(savedUser));
@@ -90,23 +90,45 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (savedRsvps) {
       setRSVPs(JSON.parse(savedRsvps));
     }
+
+    if (savedToken) {
+      fetch('/api/auth/me', {
+        headers: getAuthHeaders(),
+      })
+        .then(async (response) => {
+          if (!response.ok) {
+            throw new Error('Failed to restore session');
+          }
+          return response.json();
+        })
+        .then((data) => {
+          const nextUser = normalizeUser(data.user);
+          setUser(nextUser);
+          localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(nextUser));
+        })
+        .catch(() => {
+          setUser(null);
+          localStorage.removeItem(AUTH_TOKEN_KEY);
+          localStorage.removeItem(USER_STORAGE_KEY);
+        });
+    }
   }, []);
 
-  useEffect(() => {
-    async function loadEvents() {
-      try {
-        const response = await fetch('/api/events');
-        if (!response.ok) {
-          throw new Error('Failed to fetch events');
-        }
-        const data = await response.json();
-        setEvents(data.map(normalizeEvent));
-      } catch (error) {
-        console.error('Failed to load events from API, using mock data:', error);
-        setEvents(mockEvents);
+  async function loadEvents() {
+    try {
+      const response = await fetch('/api/events');
+      if (!response.ok) {
+        throw new Error('Failed to fetch events');
       }
+      const data = await response.json();
+      setEvents(data.map(normalizeEvent));
+    } catch (error) {
+      console.error('Failed to load events from API, using mock data:', error);
+      setEvents(mockEvents);
     }
+  }
 
+  useEffect(() => {
     loadEvents();
   }, []);
 
@@ -118,100 +140,222 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('ceda_rsvps', JSON.stringify(rsvps));
   }, [rsvps]);
 
-  const login = async (email: string, password: string): Promise<boolean> => {
-    if (!email || !password) {
-      return false;
+  useEffect(() => {
+    async function loadUserData() {
+      if (!user) {
+        setBookmarks([]);
+        setRSVPs([]);
+        return;
+      }
+
+      try {
+        if (user.role === 'student') {
+          const [bookmarkResponse, registrationResponse] = await Promise.all([
+            fetch('/api/bookmarks', { headers: getAuthHeaders() }),
+            fetch('/api/registrations', { headers: getAuthHeaders() }),
+          ]);
+
+          if (bookmarkResponse.ok) {
+            const bookmarkData = await bookmarkResponse.json();
+            setBookmarks(bookmarkData);
+          }
+
+          if (registrationResponse.ok) {
+            const registrationData = await registrationResponse.json();
+            setRSVPs(registrationData);
+          }
+        } else {
+          setBookmarks([]);
+          setRSVPs([]);
+        }
+      } catch (error) {
+        console.error('Failed to load user-specific data:', error);
+      }
     }
 
-    const role = inferRole(email);
-    const nextUser = makeDemoUser(email.split('@')[0], email, role);
-    setUser(nextUser);
-    localStorage.setItem('ceda_user', JSON.stringify(nextUser));
-    return true;
+    loadUserData();
+  }, [user]);
+
+  const login = async (email: string, password: string): Promise<User | null> => {
+    if (!email || !password) {
+      return null;
+    }
+
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!response.ok) {
+        return null;
+      }
+
+      const data = await response.json();
+      const nextUser = normalizeUser(data.user);
+      setUser(nextUser);
+      localStorage.setItem(AUTH_TOKEN_KEY, data.token);
+      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(nextUser));
+      return nextUser;
+    } catch (error) {
+      console.error('Login failed:', error);
+      return null;
+    }
   };
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem('ceda_user');
+    localStorage.removeItem(AUTH_TOKEN_KEY);
+    localStorage.removeItem(USER_STORAGE_KEY);
   };
 
   const register = async (
     name: string,
     email: string,
     password: string,
-    role: 'student' | 'organizer' | 'admin'
-  ): Promise<boolean> => {
+    role: 'student' | 'organizer'
+  ): Promise<User | null> => {
     if (!name || !email || !password) {
-      return false;
+      return null;
     }
 
-    const nextUser = makeDemoUser(name, email, role);
-    setUser(nextUser);
-    localStorage.setItem('ceda_user', JSON.stringify(nextUser));
-    return true;
+    try {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password, role }),
+      });
+
+      if (!response.ok) {
+        return null;
+      }
+
+      const data = await response.json();
+      const nextUser = normalizeUser(data.user);
+      setUser(nextUser);
+      localStorage.setItem(AUTH_TOKEN_KEY, data.token);
+      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(nextUser));
+      return nextUser;
+    } catch (error) {
+      console.error('Registration failed:', error);
+      return null;
+    }
   };
 
-  const addBookmark = (eventId: string) => {
-    if (!user || bookmarks.some((b) => b.eventId === eventId && b.userId === user.id)) return;
-    setBookmarks([...bookmarks, { userId: user.id, eventId, savedAt: new Date().toISOString() }]);
+  const addBookmark = async (eventId: string) => {
+    if (!user || user.role !== 'student' || bookmarks.some((b) => b.eventId === eventId && b.userId === user.id)) return;
+
+    try {
+      const response = await fetch('/api/bookmarks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        body: JSON.stringify({ eventId }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save bookmark');
+      }
+
+      const savedBookmark = await response.json();
+      setBookmarks((current) => [...current.filter((bookmark) => !(bookmark.eventId === eventId && bookmark.userId === user.id)), savedBookmark]);
+    } catch (error) {
+      console.error('Add bookmark failed:', error);
+    }
   };
 
-  const removeBookmark = (eventId: string) => {
-    setBookmarks(bookmarks.filter((b) => !(b.eventId === eventId && b.userId === user?.id)));
+  const removeBookmark = async (eventId: string) => {
+    if (!user || user.role !== 'student') return;
+
+    try {
+      const response = await fetch(`/api/bookmarks/${eventId}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to remove bookmark');
+      }
+
+      setBookmarks((current) => current.filter((bookmark) => !(bookmark.eventId === eventId && bookmark.userId === user.id)));
+    } catch (error) {
+      console.error('Remove bookmark failed:', error);
+    }
   };
 
   const isBookmarked = (eventId: string): boolean => {
     return bookmarks.some((b) => b.eventId === eventId && b.userId === user?.id);
   };
 
-  const addRSVP = (
+  const addRSVP = async (
     eventId: string,
     attendeeType: 'attendee' | 'volunteer',
     options?: { foodOption?: string; seatNumber?: number }
   ) => {
-    if (!user || rsvps.some((r) => r.eventId === eventId && r.userId === user.id)) return;
+    if (!user || user.role !== 'student' || rsvps.some((r) => r.eventId === eventId && r.userId === user.id)) return;
 
-    const rsvp: RSVP = {
-      userId: user.id,
-      eventId,
-      attendeeType,
-      selectedFoodOption: options?.foodOption,
-      seatNumber: options?.seatNumber,
-      createdAt: new Date().toISOString(),
-    };
+    try {
+      const response = await fetch('/api/registrations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        body: JSON.stringify({ eventId, attendeeType, options }),
+      });
 
-    setRSVPs([...rsvps, rsvp]);
-    setEvents(events.map((event) => (
-      event.id === eventId
-        ? {
-            ...event,
-            rsvpCount: event.rsvpCount + 1,
-            volunteersRegistered: attendeeType === 'volunteer'
-              ? (event.volunteersRegistered || 0) + 1
-              : event.volunteersRegistered,
-            seatsBooked: options?.seatNumber ? (event.seatsBooked || 0) + 1 : event.seatsBooked,
-          }
-        : event
-    )));
+      if (!response.ok) {
+        throw new Error('Failed to register for event');
+      }
+
+      const rsvp: RSVP = await response.json();
+      setRSVPs((current) => [...current.filter((item) => !(item.eventId === eventId && item.userId === user.id)), rsvp]);
+      setEvents((current) => current.map((event) => (
+        event.id === eventId
+          ? {
+              ...event,
+              rsvpCount: event.rsvpCount + 1,
+              volunteersRegistered: attendeeType === 'volunteer'
+                ? (event.volunteersRegistered || 0) + 1
+                : event.volunteersRegistered,
+              seatsBooked: options?.seatNumber ? (event.seatsBooked || 0) + 1 : event.seatsBooked,
+            }
+          : event
+      )));
+    } catch (error) {
+      console.error('Add RSVP failed:', error);
+    }
   };
 
-  const removeRSVP = (userId: string, eventId: string) => {
-    const existing = rsvps.find((r) => r.userId === userId && r.eventId === eventId);
+  const removeRSVP = async (eventId: string) => {
+    if (!user || user.role !== 'student') return;
+
+    const existing = rsvps.find((r) => r.userId === user.id && r.eventId === eventId);
     if (!existing) return;
 
-    setRSVPs(rsvps.filter((r) => !(r.eventId === eventId && r.userId === userId)));
-    setEvents(events.map((event) => (
-      event.id === eventId
-        ? {
-            ...event,
-            rsvpCount: Math.max(0, event.rsvpCount - 1),
-            volunteersRegistered: existing.attendeeType === 'volunteer'
-              ? Math.max(0, (event.volunteersRegistered || 0) - 1)
-              : event.volunteersRegistered,
-            seatsBooked: existing.seatNumber ? Math.max(0, (event.seatsBooked || 0) - 1) : event.seatsBooked,
-          }
-        : event
-    )));
+    try {
+      const response = await fetch(`/api/registrations/${eventId}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to unregister from event');
+      }
+
+      setRSVPs((current) => current.filter((r) => !(r.eventId === eventId && r.userId === user.id)));
+      setEvents((current) => current.map((event) => (
+        event.id === eventId
+          ? {
+              ...event,
+              rsvpCount: Math.max(0, event.rsvpCount - 1),
+              volunteersRegistered: existing.attendeeType === 'volunteer'
+                ? Math.max(0, (event.volunteersRegistered || 0) - 1)
+                : event.volunteersRegistered,
+              seatsBooked: existing.seatNumber ? Math.max(0, (event.seatsBooked || 0) - 1) : event.seatsBooked,
+            }
+          : event
+      )));
+    } catch (error) {
+      console.error('Remove RSVP failed:', error);
+    }
   };
 
   const hasRSVP = (eventId: string): boolean => {
@@ -240,7 +384,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     try {
       const response = await fetch('/api/events', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify(payload),
       });
 
@@ -264,7 +408,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     try {
       const response = await fetch(`/api/events/${eventId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({
           title: merged.title,
           description: merged.description,
@@ -295,7 +439,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const deleteEvent = async (eventId: string) => {
     try {
-      const response = await fetch(`/api/events/${eventId}`, { method: 'DELETE' });
+      const response = await fetch(`/api/events/${eventId}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+      });
       if (!response.ok) {
         throw new Error('Failed to delete event');
       }
@@ -306,6 +453,26 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setEvents(events.filter((event) => event.id !== eventId));
     setBookmarks(bookmarks.filter((bookmark) => bookmark.eventId !== eventId));
     setRSVPs(rsvps.filter((rsvp) => rsvp.eventId !== eventId));
+  };
+
+  const updateEventStatus = async (eventId: string, status: Event['status']) => {
+    try {
+      const response = await fetch(`/api/events/${eventId}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        body: JSON.stringify({ status }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update event status');
+      }
+
+      const updated = await response.json();
+      setEvents((current) => current.map((event) => event.id === eventId ? normalizeEvent(updated) : event));
+    } catch (error) {
+      console.error('Update event status failed:', error);
+      await loadEvents();
+    }
   };
 
   return (
@@ -326,6 +493,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         hasRSVP,
         createEvent,
         updateEvent,
+        updateEventStatus,
         deleteEvent,
       }}
     >
