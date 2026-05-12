@@ -44,6 +44,32 @@ const eventSelect = `
   INNER JOIN users u ON u.user_id = e.organiser_id
 `;
 
+function getAllowedWriteStatuses(role) {
+  return role === "admin"
+    ? ["draft", "pending", "published", "rejected", "cancelled"]
+    : ["draft", "pending", "cancelled"];
+}
+
+function canViewEvent(row, user) {
+  if (!row) {
+    return false;
+  }
+
+  if (row.status === "published") {
+    return true;
+  }
+
+  if (!user) {
+    return false;
+  }
+
+  if (user.role === "admin") {
+    return true;
+  }
+
+  return user.role === "organizer" && Number(row.organizerId) === Number(user.id);
+}
+
 async function resolveCategoryId(categoryName) {
   const [rows] = await pool.query(
     "SELECT category_id FROM categories WHERE name = ? LIMIT 1",
@@ -85,7 +111,7 @@ async function getEventOwnerId(eventId) {
 router.get("/", async (req, res) => {
   try {
     const [rows] = await pool.query(`${eventSelect} ORDER BY e.event_date ASC, e.start_time ASC`);
-    return res.json(rows);
+    return res.json(rows.filter((row) => canViewEvent(row, req.user)));
   } catch (error) {
     console.error("GET /api/events error:", error);
     return res.status(500).json({ error: "Failed to fetch events" });
@@ -133,6 +159,10 @@ router.get("/:id", async (req, res) => {
       return res.status(404).json({ error: "Event not found" });
     }
 
+    if (!canViewEvent(rows[0], req.user)) {
+      return res.status(404).json({ error: "Event not found" });
+    }
+
     return res.json(rows[0]);
   } catch (error) {
     console.error("GET /api/events/:id error:", error);
@@ -164,6 +194,13 @@ router.post("/", requireAuth, requireRole("organizer", "admin"), async (req, res
   } = req.body;
 
   try {
+    const allowedStatuses = getAllowedWriteStatuses(req.user.role);
+    const requestedStatus = status || "draft";
+
+    if (!allowedStatuses.includes(requestedStatus)) {
+      return res.status(403).json({ error: "You are not allowed to use that event status" });
+    }
+
     const categoryId = await resolveCategoryId(category);
     const resolvedOrganizerId = req.user.role === "admin"
       ? await resolveOrganizerId(organizerId)
@@ -184,7 +221,7 @@ router.post("/", requireAuth, requireRole("organizer", "admin"), async (req, res
         image || null,
         capacity || null,
         registrationRequired ? 1 : 0,
-        status || "draft",
+        requestedStatus,
         notes || null
       ]
     );
@@ -229,6 +266,13 @@ router.put("/:id", requireAuth, requireRole("organizer", "admin"), async (req, r
       return res.status(403).json({ error: "Forbidden" });
     }
 
+    const allowedStatuses = getAllowedWriteStatuses(req.user.role);
+    const requestedStatus = status || "draft";
+
+    if (!allowedStatuses.includes(requestedStatus)) {
+      return res.status(403).json({ error: "You are not allowed to use that event status" });
+    }
+
     const categoryId = await resolveCategoryId(category);
     const [result] = await pool.query(
       `UPDATE events
@@ -245,7 +289,7 @@ router.put("/:id", requireAuth, requireRole("organizer", "admin"), async (req, r
         image || null,
         capacity || null,
         registrationRequired ? 1 : 0,
-        status || "draft",
+        requestedStatus,
         notes || null,
         id
       ]

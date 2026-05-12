@@ -36,12 +36,16 @@ router.post("/", requireAuth, requireRole("student"), async (req, res) => {
 
   try {
     const [eventRows] = await pool.query(
-      "SELECT event_id, capacity FROM events WHERE event_id = ? LIMIT 1",
+      "SELECT event_id, capacity, status FROM events WHERE event_id = ? LIMIT 1",
       [eventId]
     );
 
     if (!eventRows.length) {
       return res.status(404).json({ error: "Event not found" });
+    }
+
+    if (eventRows[0].status !== "published") {
+      return res.status(403).json({ error: "Registrations are only available for published events" });
     }
 
     const [countRows] = await pool.query(

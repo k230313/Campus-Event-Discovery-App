@@ -13,6 +13,8 @@ const { corsOptions, securityHeaders } = require("./middleware/security");
 
 const app = express();
 
+app.set("trust proxy", 1);
+
 app.use(cors(corsOptions()));
 app.use(express.json({ limit: "100kb" }));
 app.use(securityHeaders);
@@ -29,6 +31,11 @@ app.use("/api/registrations", registrationRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/admin", adminRoutes);
+
+app.use((err, _req, res, _next) => {
+  console.error("Unhandled server error:", err);
+  res.status(err.status || 500).json({ error: "Internal server error" });
+});
 
 const PORT = process.env.PORT || 5000;
 

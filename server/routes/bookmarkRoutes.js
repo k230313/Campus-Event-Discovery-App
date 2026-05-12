@@ -29,6 +29,15 @@ router.post("/", requireAuth, requireRole("student"), async (req, res) => {
   }
 
   try {
+    const [eventRows] = await pool.query(
+      "SELECT event_id FROM events WHERE event_id = ? AND status = 'published' LIMIT 1",
+      [eventId]
+    );
+
+    if (!eventRows.length) {
+      return res.status(404).json({ error: "Published event not found" });
+    }
+
     await pool.query(
       "INSERT IGNORE INTO bookmarks (student_id, event_id) VALUES (?, ?)",
       [req.user.id, eventId]

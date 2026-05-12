@@ -33,7 +33,7 @@ export function EditEvent() {
   const [foodOptions, setFoodOptions] = useState<string[]>([]);
   const [newFoodOption, setNewFoodOption] = useState('');
   const [notes, setNotes] = useState('');
-  const [status, setStatus] = useState<'draft' | 'published' | 'cancelled'>('published');
+  const [status, setStatus] = useState<'draft' | 'pending' | 'cancelled'>('pending');
 
   useEffect(() => {
     if (event) {
@@ -185,12 +185,12 @@ export function EditEvent() {
 
                 <div className="space-y-2">
                   <Label htmlFor="status">Status *</Label>
-                  <Select value={status} onValueChange={(value) => setStatus(value as 'draft' | 'published' | 'cancelled')}>
+                  <Select value={status} onValueChange={(value) => setStatus(value as 'draft' | 'pending' | 'cancelled')}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="published">Published</SelectItem>
+                      <SelectItem value="pending">Submit for Review</SelectItem>
                       <SelectItem value="draft">Draft</SelectItem>
                       <SelectItem value="cancelled">Cancelled</SelectItem>
                     </SelectContent>
