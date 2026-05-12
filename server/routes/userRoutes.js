@@ -12,6 +12,14 @@ function toDbRole(clientRole) {
   return clientRole === "organizer" ? "organiser" : clientRole;
 }
 
+async function countAdmins() {
+  const [[row]] = await pool.query(
+    "SELECT COUNT(*) AS count FROM users WHERE role = 'admin'"
+  );
+
+  return Number(row.count || 0);
+}
+
 router.get("/", requireAuth, requireRole("admin"), async (_req, res) => {
   try {
     const [rows] = await pool.query(
@@ -40,10 +48,36 @@ router.put("/:id", requireAuth, requireRole("admin"), async (req, res) => {
     return res.status(400).json({ error: "Valid name, email, and role are required" });
   }
 
+  if (String(name).trim().length > 100) {
+    return res.status(400).json({ error: "Name is too long" });
+  }
+
+  const normalizedEmail = String(email).trim().toLowerCase();
+  if (normalizedEmail.length > 150) {
+    return res.status(400).json({ error: "Email is too long" });
+  }
+
   try {
+    const [existingRows] = await pool.query(
+      "SELECT user_id, role FROM users WHERE user_id = ? LIMIT 1",
+      [req.params.id]
+    );
+
+    const existingUser = existingRows[0];
+    if (!existingUser) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const changingAwayFromAdmin =
+      existingUser.role === "admin" && toDbRole(role) !== "admin";
+
+    if (changingAwayFromAdmin && await countAdmins() <= 1) {
+      return res.status(400).json({ error: "You cannot remove the last admin account" });
+    }
+
     const [result] = await pool.query(
       "UPDATE users SET full_name = ?, email = ?, role = ? WHERE user_id = ?",
-      [name.trim(), String(email).trim().toLowerCase(), toDbRole(role), req.params.id]
+      [name.trim(), normalizedEmail, toDbRole(role), req.params.id]
     );
 
     if (!result.affectedRows) {
@@ -78,6 +112,20 @@ router.delete("/:id", requireAuth, requireRole("admin"), async (req, res) => {
   }
 
   try {
+    const [existingRows] = await pool.query(
+      "SELECT role FROM users WHERE user_id = ? LIMIT 1",
+      [req.params.id]
+    );
+
+    const existingUser = existingRows[0];
+    if (!existingUser) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    if (existingUser.role === "admin" && await countAdmins() <= 1) {
+      return res.status(400).json({ error: "You cannot delete the last admin account" });
+    }
+
     const [result] = await pool.query("DELETE FROM users WHERE user_id = ?", [req.params.id]);
 
     if (!result.affectedRows) {
