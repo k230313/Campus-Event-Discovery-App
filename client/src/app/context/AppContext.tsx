@@ -132,7 +132,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   async function loadEvents() {
     try {
-      const response = await fetch('/api/events');
+      const response = await fetch('/api/events', buildRequestOptions());
       if (!response.ok) {
         throw new Error('Failed to fetch events');
       }
