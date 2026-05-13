@@ -31,6 +31,8 @@ export function CreateEvent() {
   const [newFoodOption, setNewFoodOption] = useState('');
   const [notes, setNotes] = useState('');
   const [status, setStatus] = useState<'draft' | 'pending'>('pending');
+  const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!user || user.role !== 'organizer') {
     navigate('/login');
@@ -66,8 +68,10 @@ export function CreateEvent() {
     setFoodOptions(foodOptions.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
+    setIsSubmitting(true);
 
     const eventData = {
       title,
@@ -88,8 +92,15 @@ export function CreateEvent() {
       notes: notes || undefined,
     };
 
-    createEvent(eventData);
-    navigate('/dashboard');
+    const createdEvent = await createEvent(eventData);
+
+    if (createdEvent) {
+      navigate('/dashboard');
+    } else {
+      setError('Event creation failed. Please check your details and try again.');
+    }
+
+    setIsSubmitting(false);
   };
 
   return (
@@ -106,11 +117,17 @@ export function CreateEvent() {
           <Card>
             <CardHeader>
               <CardTitle>Event Details</CardTitle>
-              <CardDescription>
+            <CardDescription>
                 Provide information about your event
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
+              {error && (
+                <div className="rounded-md border border-red-200 bg-red-50 p-3">
+                  <p className="text-sm text-red-800">{error}</p>
+                </div>
+              )}
+
               <div className="space-y-2">
                 <Label htmlFor="title">Event Title *</Label>
                 <Input
@@ -317,9 +334,10 @@ export function CreateEvent() {
             <Button
               type="submit"
               className="bg-[#EF9B28] hover:bg-[#EF9B28]/90 text-white"
+              disabled={isSubmitting}
             >
               <Calendar className="mr-2 h-4 w-4" />
-              Create Event
+              {isSubmitting ? 'Creating...' : 'Create Event'}
             </Button>
             <Button
               type="button"

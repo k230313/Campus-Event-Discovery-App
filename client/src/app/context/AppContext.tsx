@@ -16,7 +16,7 @@ interface AppContextType {
   addRSVP: (eventId: string, attendeeType: 'attendee' | 'volunteer', options?: { foodOption?: string; seatNumber?: number }) => Promise<void>;
   removeRSVP: (eventId: string) => Promise<void>;
   hasRSVP: (eventId: string) => boolean;
-  createEvent: (event: Omit<Event, 'id' | 'organizerId' | 'organizerName' | 'viewCount' | 'rsvpCount' | 'createdAt'>) => Promise<void>;
+  createEvent: (event: Omit<Event, 'id' | 'organizerId' | 'organizerName' | 'viewCount' | 'rsvpCount' | 'createdAt'>) => Promise<Event | null>;
   updateEvent: (eventId: string, updates: Partial<Event>) => Promise<void>;
   updateEventStatus: (eventId: string, status: Event['status']) => Promise<void>;
   deleteEvent: (eventId: string) => Promise<void>;
@@ -360,8 +360,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return rsvps.some((r) => r.eventId === eventId && r.userId === user?.id);
   };
 
-  const createEvent = async (eventData: Omit<Event, 'id' | 'organizerId' | 'organizerName' | 'viewCount' | 'rsvpCount' | 'createdAt'>) => {
-    if (!user || user.role !== 'organizer') return;
+  const createEvent = async (eventData: Omit<Event, 'id' | 'organizerId' | 'organizerName' | 'viewCount' | 'rsvpCount' | 'createdAt'>): Promise<Event | null> => {
+    if (!user || user.role !== 'organizer') return null;
 
     const payload = {
       title: eventData.title,
@@ -391,9 +391,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
 
       const created = await response.json();
-      setEvents([...events, normalizeEvent(created)]);
+      const normalizedEvent = normalizeEvent(created);
+      setEvents([...events, normalizedEvent]);
+      return normalizedEvent;
     } catch (error) {
       console.error('Create event failed:', error);
+      return null;
     }
   };
 
