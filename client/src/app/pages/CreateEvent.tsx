@@ -92,12 +92,12 @@ export function CreateEvent() {
       notes: notes || undefined,
     };
 
-    const createdEvent = await createEvent(eventData);
+    const result = await createEvent(eventData);
 
-    if (createdEvent) {
+    if (result.event) {
       navigate('/dashboard');
     } else {
-      setError('Event creation failed. Please check your details and try again.');
+      setError(result.error || 'Event creation failed. Please check your details and try again.');
     }
 
     setIsSubmitting(false);

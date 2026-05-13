@@ -16,7 +16,7 @@ interface AppContextType {
   addRSVP: (eventId: string, attendeeType: 'attendee' | 'volunteer', options?: { foodOption?: string; seatNumber?: number }) => Promise<void>;
   removeRSVP: (eventId: string) => Promise<void>;
   hasRSVP: (eventId: string) => boolean;
-  createEvent: (event: Omit<Event, 'id' | 'organizerId' | 'organizerName' | 'viewCount' | 'rsvpCount' | 'createdAt'>) => Promise<Event | null>;
+  createEvent: (event: Omit<Event, 'id' | 'organizerId' | 'organizerName' | 'viewCount' | 'rsvpCount' | 'createdAt'>) => Promise<{ event: Event | null; error: string | null }>;
   updateEvent: (eventId: string, updates: Partial<Event>) => Promise<void>;
   updateEventStatus: (eventId: string, status: Event['status']) => Promise<void>;
   deleteEvent: (eventId: string) => Promise<void>;
@@ -67,6 +67,24 @@ function buildRequestOptions(init?: RequestInit): RequestInit {
     credentials: 'include',
     ...init,
   };
+}
+
+async function getApiErrorMessage(response: Response, fallback: string) {
+  try {
+    const data = await response.json();
+
+    if (Array.isArray(data?.errors) && data.errors.length > 0) {
+      return data.errors.join(', ');
+    }
+
+    if (typeof data?.error === 'string' && data.error) {
+      return data.error;
+    }
+  } catch {
+    // Ignore JSON parsing failures and use fallback below.
+  }
+
+  return fallback;
 }
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
@@ -360,8 +378,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return rsvps.some((r) => r.eventId === eventId && r.userId === user?.id);
   };
 
-  const createEvent = async (eventData: Omit<Event, 'id' | 'organizerId' | 'organizerName' | 'viewCount' | 'rsvpCount' | 'createdAt'>): Promise<Event | null> => {
-    if (!user || user.role !== 'organizer') return null;
+  const createEvent = async (eventData: Omit<Event, 'id' | 'organizerId' | 'organizerName' | 'viewCount' | 'rsvpCount' | 'createdAt'>): Promise<{ event: Event | null; error: string | null }> => {
+    if (!user || user.role !== 'organizer') {
+      return { event: null, error: 'You must be logged in as an organizer to create events.' };
+    }
 
     const payload = {
       title: eventData.title,
@@ -387,16 +407,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }));
 
       if (!response.ok) {
-        throw new Error('Failed to create event');
+        return {
+          event: null,
+          error: await getApiErrorMessage(response, 'Failed to create event'),
+        };
       }
 
       const created = await response.json();
       const normalizedEvent = normalizeEvent(created);
       setEvents([...events, normalizedEvent]);
-      return normalizedEvent;
+      return { event: normalizedEvent, error: null };
     } catch (error) {
       console.error('Create event failed:', error);
-      return null;
+      return { event: null, error: 'Failed to create event' };
     }
   };
 
