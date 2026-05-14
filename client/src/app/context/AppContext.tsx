@@ -3,6 +3,7 @@ import { User, Event, Bookmark, RSVP } from '../types';
 
 interface AppContextType {
   user: User | null;
+  setCurrentUser: (nextUser: User | null) => void;
   login: (email: string, password: string) => Promise<User | null>;
   logout: () => void;
   register: (name: string, email: string, password: string, role: 'student' | 'organizer', turnstileToken: string) => Promise<User | null>;
@@ -92,6 +93,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
   const [rsvps, setRSVPs] = useState<RSVP[]>([]);
 
+  function setCurrentUser(nextUser: User | null) {
+    setUser(nextUser);
+
+    if (nextUser) {
+      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(nextUser));
+      return;
+    }
+
+    localStorage.removeItem(USER_STORAGE_KEY);
+  }
+
   useEffect(() => {
     const savedUser = localStorage.getItem(USER_STORAGE_KEY);
     const savedBookmarks = localStorage.getItem('ceda_bookmarks');
@@ -120,12 +132,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       })
       .then((data) => {
         const nextUser = normalizeUser(data.user);
-        setUser(nextUser);
-        localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(nextUser));
+        setCurrentUser(nextUser);
       })
       .catch(() => {
-        setUser(null);
-        localStorage.removeItem(USER_STORAGE_KEY);
+        setCurrentUser(null);
       });
   }, []);
 
@@ -209,8 +219,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
       const data = await response.json();
       const nextUser = normalizeUser(data.user);
-      setUser(nextUser);
-      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(nextUser));
+      setCurrentUser(nextUser);
       return nextUser;
     } catch (error) {
       console.error('Login failed:', error);
@@ -222,9 +231,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     fetch('/api/auth/logout', buildRequestOptions({ method: 'POST' })).catch((error) => {
       console.error('Logout request failed:', error);
     });
-    setUser(null);
+    setCurrentUser(null);
     localStorage.removeItem(LEGACY_AUTH_TOKEN_KEY);
-    localStorage.removeItem(USER_STORAGE_KEY);
   };
 
   const register = async (
@@ -251,8 +259,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
       const data = await response.json();
       const nextUser = normalizeUser(data.user);
-      setUser(nextUser);
-      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(nextUser));
+      setCurrentUser(nextUser);
       return nextUser;
     } catch (error) {
       console.error('Registration failed:', error);
@@ -501,6 +508,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     <AppContext.Provider
       value={{
         user,
+        setCurrentUser,
         login,
         logout,
         register,

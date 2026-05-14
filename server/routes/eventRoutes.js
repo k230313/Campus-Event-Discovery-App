@@ -111,7 +111,7 @@ async function getEventOwnerId(eventId) {
 
 router.get("/", async (req, res) => {
   try {
-    const [rows] = await pool.query(`${eventSelect} ORDER BY e.event_date ASC, e.start_time ASC`);
+    const [rows] = await pool.query(`${eventSelect} WHERE e.event_date >= CURDATE() ORDER BY e.event_date ASC, e.start_time ASC`);
     return res.json(rows.filter((row) => canViewEvent(row, req.user)));
   } catch (error) {
     console.error("GET /api/events error:", error);

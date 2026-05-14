@@ -2,6 +2,7 @@ const express = require("express");
 const pool = require("../config/db");
 const { requireAuth, requireRole, requireUnlock } = require("../middleware/auth");
 const { adminRateLimit } = require("../middleware/security");
+const { hashPassword, verifyPassword } = require("../utils/passwords");
 
 const router = express.Router();
 
@@ -13,6 +14,10 @@ function toDbRole(clientRole) {
   return clientRole === "organizer" ? "organiser" : clientRole;
 }
 
+function isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
 async function countAdmins() {
   const [[row]] = await pool.query(
     "SELECT COUNT(*) AS count FROM users WHERE role = 'admin'"
@@ -20,6 +25,102 @@ async function countAdmins() {
 
   return Number(row.count || 0);
 }
+
+router.patch("/me", requireAuth, async (req, res) => {
+  const fullName = String(req.body?.full_name || "").trim();
+  const normalizedEmail = String(req.body?.email || "").trim().toLowerCase();
+
+  if (!fullName) {
+    return res.status(400).json({ error: "Full name is required" });
+  }
+
+  if (fullName.length > 100) {
+    return res.status(400).json({ error: "Full name is too long" });
+  }
+
+  if (!normalizedEmail || !isValidEmail(normalizedEmail)) {
+    return res.status(400).json({ error: "A valid email address is required" });
+  }
+
+  if (normalizedEmail.length > 150) {
+    return res.status(400).json({ error: "Email is too long" });
+  }
+
+  try {
+    const [conflictRows] = await pool.query(
+      "SELECT user_id FROM users WHERE email = ? AND user_id <> ? LIMIT 1",
+      [normalizedEmail, req.user.id]
+    );
+
+    if (conflictRows[0]) {
+      return res.status(400).json({ error: "Email address is already in use" });
+    }
+
+    await pool.query(
+      "UPDATE users SET full_name = ?, email = ? WHERE user_id = ?",
+      [fullName, normalizedEmail, req.user.id]
+    );
+
+    const [rows] = await pool.query(
+      `SELECT
+         CAST(user_id AS CHAR) AS id,
+         full_name AS name,
+         email,
+         role
+       FROM users
+       WHERE user_id = ?
+       LIMIT 1`,
+      [req.user.id]
+    );
+
+    const row = rows[0];
+    return res.json({ ...row, role: toClientRole(row.role) });
+  } catch (error) {
+    console.error("PATCH /api/users/me error:", error);
+    return res.status(500).json({ error: "Failed to update profile" });
+  }
+});
+
+router.patch("/me/password", requireAuth, async (req, res) => {
+  const currentPassword = String(req.body?.currentPassword || "");
+  const newPassword = String(req.body?.newPassword || "");
+
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ error: "Current password and new password are required" });
+  }
+
+  if (newPassword.length < 8) {
+    return res.status(400).json({ error: "New password must be at least 8 characters long" });
+  }
+
+  try {
+    const [rows] = await pool.query(
+      "SELECT password_hash FROM users WHERE user_id = ? LIMIT 1",
+      [req.user.id]
+    );
+
+    const userRow = rows[0];
+    if (!userRow) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const isCurrentPasswordValid = await verifyPassword(currentPassword, userRow.password_hash);
+    if (!isCurrentPasswordValid) {
+      return res.status(400).json({ error: "Current password is incorrect" });
+    }
+
+    const nextPasswordHash = await hashPassword(newPassword);
+    await pool.query(
+      "UPDATE users SET password_hash = ? WHERE user_id = ?",
+      [nextPasswordHash, req.user.id]
+    );
+
+    return res.json({ message: "Password updated successfully" });
+  } catch (error) {
+    console.error("PATCH /api/users/me/password error:", error);
+    return res.status(500).json({ error: "Failed to update password" });
+  }
+});
 
 router.get("/", requireAuth, requireRole("admin"), adminRateLimit, async (_req, res) => {
   try {

@@ -5,26 +5,127 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Badge } from '../components/ui/badge';
 import { User, Mail, Shield, Calendar, Edit } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 export function Profile() {
-  const { user } = useApp();
+  const { user, setCurrentUser } = useApp();
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     name: user?.name || '',
     email: user?.email || '',
   });
+  const [profileError, setProfileError] = useState('');
+  const [profileSuccess, setProfileSuccess] = useState('');
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSuccess, setPasswordSuccess] = useState('');
+  const [isSavingPassword, setIsSavingPassword] = useState(false);
 
   if (!user) {
     navigate('/login');
     return null;
   }
 
-  const handleSave = () => {
-    alert('Profile updated successfully!');
-    setIsEditing(false);
+  useEffect(() => {
+    setFormData({
+      name: user.name,
+      email: user.email,
+    });
+  }, [user]);
+
+  const handleSave = async () => {
+    setProfileError('');
+    setProfileSuccess('');
+    setIsSavingProfile(true);
+
+    try {
+      const response = await fetch('/api/users/me', {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          full_name: formData.name,
+          email: formData.email,
+        }),
+      });
+
+      const data = await response.json().catch(() => null);
+      if (!response.ok) {
+        setProfileError(data?.error || 'Failed to update profile');
+        return;
+      }
+
+      setCurrentUser(data);
+      setFormData({ name: data.name, email: data.email });
+      setProfileSuccess('Profile updated successfully.');
+      setIsEditing(false);
+    } catch (error) {
+      console.error('Profile update failed:', error);
+      setProfileError('Failed to update profile');
+    } finally {
+      setIsSavingProfile(false);
+    }
+  };
+
+  const handlePasswordSave = async () => {
+    setPasswordError('');
+    setPasswordSuccess('');
+
+    if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
+      setPasswordError('All password fields are required.');
+      return;
+    }
+
+    if (passwordData.newPassword.length < 8) {
+      setPasswordError('New password must be at least 8 characters long.');
+      return;
+    }
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setPasswordError('New passwords do not match.');
+      return;
+    }
+
+    setIsSavingPassword(true);
+
+    try {
+      const response = await fetch('/api/users/me/password', {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          currentPassword: passwordData.currentPassword,
+          newPassword: passwordData.newPassword,
+        }),
+      });
+
+      const data = await response.json().catch(() => null);
+      if (!response.ok) {
+        setPasswordError(data?.error || 'Failed to update password');
+        return;
+      }
+
+      setPasswordSuccess(data?.message || 'Password updated successfully.');
+      setPasswordData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+      });
+      setShowPasswordForm(false);
+    } catch (error) {
+      console.error('Password update failed:', error);
+      setPasswordError('Failed to update password');
+    } finally {
+      setIsSavingPassword(false);
+    }
   };
 
   return (
@@ -56,6 +157,16 @@ export function Profile() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
+                {profileError && (
+                  <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                    {profileError}
+                  </div>
+                )}
+                {profileSuccess && (
+                  <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+                    {profileSuccess}
+                  </div>
+                )}
                 <div>
                   <Label htmlFor="name">Full Name</Label>
                   <Input
@@ -97,14 +208,16 @@ export function Profile() {
                   <div className="flex gap-3 pt-4">
                     <Button
                       onClick={handleSave}
+                      disabled={isSavingProfile}
                       className="bg-[#EF9B28] hover:bg-[#EF9B28]/90"
                     >
-                      Save Changes
+                      {isSavingProfile ? 'Saving...' : 'Save Changes'}
                     </Button>
                     <Button
                       variant="outline"
                       onClick={() => {
                         setFormData({ name: user.name, email: user.email });
+                        setProfileError('');
                         setIsEditing(false);
                       }}
                     >
@@ -178,8 +291,66 @@ export function Profile() {
                     <p className="font-medium text-[#1B2E55]">Password</p>
                     <p className="text-sm text-muted-foreground">Last changed 2 months ago</p>
                   </div>
-                  <Button variant="outline" size="sm">Change Password</Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setShowPasswordForm((current) => !current);
+                      setPasswordError('');
+                      setPasswordSuccess('');
+                    }}
+                  >
+                    {showPasswordForm ? 'Cancel' : 'Change Password'}
+                  </Button>
                 </div>
+                {passwordError && (
+                  <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                    {passwordError}
+                  </div>
+                )}
+                {passwordSuccess && (
+                  <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+                    {passwordSuccess}
+                  </div>
+                )}
+                {showPasswordForm && (
+                  <div className="space-y-4 rounded-lg border border-slate-200 p-4">
+                    <div>
+                      <Label htmlFor="current-password">Current Password</Label>
+                      <Input
+                        id="current-password"
+                        type="password"
+                        value={passwordData.currentPassword}
+                        onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="new-password">New Password</Label>
+                      <Input
+                        id="new-password"
+                        type="password"
+                        value={passwordData.newPassword}
+                        onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="confirm-password">Confirm New Password</Label>
+                      <Input
+                        id="confirm-password"
+                        type="password"
+                        value={passwordData.confirmPassword}
+                        onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                      />
+                    </div>
+                    <Button
+                      onClick={handlePasswordSave}
+                      disabled={isSavingPassword}
+                      className="bg-[#EF9B28] hover:bg-[#EF9B28]/90"
+                    >
+                      {isSavingPassword ? 'Updating...' : 'Update Password'}
+                    </Button>
+                  </div>
+                )}
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="font-medium text-[#1B2E55]">Two-Factor Authentication</p>
