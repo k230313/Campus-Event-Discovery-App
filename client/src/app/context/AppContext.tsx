@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Event, Bookmark, RSVP } from '../types';
-import { mockEvents } from '../data/mockData';
 
 interface AppContextType {
   user: User | null;
@@ -89,7 +88,7 @@ async function getApiErrorMessage(response: Response, fallback: string) {
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [events, setEvents] = useState<Event[]>(mockEvents);
+  const [events, setEvents] = useState<Event[]>([]);
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
   const [rsvps, setRSVPs] = useState<RSVP[]>([]);
 
@@ -139,8 +138,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const data = await response.json();
       setEvents(data.map(normalizeEvent));
     } catch (error) {
-      console.error('Failed to load events from API, using mock data:', error);
-      setEvents(mockEvents);
+      console.error('Failed to load events from API:', error);
+      setEvents([]);
     }
   }
 
