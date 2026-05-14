@@ -148,7 +148,14 @@ export function EventDetail() {
                   </Button>
                 </div>
                 <div className="absolute bottom-0 left-0 right-0 p-6">
-                  <Badge className="mb-3 bg-[#EF9B28] text-white border-0 shadow-lg">{event.category}</Badge>
+                  <div className="mb-3 flex flex-wrap items-center gap-2">
+                    <Badge className="bg-[#EF9B28] text-white border-0 shadow-lg">{event.category}</Badge>
+                    {isEventPast && (
+                      <Badge variant="secondary" className="bg-slate-200 text-slate-700 border-0 shadow-lg">
+                        Past Event
+                      </Badge>
+                    )}
+                  </div>
                   <h1 className="text-4xl font-bold text-white mb-2 drop-shadow-lg">{event.title}</h1>
                   <p className="text-white/90 text-lg drop-shadow-md">Organised by {event.organizerName}</p>
                 </div>
