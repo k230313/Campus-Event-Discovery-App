@@ -106,6 +106,22 @@ CREATE TABLE IF NOT EXISTS registrations (
     ON DELETE CASCADE ON UPDATE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS password_resets (
+  reset_id       INT           NOT NULL AUTO_INCREMENT,
+  user_id        INT           NOT NULL,
+  token_hash     VARCHAR(255)  NOT NULL,
+  expires_at     DATETIME      NOT NULL,
+  used_at        DATETIME      NULL,
+  created_at     DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+  PRIMARY KEY (reset_id),
+  KEY idx_password_resets_user_id (user_id),
+  KEY idx_password_resets_expires_at (expires_at),
+  CONSTRAINT fk_password_resets_user
+    FOREIGN KEY (user_id) REFERENCES users (user_id)
+    ON DELETE CASCADE ON UPDATE CASCADE
+);
+
 INSERT INTO users (user_id, full_name, email, password_hash, role) VALUES
   (1, 'Admin User', 'admin@university.edu.au', 'scrypt$035d0fea94d644ee0a04c14a6f291a7d$5d2cca3d1d0c9ea81f70d609c1f6c8e207da29dfafa01d899ae3588d8dc70587b92025b0b9270f0beeac4d35aae306d6e5a434ec8e70bdfd82d4d6d3cd2cadc7', 'admin'),
   (2, 'Jane Organiser', 'jane@university.edu.au', 'scrypt$dbf10d08219f33d965481880859ab24c$cdf41550ec63f938f3d537ad8c5aab5962ab22fe7011740e6b5525da6fb746b5d934627b20f2972848a55461b476976986679d5c1f2d1aec65182a061face3f8', 'organiser'),

@@ -1,9 +1,11 @@
 const express = require("express");
+const crypto = require("crypto");
 const pool = require("../config/db");
 const { hashPassword, verifyPassword } = require("../utils/passwords");
 const { createAuthToken } = require("../utils/authTokens");
 const { AUTH_COOKIE_NAME, requireAuth } = require("../middleware/auth");
 const { authRateLimit, clearAuthRateLimit } = require("../middleware/security");
+const { sendPasswordResetEmail } = require("../services/emailService");
 
 const router = express.Router();
 
@@ -22,6 +24,22 @@ function serializeUser(row) {
     email: row.email,
     role: toClientRole(row.role),
   };
+}
+
+function hashResetToken(token) {
+  return crypto.createHash("sha256").update(token).digest("hex");
+}
+
+function getResetPasswordUrl(token) {
+  const baseUrl = process.env.RESET_PASSWORD_URL_BASE;
+
+  if (!baseUrl) {
+    throw new Error("RESET_PASSWORD_URL_BASE is not configured");
+  }
+
+  const url = new URL("/reset-password", baseUrl);
+  url.searchParams.set("token", token);
+  return url.toString();
 }
 
 async function loadUserById(userId) {
@@ -174,6 +192,108 @@ router.post("/login", authRateLimit, async (req, res) => {
   } catch (error) {
     console.error("POST /api/auth/login error:", error);
     return res.status(500).json({ error: "Failed to log in" });
+  }
+});
+
+router.post("/forgot-password", authRateLimit, async (req, res) => {
+  const email = String(req.body?.email || "").trim().toLowerCase();
+
+  if (!email) {
+    return res.status(400).json({ error: "Email is required" });
+  }
+
+  if (email.length > 150) {
+    return res.status(400).json({ error: "Email is too long" });
+  }
+
+  try {
+    const [rows] = await pool.query(
+      "SELECT user_id, email FROM users WHERE email = ? LIMIT 1",
+      [email]
+    );
+
+    const user = rows[0];
+    if (!user) {
+      return res.json({ message: "If an account exists for that email, a reset link has been sent." });
+    }
+
+    const token = crypto.randomBytes(32).toString("hex");
+    const tokenHash = hashResetToken(token);
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+    const resetUrl = getResetPasswordUrl(token);
+
+    await pool.query("DELETE FROM password_resets WHERE user_id = ?", [user.user_id]);
+    await pool.query(
+      "INSERT INTO password_resets (user_id, token_hash, expires_at) VALUES (?, ?, ?)",
+      [user.user_id, tokenHash, expiresAt]
+    );
+
+    const { error } = await sendPasswordResetEmail({
+      to: user.email,
+      resetUrl,
+      idempotencyKey: `password-reset/${user.user_id}`,
+    });
+
+    if (error) {
+      console.error("POST /api/auth/forgot-password email error:", error);
+      return res.status(500).json({ error: "Failed to send password reset email" });
+    }
+
+    return res.json({ message: "If an account exists for that email, a reset link has been sent." });
+  } catch (error) {
+    console.error("POST /api/auth/forgot-password error:", error);
+    return res.status(500).json({ error: "Failed to process password reset request" });
+  }
+});
+
+router.post("/reset-password", authRateLimit, async (req, res) => {
+  const token = String(req.body?.token || "").trim();
+  const password = String(req.body?.password || "");
+
+  if (!token || !password) {
+    return res.status(400).json({ error: "Token and password are required" });
+  }
+
+  if (password.length < 8) {
+    return res.status(400).json({ error: "Password must be at least 8 characters" });
+  }
+
+  try {
+    const tokenHash = hashResetToken(token);
+    const [rows] = await pool.query(
+      `SELECT reset_id, user_id
+       FROM password_resets
+       WHERE token_hash = ?
+         AND used_at IS NULL
+         AND expires_at > NOW()
+       ORDER BY created_at DESC
+       LIMIT 1`,
+      [tokenHash]
+    );
+
+    const resetRow = rows[0];
+    if (!resetRow) {
+      return res.status(400).json({ error: "Reset link is invalid or has expired" });
+    }
+
+    const nextPasswordHash = await hashPassword(password);
+
+    await pool.query("UPDATE users SET password_hash = ? WHERE user_id = ?", [
+      nextPasswordHash,
+      resetRow.user_id,
+    ]);
+    await pool.query("UPDATE password_resets SET used_at = NOW() WHERE reset_id = ?", [
+      resetRow.reset_id,
+    ]);
+    await pool.query(
+      "DELETE FROM password_resets WHERE user_id = ? AND reset_id <> ?",
+      [resetRow.user_id, resetRow.reset_id]
+    );
+
+    return res.json({ message: "Password reset successfully" });
+  } catch (error) {
+    console.error("POST /api/auth/reset-password error:", error);
+    return res.status(500).json({ error: "Failed to reset password" });
   }
 });
 

@@ -13,13 +13,28 @@ export function ForgotPassword() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSuccess(false);
     setIsLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      const response = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to request password reset');
+      }
+
       setIsSuccess(true);
-    }, 1500);
+    } catch (error) {
+      console.error('Forgot password request failed:', error);
+      alert('Failed to request a password reset. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
