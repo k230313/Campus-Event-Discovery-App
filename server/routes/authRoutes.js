@@ -6,7 +6,15 @@ const { hashPassword, verifyPassword } = require("../utils/passwords");
 const { createAuthToken } = require("../utils/authTokens");
 const { AUTH_COOKIE_NAME, requireAuth } = require("../middleware/auth");
 const { authRateLimit, clearAuthRateLimit } = require("../middleware/security");
+const { validateBody } = require("../middleware/validate");
 const { sendPasswordResetEmail, sendVerificationEmail } = require("../services/emailService");
+const {
+  forgotPasswordSchema,
+  loginSchema,
+  registerSchema,
+  resetPasswordSchema,
+  verifyEmailSchema,
+} = require("../validation/schemas");
 
 const router = express.Router();
 const registrationRateLimit = rateLimit({
@@ -139,7 +147,7 @@ function clearAuthCookie(res) {
   });
 }
 
-router.post("/register", registrationRateLimit, authRateLimit, async (req, res) => {
+router.post("/register", registrationRateLimit, authRateLimit, validateBody(registerSchema), async (req, res) => {
   const { name, email, password, role, turnstileToken } = req.body;
 
   if (!name || !email || !password || !role || !turnstileToken) {
@@ -221,7 +229,7 @@ router.post("/register", registrationRateLimit, authRateLimit, async (req, res) 
   }
 });
 
-router.post("/login", authRateLimit, async (req, res) => {
+router.post("/login", authRateLimit, validateBody(loginSchema), async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
@@ -259,7 +267,7 @@ router.post("/login", authRateLimit, async (req, res) => {
   }
 });
 
-router.post("/forgot-password", authRateLimit, async (req, res) => {
+router.post("/forgot-password", authRateLimit, validateBody(forgotPasswordSchema), async (req, res) => {
   const email = String(req.body?.email || "").trim().toLowerCase();
 
   if (!email) {
@@ -310,7 +318,7 @@ router.post("/forgot-password", authRateLimit, async (req, res) => {
   }
 });
 
-router.post("/verify-email", authRateLimit, async (req, res) => {
+router.post("/verify-email", authRateLimit, validateBody(verifyEmailSchema), async (req, res) => {
   const token = String(req.body?.token || "").trim();
 
   if (!token) {
@@ -353,7 +361,7 @@ router.post("/verify-email", authRateLimit, async (req, res) => {
   }
 });
 
-router.post("/reset-password", authRateLimit, async (req, res) => {
+router.post("/reset-password", authRateLimit, validateBody(resetPasswordSchema), async (req, res) => {
   const token = String(req.body?.token || "").trim();
   const password = String(req.body?.password || "");
 

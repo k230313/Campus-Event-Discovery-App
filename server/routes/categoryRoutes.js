@@ -2,6 +2,8 @@ const express = require("express");
 const pool = require("../config/db");
 const { requireAuth, requireRole } = require("../middleware/auth");
 const { adminRateLimit } = require("../middleware/security");
+const { validateBody } = require("../middleware/validate");
+const { categorySchema } = require("../validation/schemas");
 
 const router = express.Router();
 
@@ -28,7 +30,7 @@ router.get("/", async (_req, res) => {
   }
 });
 
-router.post("/", requireAuth, requireRole("admin"), adminRateLimit, async (req, res) => {
+router.post("/", requireAuth, requireRole("admin"), adminRateLimit, validateBody(categorySchema), async (req, res) => {
   const { name } = req.body;
 
   if (!name || !String(name).trim()) {
@@ -59,7 +61,7 @@ router.post("/", requireAuth, requireRole("admin"), adminRateLimit, async (req, 
   }
 });
 
-router.put("/:id", requireAuth, requireRole("admin"), adminRateLimit, async (req, res) => {
+router.put("/:id", requireAuth, requireRole("admin"), adminRateLimit, validateBody(categorySchema), async (req, res) => {
   const { name } = req.body;
 
   if (!name || !String(name).trim()) {

@@ -2,12 +2,14 @@ const express = require("express");
 const pool = require("../config/db");
 const { ADMIN_UNLOCK_TTL_MS, requireAuth, requireRole } = require("../middleware/auth");
 const { adminRateLimit } = require("../middleware/security");
+const { validateBody } = require("../middleware/validate");
 const { verifyPassword } = require("../utils/passwords");
 const { createAuthToken } = require("../utils/authTokens");
+const { adminUnlockSchema } = require("../validation/schemas");
 
 const router = express.Router();
 
-router.post("/unlock", requireAuth, requireRole("admin"), adminRateLimit, async (req, res) => {
+router.post("/unlock", requireAuth, requireRole("admin"), adminRateLimit, validateBody(adminUnlockSchema), async (req, res) => {
   if (!process.env.MASTER_PASSWORD_HASH) {
     console.error("[ADMIN] MASTER_PASSWORD_HASH env var not set");
     return res.status(401).json({ error: "Invalid credentials" });

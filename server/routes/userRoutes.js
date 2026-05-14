@@ -2,7 +2,13 @@ const express = require("express");
 const pool = require("../config/db");
 const { requireAuth, requireRole, requireUnlock } = require("../middleware/auth");
 const { adminRateLimit } = require("../middleware/security");
+const { validateBody } = require("../middleware/validate");
 const { hashPassword, verifyPassword } = require("../utils/passwords");
+const {
+  adminUserUpdateSchema,
+  passwordUpdateSchema,
+  profileUpdateSchema,
+} = require("../validation/schemas");
 
 const router = express.Router();
 
@@ -31,7 +37,7 @@ async function countAdmins() {
   }
 }
 
-router.patch("/me", requireAuth, async (req, res) => {
+router.patch("/me", requireAuth, validateBody(profileUpdateSchema), async (req, res) => {
   const fullName = String(req.body?.full_name || "").trim();
   const normalizedEmail = String(req.body?.email || "").trim().toLowerCase();
 
@@ -86,7 +92,7 @@ router.patch("/me", requireAuth, async (req, res) => {
   }
 });
 
-router.patch("/me/password", requireAuth, async (req, res) => {
+router.patch("/me/password", requireAuth, validateBody(passwordUpdateSchema), async (req, res) => {
   const currentPassword = String(req.body?.currentPassword || "");
   const newPassword = String(req.body?.newPassword || "");
 
@@ -148,7 +154,7 @@ router.get("/", requireAuth, requireRole("admin"), adminRateLimit, async (_req, 
   }
 });
 
-router.put("/:id", requireAuth, requireRole("admin"), adminRateLimit, async (req, res) => {
+router.put("/:id", requireAuth, requireRole("admin"), adminRateLimit, validateBody(adminUserUpdateSchema), async (req, res) => {
   const { name, email, role } = req.body;
 
   if (!name || !email || !role || !["student", "organizer", "admin"].includes(role)) {

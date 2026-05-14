@@ -2,6 +2,8 @@ const express = require("express");
 const pool = require("../config/db");
 const { requireAuth, requireRole } = require("../middleware/auth");
 const { registrationRateLimit } = require("../middleware/security");
+const { validateBody } = require("../middleware/validate");
+const { registrationCreateSchema } = require("../validation/schemas");
 
 const router = express.Router();
 
@@ -28,7 +30,7 @@ router.get("/", requireAuth, requireRole("student"), async (req, res) => {
   }
 });
 
-router.post("/", requireAuth, requireRole("student"), registrationRateLimit, async (req, res) => {
+router.post("/", requireAuth, requireRole("student"), registrationRateLimit, validateBody(registrationCreateSchema), async (req, res) => {
   const { eventId } = req.body;
 
   if (!eventId) {

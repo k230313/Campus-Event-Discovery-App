@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node scripts/smoke-check.js"
   },
   "keywords": [],
   "author": "",
@@ -19,7 +19,8 @@
     "express": "^5.2.1",
     "express-rate-limit": "^8.5.2",
     "mysql2": "^3.15.2",
-    "resend": "^4.7.0"
+    "resend": "^4.7.0",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"

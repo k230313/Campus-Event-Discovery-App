@@ -4,7 +4,9 @@ const pool = require("../config/db");
 const { eventFields } = require("../models/eventModel");
 const validateEvent = require("../validation/eventValidation");
 const { requireAuth, requireRole } = require("../middleware/auth");
+const { validateBody } = require("../middleware/validate");
 const { adminRateLimit, generalWriteRateLimit } = require("../middleware/security");
+const { eventStatusSchema } = require("../validation/schemas");
 
 const EVENT_SELECT_SQL = [
   "SELECT",
@@ -154,7 +156,7 @@ router.get("/schema", (req, res) => {
   res.json(eventFields);
 });
 
-router.patch("/:id/status", requireAuth, requireRole("admin"), adminRateLimit, async (req, res) => {
+router.patch("/:id/status", requireAuth, requireRole("admin"), adminRateLimit, validateBody(eventStatusSchema), async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
   const allowedStatuses = ["draft", "pending", "published", "rejected", "cancelled"];
@@ -203,11 +205,13 @@ router.get("/:id", async (req, res) => {
 });
 
 router.post("/", requireAuth, requireRole("organizer", "admin"), generalWriteRateLimit, async (req, res) => {
-  const { isValid, errors } = validateEvent(req.body);
+  const validation = validateEvent(req.body);
 
-  if (!isValid) {
-    return res.status(400).json({ errors });
+  if (!validation.isValid) {
+    return res.status(400).json({ errors: validation.errors });
   }
+
+  const requestBody = validation.data;
 
   const {
     title,
@@ -223,7 +227,7 @@ router.post("/", requireAuth, requireRole("organizer", "admin"), generalWriteRat
     notes,
     organizerId,
     status
-  } = req.body;
+  } = requestBody;
 
   try {
     const allowedStatuses = getAllowedWriteStatuses(req.user.role);
@@ -265,11 +269,13 @@ router.post("/", requireAuth, requireRole("organizer", "admin"), generalWriteRat
 
 router.put("/:id", requireAuth, requireRole("organizer", "admin"), generalWriteRateLimit, async (req, res) => {
   const { id } = req.params;
-  const { isValid, errors } = validateEvent(req.body);
+  const validation = validateEvent(req.body);
 
-  if (!isValid) {
-    return res.status(400).json({ errors });
+  if (!validation.isValid) {
+    return res.status(400).json({ errors: validation.errors });
   }
+
+  const requestBody = validation.data;
 
   const {
     title,
@@ -284,7 +290,7 @@ router.put("/:id", requireAuth, requireRole("organizer", "admin"), generalWriteR
     registrationRequired,
     notes,
     status
-  } = req.body;
+  } = requestBody;
 
   try {
     const ownerId = await getEventOwnerId(id);
