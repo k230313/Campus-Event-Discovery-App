@@ -34,3 +34,12 @@ Supporting documents:
 ## Notes
 
 This repository is being developed progressively based on weekly deliverables.
+
+## Changelog
+
+### v3.0.0
+- Added organiser name display on event cards and event detail page
+- Enabled bookmarking for organiser role (bookmark button, My Bookmarks page, nav link)
+- Implemented master password session-unlock for admin user deletion
+- Fixed radio button visibility on registration form
+- Fixed browser tab title

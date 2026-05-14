@@ -5,7 +5,7 @@ const { generalWriteRateLimit } = require("../middleware/security");
 
 const router = express.Router();
 
-router.get("/", requireAuth, requireRole("student"), async (req, res) => {
+router.get("/", requireAuth, requireRole("student", "organizer"), async (req, res) => {
   try {
     const [rows] = await pool.query(
       `SELECT CAST(student_id AS CHAR) AS userId, CAST(event_id AS CHAR) AS eventId, DATE_FORMAT(saved_at, '%Y-%m-%dT%H:%i:%sZ') AS savedAt
@@ -22,7 +22,7 @@ router.get("/", requireAuth, requireRole("student"), async (req, res) => {
   }
 });
 
-router.post("/", requireAuth, requireRole("student"), generalWriteRateLimit, async (req, res) => {
+router.post("/", requireAuth, requireRole("student", "organizer"), generalWriteRateLimit, async (req, res) => {
   const { eventId } = req.body;
 
   if (!eventId) {
@@ -59,7 +59,7 @@ router.post("/", requireAuth, requireRole("student"), generalWriteRateLimit, asy
   }
 });
 
-router.delete("/:eventId", requireAuth, requireRole("student"), generalWriteRateLimit, async (req, res) => {
+router.delete("/:eventId", requireAuth, requireRole("student", "organizer"), generalWriteRateLimit, async (req, res) => {
   try {
     await pool.query(
       "DELETE FROM bookmarks WHERE student_id = ? AND event_id = ?",

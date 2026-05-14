@@ -37,7 +37,7 @@ function normalizeEvent(apiEvent: any): Event {
     location: apiEvent.location,
     category: apiEvent.category,
     organizerId: String(apiEvent.organizerId || '2'),
-    organizerName: apiEvent.organizerName || 'Kent Institute',
+    organizerName: apiEvent.organiser_name || apiEvent.organizerName || 'Kent Institute',
     image: apiEvent.image || undefined,
     status: apiEvent.status || 'published',
     viewCount: Number(apiEvent.viewCount || 0),
@@ -165,7 +165,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
 
       try {
-        if (user.role === 'student') {
+        if (user.role === 'student' || user.role === 'organizer') {
           const [bookmarkResponse, registrationResponse] = await Promise.all([
             fetch('/api/bookmarks', buildRequestOptions()),
             fetch('/api/registrations', buildRequestOptions()),
@@ -262,7 +262,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const addBookmark = async (eventId: string) => {
-    if (!user || user.role !== 'student' || bookmarks.some((b) => b.eventId === eventId && b.userId === user.id)) return;
+    if (!user || (user.role !== 'student' && user.role !== 'organizer') || bookmarks.some((b) => b.eventId === eventId && b.userId === user.id)) return;
 
     try {
       const response = await fetch('/api/bookmarks', buildRequestOptions({
@@ -283,7 +283,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const removeBookmark = async (eventId: string) => {
-    if (!user || user.role !== 'student') return;
+    if (!user || (user.role !== 'student' && user.role !== 'organizer')) return;
 
     try {
       const response = await fetch(`/api/bookmarks/${eventId}`, buildRequestOptions({

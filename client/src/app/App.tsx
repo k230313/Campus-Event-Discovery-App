@@ -56,7 +56,7 @@ export default function App() {
               <Route path="/registration-confirmation" element={<RegistrationConfirmation />} />
 
               {/* Student Routes */}
-              <Route path="/my-bookmarks" element={<ProtectedRoute allowedRoles={['student']}><MyBookmarks /></ProtectedRoute>} />
+              <Route path="/my-bookmarks" element={<ProtectedRoute allowedRoles={['student', 'organizer']}><MyBookmarks /></ProtectedRoute>} />
               <Route path="/my-events" element={<ProtectedRoute allowedRoles={['student']}><MyEvents /></ProtectedRoute>} />
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />

@@ -150,7 +150,7 @@ export function EventDetail() {
                 <div className="absolute bottom-0 left-0 right-0 p-6">
                   <Badge className="mb-3 bg-[#EF9B28] text-white border-0 shadow-lg">{event.category}</Badge>
                   <h1 className="text-4xl font-bold text-white mb-2 drop-shadow-lg">{event.title}</h1>
-                  <p className="text-white/90 text-lg drop-shadow-md">by {event.organizerName}</p>
+                  <p className="text-white/90 text-lg drop-shadow-md">Organised by {event.organizerName}</p>
                 </div>
               </div>
 

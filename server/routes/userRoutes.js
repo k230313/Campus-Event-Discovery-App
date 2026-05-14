@@ -1,6 +1,6 @@
 const express = require("express");
 const pool = require("../config/db");
-const { requireAuth, requireRole } = require("../middleware/auth");
+const { requireAuth, requireRole, requireUnlock } = require("../middleware/auth");
 const { adminRateLimit } = require("../middleware/security");
 
 const router = express.Router();
@@ -107,7 +107,7 @@ router.put("/:id", requireAuth, requireRole("admin"), adminRateLimit, async (req
   }
 });
 
-router.delete("/:id", requireAuth, requireRole("admin"), adminRateLimit, async (req, res) => {
+router.delete("/:id", requireAuth, requireRole("admin"), requireUnlock, adminRateLimit, async (req, res) => {
   if (String(req.user.id) === String(req.params.id)) {
     return res.status(400).json({ error: "You cannot delete your own admin account" });
   }

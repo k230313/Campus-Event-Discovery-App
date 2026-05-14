@@ -2,8 +2,33 @@ const express = require("express");
 const pool = require("../config/db");
 const { requireAuth, requireRole } = require("../middleware/auth");
 const { adminRateLimit } = require("../middleware/security");
+const { verifyPassword } = require("../utils/passwords");
+const { createAuthToken } = require("../utils/authTokens");
 
 const router = express.Router();
+
+router.post("/unlock", requireAuth, requireRole("admin"), adminRateLimit, async (req, res) => {
+  const { masterPassword } = req.body || {};
+  const storedHash = process.env.MASTER_PASSWORD_HASH;
+
+  if (!masterPassword || !storedHash) {
+    return res.status(403).json({ error: "Invalid master password" });
+  }
+
+  try {
+    const isValid = await verifyPassword(masterPassword, storedHash);
+
+    if (!isValid) {
+      return res.status(403).json({ error: "Invalid master password" });
+    }
+
+    const unlockToken = createAuthToken({ adminUnlock: true }, 60 * 30);
+    return res.json({ unlockToken });
+  } catch (error) {
+    console.error("POST /api/admin/unlock error:", error);
+    return res.status(500).json({ error: "Failed to unlock admin deletion" });
+  }
+});
 
 router.get("/overview", requireAuth, requireRole("admin"), adminRateLimit, async (_req, res) => {
   try {

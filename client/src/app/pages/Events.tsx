@@ -217,6 +217,10 @@ export function Events() {
                   {event.description}
                 </p>
 
+                <p className="text-sm font-medium text-[#1B2E55] mb-4 line-clamp-1">
+                  Organised by {event.organizerName}
+                </p>
+
                 <div className="space-y-2.5 text-sm">
                   <div className="flex items-center text-gray-700">
                     <div className="w-8 h-8 rounded-lg bg-[#1B2E55]/10 flex items-center justify-center mr-3 flex-shrink-0">

@@ -135,6 +135,15 @@ export function Navigation() {
                       Browse Events
                     </Button>
                   </Link>
+                  <Link to="/my-bookmarks">
+                    <Button
+                      variant={isActive('/my-bookmarks') ? 'secondary' : 'ghost'}
+                      className="text-white hover:text-white hover:bg-white/20"
+                    >
+                      <Bookmark className="h-4 w-4 mr-2" />
+                      My Bookmarks
+                    </Button>
+                  </Link>
                   <Link to="/dashboard">
                     <Button
                       variant={isActive('/dashboard') ? 'secondary' : 'ghost'}

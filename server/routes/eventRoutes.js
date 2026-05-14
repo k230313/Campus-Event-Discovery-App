@@ -17,7 +17,7 @@ const eventSelect = `
     e.location,
     c.name AS category,
     CAST(e.organiser_id AS CHAR) AS organizerId,
-    u.full_name AS organizerName,
+    u.full_name AS organiser_name,
     e.banner_image_url AS image,
     e.status,
     0 AS viewCount,

@@ -82,10 +82,36 @@ function requireRole(...roles) {
   };
 }
 
+function getUnlockTokenFromRequest(req) {
+  const authHeader = req.headers.authorization || "";
+  if (authHeader.startsWith("Unlock ")) {
+    return authHeader.slice(7);
+  }
+
+  if (typeof req.body?.unlockToken === "string" && req.body.unlockToken.trim()) {
+    return req.body.unlockToken.trim();
+  }
+
+  return null;
+}
+
+function requireUnlock(req, res, next) {
+  const token = getUnlockTokenFromRequest(req);
+  const payload = verifyAuthToken(token);
+
+  if (!payload?.adminUnlock) {
+    return res.status(403).json({ error: "Admin unlock required" });
+  }
+
+  return next();
+}
+
 module.exports = {
   AUTH_COOKIE_NAME,
   attachUser,
   getAuthTokenFromRequest,
+  getUnlockTokenFromRequest,
   requireAuth,
   requireRole,
+  requireUnlock,
 };

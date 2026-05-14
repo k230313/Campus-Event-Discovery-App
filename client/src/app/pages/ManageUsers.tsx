@@ -4,7 +4,16 @@ import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
-import { Users, Search, Shield, UserX, Mail, Edit2, X } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '../components/ui/alert';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '../components/ui/dialog';
+import { Users, Search, Shield, UserX, Mail, Edit2, X, Lock, LockOpen } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 
@@ -24,6 +33,23 @@ export function ManageUsers() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   const [users, setUsers] = useState<Array<EditingUser & { joinedDate: string }>>([]);
   const [loading, setLoading] = useState(true);
+  const [isUnlocked, setIsUnlocked] = useState(false);
+  const [unlockToken, setUnlockToken] = useState('');
+  const [unlockExpiresAt, setUnlockExpiresAt] = useState<number | null>(null);
+  const [showUnlockDialog, setShowUnlockDialog] = useState(false);
+  const [masterPassword, setMasterPassword] = useState('');
+  const [unlockError, setUnlockError] = useState('');
+  const [isUnlocking, setIsUnlocking] = useState(false);
+  const [now, setNow] = useState(Date.now());
+
+  const clearUnlockState = () => {
+    setIsUnlocked(false);
+    setUnlockToken('');
+    setUnlockExpiresAt(null);
+    setMasterPassword('');
+    setUnlockError('');
+    setShowDeleteConfirm(null);
+  };
 
   if (!user || user.role !== 'admin') {
     navigate('/');
@@ -52,6 +78,37 @@ export function ManageUsers() {
 
     loadUsers();
   }, []);
+
+  useEffect(() => {
+    if (!unlockExpiresAt) {
+      return undefined;
+    }
+
+    const remainingMs = unlockExpiresAt - Date.now();
+    if (remainingMs <= 0) {
+      clearUnlockState();
+      return undefined;
+    }
+
+    const expiryTimer = window.setTimeout(() => {
+      clearUnlockState();
+    }, remainingMs);
+
+    const ticker = window.setInterval(() => {
+      setNow(Date.now());
+    }, 30000);
+
+    return () => {
+      window.clearTimeout(expiryTimer);
+      window.clearInterval(ticker);
+    };
+  }, [unlockExpiresAt]);
+
+  const isUnlockExpired = Boolean(unlockExpiresAt && unlockExpiresAt <= now);
+  const deletionUnlocked = isUnlocked && !isUnlockExpired && Boolean(unlockToken);
+  const minutesRemaining = unlockExpiresAt
+    ? Math.max(0, Math.ceil((unlockExpiresAt - now) / 60000))
+    : 0;
 
   const filteredUsers = users.filter(
     (u) =>
@@ -92,15 +149,66 @@ export function ManageUsers() {
     }
   };
 
+  const handleUnlockDeletion = async () => {
+    if (!masterPassword) {
+      setUnlockError('Master password is required.');
+      return;
+    }
+
+    setIsUnlocking(true);
+    setUnlockError('');
+
+    try {
+      const response = await fetch('/api/admin/unlock', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ masterPassword }),
+      });
+
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok || !data?.unlockToken) {
+        setUnlockError(data?.error || 'Failed to unlock user deletion.');
+        return;
+      }
+
+      const expiry = Date.now() + 30 * 60 * 1000;
+      setUnlockToken(data.unlockToken);
+      setUnlockExpiresAt(expiry);
+      setIsUnlocked(true);
+      setNow(Date.now());
+      setMasterPassword('');
+      setUnlockError('');
+      setShowUnlockDialog(false);
+    } catch (error) {
+      setUnlockError('Failed to unlock user deletion.');
+    } finally {
+      setIsUnlocking(false);
+    }
+  };
+
   const handleDeleteUser = async (userId: string, userName: string) => {
+    if (!deletionUnlocked) {
+      setShowUnlockDialog(true);
+      return;
+    }
+
     if (showDeleteConfirm === userId) {
       try {
         const response = await fetch(`/api/users/${userId}`, {
           method: 'DELETE',
           credentials: 'include',
+          headers: {
+            Authorization: `Unlock ${unlockToken}`,
+          },
         });
 
         if (!response.ok) {
+          if (response.status === 403) {
+            clearUnlockState();
+            setShowUnlockDialog(true);
+          }
           throw new Error('Failed to delete user');
         }
 
@@ -164,17 +272,44 @@ export function ManageUsers() {
           {/* Search */}
           <Card className="mb-6 border-2">
             <CardContent className="pt-6">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search users by name or email..."
-                  className="pl-10"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search users by name or email..."
+                    className="pl-10"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+                <Button
+                  type="button"
+                  variant={deletionUnlocked ? 'secondary' : 'outline'}
+                  className={deletionUnlocked ? 'bg-green-100 text-green-800 hover:bg-green-200' : ''}
+                  onClick={() => {
+                    if (isUnlockExpired) {
+                      clearUnlockState();
+                    }
+                    setUnlockError('');
+                    setShowUnlockDialog(true);
+                  }}
+                >
+                  {deletionUnlocked ? <LockOpen className="h-4 w-4 mr-2" /> : <Lock className="h-4 w-4 mr-2" />}
+                  Unlock User Deletion
+                </Button>
               </div>
             </CardContent>
           </Card>
+
+          {deletionUnlocked && (
+            <Alert className="mb-6 border-green-200 bg-green-50 text-green-900">
+              <LockOpen className="h-4 w-4" />
+              <AlertTitle>User deletion unlocked</AlertTitle>
+              <AlertDescription>
+                User deletion unlocked — expires in {minutesRemaining} minute{minutesRemaining === 1 ? '' : 's'}.
+              </AlertDescription>
+            </Alert>
+          )}
 
           {/* Users List */}
           <Card className="border-2">
@@ -227,10 +362,17 @@ export function ManageUsers() {
                       <Button
                         variant="outline"
                         size="sm"
-                        className={showDeleteConfirm === u.id ? 'bg-red-500 text-white hover:bg-red-600' : 'text-red-600'}
+                        disabled={!deletionUnlocked}
+                        className={
+                          deletionUnlocked
+                            ? showDeleteConfirm === u.id
+                              ? 'bg-red-500 text-white hover:bg-red-600'
+                              : 'text-red-600'
+                            : 'text-gray-400'
+                        }
                         onClick={() => handleDeleteUser(u.id, u.name)}
                       >
-                        <UserX className="h-4 w-4" />
+                        {deletionUnlocked ? <UserX className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
                         {showDeleteConfirm === u.id ? 'Confirm?' : ''}
                       </Button>
                     </div>
@@ -323,6 +465,68 @@ export function ManageUsers() {
               </Card>
             </div>
           )}
+
+          <Dialog
+            open={showUnlockDialog}
+            onOpenChange={(open) => {
+              setShowUnlockDialog(open);
+              if (!open) {
+                setMasterPassword('');
+                setUnlockError('');
+              }
+            }}
+          >
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Unlock User Deletion</DialogTitle>
+                <DialogDescription>
+                  Enter the admin master password to enable user deletion for 30 minutes.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-2">
+                <Label htmlFor="master-password">Master Password</Label>
+                <Input
+                  id="master-password"
+                  type="password"
+                  value={masterPassword}
+                  onChange={(e) => setMasterPassword(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      void handleUnlockDeletion();
+                    }
+                  }}
+                />
+                {unlockError && (
+                  <p className="text-sm text-red-600">{unlockError}</p>
+                )}
+              </div>
+
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setShowUnlockDialog(false);
+                    setMasterPassword('');
+                    setUnlockError('');
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  className="bg-[#EF9B28] hover:bg-[#EF9B28]/90"
+                  disabled={isUnlocking}
+                  onClick={() => {
+                    void handleUnlockDeletion();
+                  }}
+                >
+                  {isUnlocking ? 'Confirming...' : 'Confirm'}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
     </div>

@@ -23,10 +23,10 @@ function sign(value) {
   return crypto.createHmac("sha256", getSecret()).update(value).digest("base64url");
 }
 
-function createAuthToken(payload) {
+function createAuthToken(payload, expiresInSeconds = TOKEN_TTL_SECONDS) {
   const enrichedPayload = {
     ...payload,
-    exp: Math.floor(Date.now() / 1000) + TOKEN_TTL_SECONDS,
+    exp: Math.floor(Date.now() / 1000) + expiresInSeconds,
   };
 
   const encodedPayload = encode(JSON.stringify(enrichedPayload));
