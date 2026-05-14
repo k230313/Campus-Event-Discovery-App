@@ -19,11 +19,16 @@ function isValidEmail(email) {
 }
 
 async function countAdmins() {
-  const [[row]] = await pool.query(
-    "SELECT COUNT(*) AS count FROM users WHERE role = 'admin'"
-  );
+  try {
+    const [[row]] = await pool.query(
+      "SELECT COUNT(*) AS count FROM users WHERE role = 'admin'"
+    );
 
-  return Number(row.count || 0);
+    return Number(row.count || 0);
+  } catch (error) {
+    console.error("[countAdmins] Failed:", error.message);
+    throw error;
+  }
 }
 
 router.patch("/me", requireAuth, async (req, res) => {

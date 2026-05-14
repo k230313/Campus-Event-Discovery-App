@@ -7,6 +7,7 @@ import { Badge } from '../components/ui/badge';
 import { User, Mail, Shield, Calendar, Edit } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { csrfFetch } from '../services/api';
 
 export function Profile() {
   const { user, setCurrentUser } = useApp();
@@ -47,9 +48,8 @@ export function Profile() {
     setIsSavingProfile(true);
 
     try {
-      const response = await fetch('/api/users/me', {
+      const response = await csrfFetch('/api/users/me', {
         method: 'PATCH',
-        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           full_name: formData.name,
@@ -97,9 +97,8 @@ export function Profile() {
     setIsSavingPassword(true);
 
     try {
-      const response = await fetch('/api/users/me/password', {
+      const response = await csrfFetch('/api/users/me/password', {
         method: 'PATCH',
-        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           currentPassword: passwordData.currentPassword,

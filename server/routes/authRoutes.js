@@ -1,5 +1,6 @@
 const express = require("express");
 const crypto = require("crypto");
+const rateLimit = require("express-rate-limit");
 const pool = require("../config/db");
 const { hashPassword, verifyPassword } = require("../utils/passwords");
 const { createAuthToken } = require("../utils/authTokens");
@@ -8,6 +9,13 @@ const { authRateLimit, clearAuthRateLimit } = require("../middleware/security");
 const { sendPasswordResetEmail, sendVerificationEmail } = require("../services/emailService");
 
 const router = express.Router();
+const registrationRateLimit = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 5,
+  message: { error: "Too many registration attempts, please try again later." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 function toClientRole(dbRole) {
   return dbRole === "organiser" ? "organizer" : dbRole;
@@ -28,6 +36,14 @@ function serializeUser(row) {
 
 function hashResetToken(token) {
   return crypto.createHash("sha256").update(token).digest("hex");
+}
+
+async function createRandomHexToken(size = 32) {
+  return new Promise((resolve, reject) => {
+    crypto.randomBytes(size, (err, buf) => (
+      err ? reject(err) : resolve(buf.toString("hex"))
+    ));
+  });
 }
 
 function getResetPasswordUrl(token) {
@@ -55,39 +71,49 @@ function getVerifyEmailUrl(token) {
 }
 
 async function loadUserById(userId) {
-  const [rows] = await pool.query(
-    "SELECT user_id, full_name, email, role FROM users WHERE user_id = ? LIMIT 1",
-    [userId]
-  );
+  try {
+    const [rows] = await pool.query(
+      "SELECT user_id, full_name, email, role FROM users WHERE user_id = ? LIMIT 1",
+      [userId]
+    );
 
-  return rows[0] || null;
+    return rows[0] || null;
+  } catch (error) {
+    console.error("[loadUserById] Failed:", error.message);
+    throw error;
+  }
 }
 
 async function verifyTurnstileToken(token, remoteIp) {
-  const secret = process.env.TURNSTILE_SECRET_KEY;
+  try {
+    const secret = process.env.TURNSTILE_SECRET_KEY;
 
-  if (!secret) {
-    throw new Error("TURNSTILE_SECRET_KEY is not configured");
+    if (!secret) {
+      throw new Error("TURNSTILE_SECRET_KEY is not configured");
+    }
+
+    const response = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({
+        secret,
+        response: token,
+        remoteip: remoteIp || "",
+      }),
+    });
+
+    if (!response.ok) {
+      return false;
+    }
+
+    const data = await response.json();
+    return Boolean(data.success);
+  } catch (error) {
+    console.error("[verifyTurnstileToken] Failed:", error.message);
+    throw error;
   }
-
-  const response = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: new URLSearchParams({
-      secret,
-      response: token,
-      remoteip: remoteIp || "",
-    }),
-  });
-
-  if (!response.ok) {
-    return false;
-  }
-
-  const data = await response.json();
-  return Boolean(data.success);
 }
 
 function getAuthCookieOptions() {
@@ -113,7 +139,7 @@ function clearAuthCookie(res) {
   });
 }
 
-router.post("/register", authRateLimit, async (req, res) => {
+router.post("/register", registrationRateLimit, authRateLimit, async (req, res) => {
   const { name, email, password, role, turnstileToken } = req.body;
 
   if (!name || !email || !password || !role || !turnstileToken) {
@@ -162,7 +188,7 @@ router.post("/register", authRateLimit, async (req, res) => {
       [name.trim(), normalizedEmail, passwordHash, toDbRole(role)]
     );
 
-    const verificationToken = crypto.randomBytes(32).toString("hex");
+    const verificationToken = await createRandomHexToken(32);
     const verificationTokenHash = hashResetToken(verificationToken);
     const verificationUrl = getVerifyEmailUrl(verificationToken);
     const verificationExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
@@ -255,7 +281,7 @@ router.post("/forgot-password", authRateLimit, async (req, res) => {
       return res.json({ message: "If an account exists for that email, a reset link has been sent." });
     }
 
-    const token = crypto.randomBytes(32).toString("hex");
+    const token = await createRandomHexToken(32);
     const tokenHash = hashResetToken(token);
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
     const resetUrl = getResetPasswordUrl(token);

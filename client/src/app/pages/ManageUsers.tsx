@@ -16,6 +16,7 @@ import {
 import { Users, Search, Shield, UserX, Mail, Edit2, X, Lock, LockOpen } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
+import { apiFetch, csrfFetch } from '../services/api';
 
 interface EditingUser {
   id: string;
@@ -59,9 +60,7 @@ export function ManageUsers() {
   useEffect(() => {
     async function loadUsers() {
       try {
-        const response = await fetch('/api/users', {
-          credentials: 'include',
-        });
+        const response = await apiFetch('/api/users');
 
         if (!response.ok) {
           throw new Error('Failed to fetch users');
@@ -130,9 +129,8 @@ export function ManageUsers() {
     if (!editingUser) return;
 
     try {
-      const response = await fetch(`/api/users/${editingUser.id}`, {
+      const response = await csrfFetch(`/api/users/${editingUser.id}`, {
         method: 'PUT',
-        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(editingUser),
       });
@@ -159,9 +157,8 @@ export function ManageUsers() {
     setUnlockError('');
 
     try {
-      const response = await fetch('/api/admin/unlock', {
+      const response = await csrfFetch('/api/admin/unlock', {
         method: 'POST',
-        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ masterPassword }),
       });
@@ -196,9 +193,8 @@ export function ManageUsers() {
 
     if (showDeleteConfirm === userId) {
       try {
-        const response = await fetch(`/api/users/${userId}`, {
+        const response = await csrfFetch(`/api/users/${userId}`, {
           method: 'DELETE',
-          credentials: 'include',
           headers: {
             Authorization: `Unlock ${unlockToken}`,
           },

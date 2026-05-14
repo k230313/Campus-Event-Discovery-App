@@ -5,6 +5,7 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../components/ui/card';
+import { csrfFetch } from '../services/api';
 
 export function ResetPassword() {
   const navigate = useNavigate();
@@ -38,9 +39,8 @@ export function ResetPassword() {
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/auth/reset-password', {
+      const response = await csrfFetch('/api/auth/reset-password', {
         method: 'POST',
-        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token, password }),
       });

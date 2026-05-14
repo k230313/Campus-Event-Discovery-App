@@ -5,11 +5,10 @@ const MAX_ATTEMPTS = 10;
 const WINDOW_MS = 15 * 60 * 1000;
 
 function getAllowedOrigins() {
-  const raw = process.env.CORS_ORIGIN || process.env.FRONTEND_ORIGIN || "";
-  return raw
-    .split(",")
-    .map((value) => value.trim())
-    .filter(Boolean);
+  return [
+    process.env.CLIENT_URL,
+    process.env.CLIENT_URL_ALT,
+  ].filter(Boolean);
 }
 
 function corsOptions() {
@@ -18,23 +17,15 @@ function corsOptions() {
   return {
     origin(origin, callback) {
       if (!origin) {
-        callback(null, true);
-        return;
+        return callback(null, true);
       }
 
-      if (allowedOrigins.length === 0) {
-        const localhostAllowed =
-          origin.startsWith("http://localhost:") ||
-          origin.startsWith("http://127.0.0.1:") ||
-          origin.startsWith("https://localhost:") ||
-          origin.startsWith("https://127.0.0.1:");
-
-        callback(localhostAllowed ? null : new Error("CORS origin not allowed"), localhostAllowed);
-        return;
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
       }
 
-      const isAllowed = allowedOrigins.includes(origin);
-      callback(isAllowed ? null : new Error("CORS origin not allowed"), isAllowed);
+      console.warn("[CORS] Blocked request from origin:", origin);
+      return callback(new Error("Not allowed by CORS"));
     },
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],

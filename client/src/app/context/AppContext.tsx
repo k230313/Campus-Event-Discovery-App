@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Event, Bookmark, RSVP } from '../types';
+import { apiFetch, clearCsrfToken, csrfFetch } from '../services/api';
 
 interface AppContextType {
   user: User | null;
@@ -62,13 +63,6 @@ function normalizeUser(apiUser: any): User {
   };
 }
 
-function buildRequestOptions(init?: RequestInit): RequestInit {
-  return {
-    credentials: 'include',
-    ...init,
-  };
-}
-
 async function getApiErrorMessage(response: Response, fallback: string) {
   try {
     const data = await response.json();
@@ -85,6 +79,17 @@ async function getApiErrorMessage(response: Response, fallback: string) {
   }
 
   return fallback;
+}
+
+async function fetchWithTimeout(input: RequestInfo | URL, timeoutMs = 5000) {
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    return await apiFetch(input, { signal: controller.signal });
+  } finally {
+    window.clearTimeout(timeout);
+  }
 }
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
@@ -123,7 +128,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     localStorage.removeItem(LEGACY_AUTH_TOKEN_KEY);
 
-    fetch('/api/auth/me', buildRequestOptions())
+    apiFetch('/api/auth/me')
       .then(async (response) => {
         if (!response.ok) {
           throw new Error('Failed to restore session');
@@ -141,7 +146,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   async function loadEvents() {
     try {
-      const response = await fetch('/api/events', buildRequestOptions());
+      const response = await apiFetch('/api/events');
       if (!response.ok) {
         throw new Error('Failed to fetch events');
       }
@@ -175,19 +180,33 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
       try {
         if (user.role === 'student' || user.role === 'organizer') {
-          const [bookmarkResponse, registrationResponse] = await Promise.all([
-            fetch('/api/bookmarks', buildRequestOptions()),
-            fetch('/api/registrations', buildRequestOptions()),
+          const [bookmarkResult, registrationResult] = await Promise.allSettled([
+            fetchWithTimeout('/api/bookmarks'),
+            fetchWithTimeout('/api/registrations'),
           ]);
 
-          if (bookmarkResponse.ok) {
-            const bookmarkData = await bookmarkResponse.json();
-            setBookmarks(bookmarkData);
+          if (bookmarkResult.status === 'fulfilled') {
+            if (bookmarkResult.value.ok) {
+              const bookmarkData = await bookmarkResult.value.json();
+              setBookmarks(bookmarkData);
+            } else {
+              setBookmarks([]);
+            }
+          } else {
+            console.error('[AppContext] Bookmarks fetch failed:', bookmarkResult.reason);
+            setBookmarks([]);
           }
 
-          if (registrationResponse.ok) {
-            const registrationData = await registrationResponse.json();
-            setRSVPs(registrationData);
+          if (registrationResult.status === 'fulfilled') {
+            if (registrationResult.value.ok) {
+              const registrationData = await registrationResult.value.json();
+              setRSVPs(registrationData);
+            } else {
+              setRSVPs([]);
+            }
+          } else {
+            console.error('[AppContext] Registrations fetch failed:', registrationResult.reason);
+            setRSVPs([]);
           }
         } else {
           setBookmarks([]);
@@ -207,11 +226,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
-      const response = await fetch('/api/auth/login', buildRequestOptions({
+      const response = await csrfFetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
-      }));
+      });
 
       if (!response.ok) {
         return {
@@ -231,11 +250,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = () => {
-    fetch('/api/auth/logout', buildRequestOptions({ method: 'POST' })).catch((error) => {
+    csrfFetch('/api/auth/logout', { method: 'POST' }).catch((error) => {
       console.error('Logout request failed:', error);
     });
     setCurrentUser(null);
     localStorage.removeItem(LEGACY_AUTH_TOKEN_KEY);
+    clearCsrfToken();
   };
 
   const register = async (
@@ -250,11 +270,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
-      const response = await fetch('/api/auth/register', buildRequestOptions({
+      const response = await csrfFetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, password, role, turnstileToken }),
-      }));
+      });
 
       if (!response.ok) {
         return {
@@ -276,11 +296,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (!user || (user.role !== 'student' && user.role !== 'organizer') || bookmarks.some((b) => b.eventId === eventId && b.userId === user.id)) return;
 
     try {
-      const response = await fetch('/api/bookmarks', buildRequestOptions({
+      const response = await csrfFetch('/api/bookmarks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ eventId }),
-      }));
+      });
 
       if (!response.ok) {
         throw new Error('Failed to save bookmark');
@@ -297,9 +317,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (!user || (user.role !== 'student' && user.role !== 'organizer')) return;
 
     try {
-      const response = await fetch(`/api/bookmarks/${eventId}`, buildRequestOptions({
+      const response = await csrfFetch(`/api/bookmarks/${eventId}`, {
         method: 'DELETE',
-      }));
+      });
 
       if (!response.ok) {
         throw new Error('Failed to remove bookmark');
@@ -323,11 +343,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (!user || user.role !== 'student' || rsvps.some((r) => r.eventId === eventId && r.userId === user.id)) return;
 
     try {
-      const response = await fetch('/api/registrations', buildRequestOptions({
+      const response = await csrfFetch('/api/registrations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ eventId, attendeeType, options }),
-      }));
+      });
 
       if (!response.ok) {
         throw new Error('Failed to register for event');
@@ -359,9 +379,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (!existing) return;
 
     try {
-      const response = await fetch(`/api/registrations/${eventId}`, buildRequestOptions({
+      const response = await csrfFetch(`/api/registrations/${eventId}`, {
         method: 'DELETE',
-      }));
+      });
 
       if (!response.ok) {
         throw new Error('Failed to unregister from event');
@@ -411,11 +431,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     };
 
     try {
-      const response = await fetch('/api/events', buildRequestOptions({
+      const response = await csrfFetch('/api/events', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
-      }));
+      });
 
       if (!response.ok) {
         return {
@@ -441,7 +461,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const merged = { ...current, ...updates };
 
     try {
-      const response = await fetch(`/api/events/${eventId}`, buildRequestOptions({
+      const response = await csrfFetch(`/api/events/${eventId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -458,7 +478,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           notes: merged.notes,
           status: merged.status,
         }),
-      }));
+      });
 
       if (!response.ok) {
         throw new Error('Failed to update event');
@@ -474,9 +494,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const deleteEvent = async (eventId: string) => {
     try {
-      const response = await fetch(`/api/events/${eventId}`, buildRequestOptions({
+      const response = await csrfFetch(`/api/events/${eventId}`, {
         method: 'DELETE',
-      }));
+      });
       if (!response.ok) {
         throw new Error('Failed to delete event');
       }
@@ -491,11 +511,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const updateEventStatus = async (eventId: string, status: Event['status']) => {
     try {
-      const response = await fetch(`/api/events/${eventId}/status`, buildRequestOptions({
+      const response = await csrfFetch(`/api/events/${eventId}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status }),
-      }));
+      });
 
       if (!response.ok) {
         throw new Error('Failed to update event status');

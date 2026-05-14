@@ -5,6 +5,7 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../components/ui/card';
+import { csrfFetch } from '../services/api';
 
 export function ForgotPassword() {
   const [email, setEmail] = useState('');
@@ -17,9 +18,8 @@ export function ForgotPassword() {
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/auth/forgot-password', {
+      const response = await csrfFetch('/api/auth/forgot-password', {
         method: 'POST',
-        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
       });

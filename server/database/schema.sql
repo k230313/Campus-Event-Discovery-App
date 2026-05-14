@@ -139,6 +139,14 @@ CREATE TABLE IF NOT EXISTS email_verifications (
     ON DELETE CASCADE ON UPDATE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS used_unlock_tokens (
+  token      VARCHAR(255) NOT NULL,
+  used_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+  PRIMARY KEY (token),
+  KEY idx_used_unlock_tokens_used_at (used_at)
+);
+
 INSERT IGNORE INTO events
   (event_id, organiser_id, category_id, title, description, event_date, start_time, end_time, location, capacity, registration_required, status, approved_by)
 VALUES

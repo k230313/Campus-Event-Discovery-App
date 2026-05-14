@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { CheckCircle, MailCheck, XCircle } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../components/ui/card';
+import { csrfFetch } from '../services/api';
 
 export function VerifyEmail() {
   const [searchParams] = useSearchParams();
@@ -20,9 +21,8 @@ export function VerifyEmail() {
 
     async function verifyEmail() {
       try {
-        const response = await fetch('/api/auth/verify-email', {
+        const response = await csrfFetch('/api/auth/verify-email', {
           method: 'POST',
-          credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ token }),
         });

@@ -1,6 +1,8 @@
+const crypto = require("crypto");
 const pool = require("../config/db");
 const { verifyAuthToken } = require("../utils/authTokens");
 const AUTH_COOKIE_NAME = "ceda_auth";
+const ADMIN_UNLOCK_TTL_MS = 30 * 60 * 1000;
 
 function toClientRole(dbRole) {
   return dbRole === "organiser" ? "organizer" : dbRole;
@@ -95,18 +97,51 @@ function getUnlockTokenFromRequest(req) {
   return null;
 }
 
-function requireUnlock(req, res, next) {
+async function requireUnlock(req, res, next) {
   const token = getUnlockTokenFromRequest(req);
   const payload = verifyAuthToken(token);
+  const tokenType = payload?.type;
+  const issuedAt = Number(payload?.iat);
 
-  if (!payload?.adminUnlock) {
+  if (!payload?.adminUnlock || tokenType !== "adminUnlock") {
     return res.status(403).json({ error: "Admin unlock required" });
   }
 
-  return next();
+  if (Date.now() - issuedAt >= ADMIN_UNLOCK_TTL_MS) {
+    return res.status(401).json({ error: "Admin unlock token has expired" });
+  }
+
+  try {
+    const [rows] = await pool.query(
+      "SELECT token FROM used_unlock_tokens WHERE token = ?",
+      [token]
+    );
+
+    if (rows.length > 0) {
+      return res.status(401).json({ error: "Token already used" });
+    }
+
+    await pool.query(
+      "INSERT INTO used_unlock_tokens (token) VALUES (?)",
+      [token]
+    );
+
+    await pool.query(
+      "DELETE FROM used_unlock_tokens WHERE used_at < DATE_SUB(NOW(), INTERVAL 1 HOUR)"
+    );
+
+    return next();
+  } catch (error) {
+    if (error?.code === "ER_DUP_ENTRY") {
+      return res.status(401).json({ error: "Token already used" });
+    }
+
+    return next(error);
+  }
 }
 
 module.exports = {
+  ADMIN_UNLOCK_TTL_MS,
   AUTH_COOKIE_NAME,
   attachUser,
   getAuthTokenFromRequest,

@@ -8,6 +8,7 @@ import { Tag, Plus, Edit, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { Category } from '../types';
+import { apiFetch, csrfFetch } from '../services/api';
 
 export function Categories() {
   const { user, events } = useApp();
@@ -25,7 +26,7 @@ export function Categories() {
   useEffect(() => {
     async function loadCategories() {
       try {
-        const response = await fetch('/api/categories');
+        const response = await apiFetch('/api/categories');
         if (!response.ok) {
           throw new Error('Failed to load categories');
         }
@@ -44,9 +45,8 @@ export function Categories() {
     if (!newCategory.trim()) return;
 
     try {
-      const response = await fetch('/api/categories', {
+      const response = await csrfFetch('/api/categories', {
         method: 'POST',
-        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: newCategory.trim() }),
       });
@@ -67,9 +67,8 @@ export function Categories() {
     if (!editingName.trim()) return;
 
     try {
-      const response = await fetch(`/api/categories/${categoryId}`, {
+      const response = await csrfFetch(`/api/categories/${categoryId}`, {
         method: 'PUT',
-        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: editingName.trim() }),
       });
@@ -93,9 +92,8 @@ export function Categories() {
     }
 
     try {
-      const response = await fetch(`/api/categories/${category.id}`, {
+      const response = await csrfFetch(`/api/categories/${category.id}`, {
         method: 'DELETE',
-        credentials: 'include',
       });
 
       if (!response.ok) {

@@ -6,44 +6,65 @@ const validateEvent = require("../validation/eventValidation");
 const { requireAuth, requireRole } = require("../middleware/auth");
 const { adminRateLimit, generalWriteRateLimit } = require("../middleware/security");
 
-const eventSelect = `
-  SELECT
-    e.event_id AS id,
-    e.title,
-    e.description,
-    DATE_FORMAT(e.event_date, '%Y-%m-%d') AS date,
-    TIME_FORMAT(e.start_time, '%H:%i:%s') AS startTime,
-    TIME_FORMAT(e.end_time, '%H:%i:%s') AS endTime,
-    e.location,
-    c.name AS category,
-    CAST(e.organiser_id AS CHAR) AS organizerId,
-    u.full_name AS organiser_name,
-    e.banner_image_url AS image,
-    e.status,
-    0 AS viewCount,
-    (
-      SELECT COUNT(*)
-      FROM registrations r
-      WHERE r.event_id = e.event_id
-        AND r.status = 'registered'
-    ) AS rsvpCount,
-    NULL AS volunteersNeeded,
-    NULL AS volunteersRegistered,
-    e.capacity AS seatingCapacity,
-    (
-      SELECT COUNT(*)
-      FROM registrations r
-      WHERE r.event_id = e.event_id
-        AND r.status = 'registered'
-    ) AS seatsBooked,
-    0 AS foodProvided,
-    NULL AS foodOptions,
-    e.notes,
-    DATE_FORMAT(e.created_at, '%Y-%m-%dT%H:%i:%sZ') AS createdAt
-  FROM events e
-  INNER JOIN categories c ON c.category_id = e.category_id
-  INNER JOIN users u ON u.user_id = e.organiser_id
-`;
+const EVENT_SELECT_SQL = [
+  "SELECT",
+  "e.event_id AS id,",
+  "e.title,",
+  "e.description,",
+  "DATE_FORMAT(e.event_date, '%Y-%m-%d') AS date,",
+  "TIME_FORMAT(e.start_time, '%H:%i:%s') AS startTime,",
+  "TIME_FORMAT(e.end_time, '%H:%i:%s') AS endTime,",
+  "e.location,",
+  "c.name AS category,",
+  "CAST(e.organiser_id AS CHAR) AS organizerId,",
+  "u.full_name AS organiser_name,",
+  "e.banner_image_url AS image,",
+  "e.status,",
+  "0 AS viewCount,",
+  "(",
+  "SELECT COUNT(*)",
+  "FROM registrations r",
+  "WHERE r.event_id = e.event_id",
+  "AND r.status = 'registered'",
+  ") AS rsvpCount,",
+  "NULL AS volunteersNeeded,",
+  "NULL AS volunteersRegistered,",
+  "e.capacity AS seatingCapacity,",
+  "(",
+  "SELECT COUNT(*)",
+  "FROM registrations r",
+  "WHERE r.event_id = e.event_id",
+  "AND r.status = 'registered'",
+  ") AS seatsBooked,",
+  "0 AS foodProvided,",
+  "NULL AS foodOptions,",
+  "e.notes,",
+  "DATE_FORMAT(e.created_at, '%Y-%m-%dT%H:%i:%sZ') AS createdAt",
+  "FROM events e",
+  "INNER JOIN categories c ON c.category_id = e.category_id",
+  "INNER JOIN users u ON u.user_id = e.organiser_id"
+].join(" ");
+
+const LIST_EVENTS_SQL = [
+  EVENT_SELECT_SQL,
+  "WHERE e.event_date >= CURDATE()",
+  "ORDER BY e.event_date ASC, e.start_time ASC"
+].join(" ");
+const GET_EVENT_BY_ID_SQL = [
+  EVENT_SELECT_SQL,
+  "WHERE e.event_id = ?",
+  "LIMIT 1"
+].join(" ");
+const INSERT_EVENT_SQL = [
+  "INSERT INTO events",
+  "(organiser_id, category_id, title, description, event_date, start_time, end_time, location, banner_image_url, capacity, registration_required, status, notes)",
+  "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+].join(" ");
+const UPDATE_EVENT_SQL = [
+  "UPDATE events",
+  "SET category_id = ?, title = ?, description = ?, event_date = ?, start_time = ?, end_time = ?, location = ?, banner_image_url = ?, capacity = ?, registration_required = ?, status = ?, notes = ?",
+  "WHERE event_id = ?"
+].join(" ");
 
 function getAllowedWriteStatuses(role) {
   return role === "admin"
@@ -72,32 +93,42 @@ function canViewEvent(row, user) {
 }
 
 async function resolveCategoryId(categoryName) {
-  const [rows] = await pool.query(
-    "SELECT category_id FROM categories WHERE name = ? LIMIT 1",
-    [categoryName]
-  );
+  try {
+    const [rows] = await pool.query(
+      "SELECT category_id FROM categories WHERE name = ? LIMIT 1",
+      [categoryName]
+    );
 
-  if (!rows.length) {
-    throw new Error("Unknown category");
+    if (!rows.length) {
+      throw new Error("Unknown category");
+    }
+
+    return rows[0].category_id;
+  } catch (error) {
+    console.error("[resolveCategoryId] Failed:", error.message);
+    throw error;
   }
-
-  return rows[0].category_id;
 }
 
 async function resolveOrganizerId(organizerId) {
-  if (organizerId) {
-    return Number(organizerId);
+  try {
+    if (organizerId) {
+      return Number(organizerId);
+    }
+
+    const [rows] = await pool.query(
+      "SELECT user_id FROM users WHERE role = 'organiser' ORDER BY user_id ASC LIMIT 1"
+    );
+
+    if (!rows.length) {
+      throw new Error("No organiser user available");
+    }
+
+    return rows[0].user_id;
+  } catch (error) {
+    console.error("[resolveOrganizerId] Failed:", error.message);
+    throw error;
   }
-
-  const [rows] = await pool.query(
-    "SELECT user_id FROM users WHERE role = 'organiser' ORDER BY user_id ASC LIMIT 1"
-  );
-
-  if (!rows.length) {
-    throw new Error("No organiser user available");
-  }
-
-  return rows[0].user_id;
 }
 
 async function getEventOwnerId(eventId) {
@@ -111,7 +142,7 @@ async function getEventOwnerId(eventId) {
 
 router.get("/", async (req, res) => {
   try {
-    const [rows] = await pool.query(`${eventSelect} WHERE e.event_date >= CURDATE() ORDER BY e.event_date ASC, e.start_time ASC`);
+    const [rows] = await pool.query(LIST_EVENTS_SQL);
     return res.json(rows.filter((row) => canViewEvent(row, req.user)));
   } catch (error) {
     console.error("GET /api/events error:", error);
@@ -142,7 +173,7 @@ router.patch("/:id/status", requireAuth, requireRole("admin"), adminRateLimit, a
       return res.status(404).json({ error: "Event not found" });
     }
 
-    const [rows] = await pool.query(`${eventSelect} WHERE e.event_id = ? LIMIT 1`, [id]);
+    const [rows] = await pool.query(GET_EVENT_BY_ID_SQL, [id]);
     return res.json(rows[0]);
   } catch (error) {
     console.error("PATCH /api/events/:id/status error:", error);
@@ -154,7 +185,7 @@ router.get("/:id", async (req, res) => {
   const { id } = req.params;
 
   try {
-    const [rows] = await pool.query(`${eventSelect} WHERE e.event_id = ? LIMIT 1`, [id]);
+    const [rows] = await pool.query(GET_EVENT_BY_ID_SQL, [id]);
 
     if (rows.length === 0) {
       return res.status(404).json({ error: "Event not found" });
@@ -207,9 +238,7 @@ router.post("/", requireAuth, requireRole("organizer", "admin"), generalWriteRat
       ? await resolveOrganizerId(organizerId)
       : req.user.id;
     const [result] = await pool.query(
-      `INSERT INTO events
-        (organiser_id, category_id, title, description, event_date, start_time, end_time, location, banner_image_url, capacity, registration_required, status, notes)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      INSERT_EVENT_SQL,
       [
         resolvedOrganizerId,
         categoryId,
@@ -226,7 +255,7 @@ router.post("/", requireAuth, requireRole("organizer", "admin"), generalWriteRat
         notes || null
       ]
     );
-    const [rows] = await pool.query(`${eventSelect} WHERE e.event_id = ? LIMIT 1`, [result.insertId]);
+    const [rows] = await pool.query(GET_EVENT_BY_ID_SQL, [result.insertId]);
     return res.status(201).json(rows[0]);
   } catch (error) {
     console.error("POST /api/events error:", error);
@@ -276,9 +305,7 @@ router.put("/:id", requireAuth, requireRole("organizer", "admin"), generalWriteR
 
     const categoryId = await resolveCategoryId(category);
     const [result] = await pool.query(
-      `UPDATE events
-       SET category_id = ?, title = ?, description = ?, event_date = ?, start_time = ?, end_time = ?, location = ?, banner_image_url = ?, capacity = ?, registration_required = ?, status = ?, notes = ?
-       WHERE event_id = ?`,
+      UPDATE_EVENT_SQL,
       [
         categoryId,
         title,
@@ -300,7 +327,7 @@ router.put("/:id", requireAuth, requireRole("organizer", "admin"), generalWriteR
       return res.status(404).json({ error: "Event not found" });
     }
 
-    const [rows] = await pool.query(`${eventSelect} WHERE e.event_id = ? LIMIT 1`, [id]);
+    const [rows] = await pool.query(GET_EVENT_BY_ID_SQL, [id]);
     return res.json(rows[0]);
   } catch (error) {
     console.error("PUT /api/events/:id error:", error);
