@@ -9,9 +9,11 @@ const userRoutes = require("./routes/userRoutes");
 const categoryRoutes = require("./routes/categoryRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const { attachUser } = require("./middleware/auth");
+const { getSecret } = require("./utils/authTokens");
 const { corsOptions, securityHeaders } = require("./middleware/security");
 
 const app = express();
+getSecret();
 
 app.set("trust proxy", 1);
 

@@ -1,14 +1,20 @@
 const crypto = require("crypto");
 
-const DEFAULT_SECRET = process.env.AUTH_SECRET || process.env.JWT_SECRET || "ceda-dev-secret";
 const TOKEN_TTL_SECONDS = 60 * 60 * 24 * 7;
+const MIN_SECRET_LENGTH = 32;
 
 function getSecret() {
-  if (process.env.NODE_ENV === "production" && DEFAULT_SECRET === "ceda-dev-secret") {
-    throw new Error("AUTH_SECRET or JWT_SECRET must be set in production");
+  const secret = process.env.AUTH_SECRET || process.env.JWT_SECRET;
+
+  if (!secret) {
+    throw new Error("AUTH_SECRET or JWT_SECRET must be set");
   }
 
-  return DEFAULT_SECRET;
+  if (secret.length < MIN_SECRET_LENGTH) {
+    throw new Error(`AUTH_SECRET or JWT_SECRET must be at least ${MIN_SECRET_LENGTH} characters long`);
+  }
+
+  return secret;
 }
 
 function encode(value) {
@@ -61,5 +67,6 @@ function verifyAuthToken(token) {
 
 module.exports = {
   createAuthToken,
+  getSecret,
   verifyAuthToken,
 };
