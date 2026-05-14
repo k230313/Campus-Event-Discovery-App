@@ -37,9 +37,16 @@ This repository is being developed progressively based on weekly deliverables.
 
 ## Changelog
 
+### v3.1.0
+- Added major security upgrade: email-based password reset and registration email verification
+- Integrated Resend for transactional account emails
+- Added expiring, one-time hashed reset tokens for password recovery
+
+
 ### v3.0.0
 - Added organiser name display on event cards and event detail page
 - Enabled bookmarking for organiser role (bookmark button, My Bookmarks page, nav link)
 - Implemented master password session-unlock for admin user deletion
 - Fixed radio button visibility on registration form
 - Fixed browser tab title
+
