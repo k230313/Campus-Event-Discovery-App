@@ -63,7 +63,6 @@ jobs:
           port: ${{ secrets.SERVER_PORT }}
           command_timeout: 20m
           script_stop: true
-          command_timeout: 20m
           script: |
             set -e
             APP_DIR="/var/www/ceda/Campus-Event-Discovery-App"
