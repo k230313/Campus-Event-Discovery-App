@@ -4,9 +4,9 @@ import { User, Event, Bookmark, RSVP } from '../types';
 interface AppContextType {
   user: User | null;
   setCurrentUser: (nextUser: User | null) => void;
-  login: (email: string, password: string) => Promise<User | null>;
+  login: (email: string, password: string) => Promise<{ user: User | null; error: string | null }>;
   logout: () => void;
-  register: (name: string, email: string, password: string, role: 'student' | 'organizer', turnstileToken: string) => Promise<User | null>;
+  register: (name: string, email: string, password: string, role: 'student' | 'organizer', turnstileToken: string) => Promise<{ user: User | null; message: string | null; error: string | null }>;
   events: Event[];
   bookmarks: Bookmark[];
   rsvps: RSVP[];
@@ -201,9 +201,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     loadUserData();
   }, [user]);
 
-  const login = async (email: string, password: string): Promise<User | null> => {
+  const login = async (email: string, password: string): Promise<{ user: User | null; error: string | null }> => {
     if (!email || !password) {
-      return null;
+      return { user: null, error: 'Email and password are required' };
     }
 
     try {
@@ -214,16 +214,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }));
 
       if (!response.ok) {
-        return null;
+        return {
+          user: null,
+          error: await getApiErrorMessage(response, 'Failed to log in'),
+        };
       }
 
       const data = await response.json();
       const nextUser = normalizeUser(data.user);
       setCurrentUser(nextUser);
-      return nextUser;
+      return { user: nextUser, error: null };
     } catch (error) {
       console.error('Login failed:', error);
-      return null;
+      return { user: null, error: 'Failed to log in' };
     }
   };
 
@@ -241,9 +244,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     password: string,
     role: 'student' | 'organizer',
     turnstileToken: string
-  ): Promise<User | null> => {
+  ): Promise<{ user: User | null; message: string | null; error: string | null }> => {
     if (!name || !email || !password || !turnstileToken) {
-      return null;
+      return { user: null, message: null, error: 'All fields are required' };
     }
 
     try {
@@ -254,16 +257,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }));
 
       if (!response.ok) {
-        return null;
+        return {
+          user: null,
+          message: null,
+          error: await getApiErrorMessage(response, 'Registration failed'),
+        };
       }
 
       const data = await response.json();
-      const nextUser = normalizeUser(data.user);
-      setCurrentUser(nextUser);
-      return nextUser;
+      return { user: null, message: data.message || null, error: null };
     } catch (error) {
       console.error('Registration failed:', error);
-      return null;
+      return { user: null, message: null, error: 'Registration failed' };
     }
   };
 

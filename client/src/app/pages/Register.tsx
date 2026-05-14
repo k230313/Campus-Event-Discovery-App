@@ -19,6 +19,7 @@ export function Register() {
   const [role, setRole] = useState<'student' | 'organizer'>('student');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [turnstileToken, setTurnstileToken] = useState('');
   const turnstileContainerRef = useRef<HTMLDivElement | null>(null);
   const turnstileWidgetIdRef = useRef<string | null>(null);
@@ -63,6 +64,7 @@ export function Register() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
 
     if (password !== confirmPassword) {
       setError('Passwords do not match');
@@ -82,12 +84,16 @@ export function Register() {
     setIsLoading(true);
 
     try {
-      const nextUser = await register(name, email, password, role, turnstileToken);
-      if (nextUser) {
-        const destination = nextUser.role === 'organizer' ? '/dashboard' : '/my-events';
-        navigate(destination);
+      const result = await register(name, email, password, role, turnstileToken);
+      if (result.message) {
+        setSuccess(result.message);
+        setName('');
+        setEmail('');
+        setPassword('');
+        setConfirmPassword('');
+        setRole('student');
       } else {
-        setError('Registration failed. Please try again.');
+        setError(result.error || 'Registration failed. Please try again.');
         const turnstile = (window as any).turnstile;
         if (turnstile && turnstileWidgetIdRef.current !== null) {
           turnstile.reset(turnstileWidgetIdRef.current);
@@ -121,6 +127,11 @@ export function Register() {
             {error && (
               <div className="p-3 bg-red-50 border border-red-200 rounded-md">
                 <p className="text-sm text-red-800">{error}</p>
+              </div>
+            )}
+            {success && (
+              <div className="p-3 bg-green-50 border border-green-200 rounded-md">
+                <p className="text-sm text-green-800">{success}</p>
               </div>
             )}
 

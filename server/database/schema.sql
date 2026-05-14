@@ -33,6 +33,7 @@ CREATE TABLE IF NOT EXISTS users (
   email           VARCHAR(150)                        NOT NULL,
   password_hash   VARCHAR(255)                        NOT NULL,
   role            ENUM('student', 'organiser', 'admin') NOT NULL DEFAULT 'student',
+  email_verified_at DATETIME                          NULL,
   created_at      DATETIME                            NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
   PRIMARY KEY (user_id),
@@ -122,14 +123,31 @@ CREATE TABLE IF NOT EXISTS password_resets (
     ON DELETE CASCADE ON UPDATE CASCADE
 );
 
-INSERT INTO users (user_id, full_name, email, password_hash, role) VALUES
-  (1, 'Admin User', 'admin@university.edu.au', 'scrypt$035d0fea94d644ee0a04c14a6f291a7d$5d2cca3d1d0c9ea81f70d609c1f6c8e207da29dfafa01d899ae3588d8dc70587b92025b0b9270f0beeac4d35aae306d6e5a434ec8e70bdfd82d4d6d3cd2cadc7', 'admin'),
-  (2, 'Jane Organiser', 'jane@university.edu.au', 'scrypt$dbf10d08219f33d965481880859ab24c$cdf41550ec63f938f3d537ad8c5aab5962ab22fe7011740e6b5525da6fb746b5d934627b20f2972848a55461b476976986679d5c1f2d1aec65182a061face3f8', 'organiser'),
-  (3, 'John Student', 'john@university.edu.au', 'scrypt$abd5a2278b56de5446759dca311b9d1e$dee914f09ecc0cb34a11176016abd115e53d68d12f6c152de1ecdd69122432ca158bba582a38186ac3196d97ffd929d9f7850d348ab63faebca146300903ae0f', 'student')
+CREATE TABLE IF NOT EXISTS email_verifications (
+  verification_id INT           NOT NULL AUTO_INCREMENT,
+  user_id         INT           NOT NULL,
+  token_hash      VARCHAR(255)  NOT NULL,
+  expires_at      DATETIME      NOT NULL,
+  used_at         DATETIME      NULL,
+  created_at      DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+  PRIMARY KEY (verification_id),
+  KEY idx_email_verifications_user_id (user_id),
+  KEY idx_email_verifications_expires_at (expires_at),
+  CONSTRAINT fk_email_verifications_user
+    FOREIGN KEY (user_id) REFERENCES users (user_id)
+    ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+INSERT INTO users (user_id, full_name, email, password_hash, role, email_verified_at) VALUES
+  (1, 'Admin User', 'admin@university.edu.au', 'scrypt$035d0fea94d644ee0a04c14a6f291a7d$5d2cca3d1d0c9ea81f70d609c1f6c8e207da29dfafa01d899ae3588d8dc70587b92025b0b9270f0beeac4d35aae306d6e5a434ec8e70bdfd82d4d6d3cd2cadc7', 'admin', CURRENT_TIMESTAMP),
+  (2, 'Jane Organiser', 'jane@university.edu.au', 'scrypt$dbf10d08219f33d965481880859ab24c$cdf41550ec63f938f3d537ad8c5aab5962ab22fe7011740e6b5525da6fb746b5d934627b20f2972848a55461b476976986679d5c1f2d1aec65182a061face3f8', 'organiser', CURRENT_TIMESTAMP),
+  (3, 'John Student', 'john@university.edu.au', 'scrypt$abd5a2278b56de5446759dca311b9d1e$dee914f09ecc0cb34a11176016abd115e53d68d12f6c152de1ecdd69122432ca158bba582a38186ac3196d97ffd929d9f7850d348ab63faebca146300903ae0f', 'student', CURRENT_TIMESTAMP)
 ON DUPLICATE KEY UPDATE
   full_name = VALUES(full_name),
   password_hash = VALUES(password_hash),
-  role = VALUES(role);
+  role = VALUES(role),
+  email_verified_at = COALESCE(users.email_verified_at, VALUES(email_verified_at));
 
 INSERT IGNORE INTO events
   (event_id, organiser_id, category_id, title, description, event_date, start_time, end_time, location, capacity, registration_required, status, approved_by)

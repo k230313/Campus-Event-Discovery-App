@@ -21,16 +21,16 @@ export function Login() {
     setIsLoading(true);
 
     try {
-      const nextUser = await login(email, password);
-      if (nextUser) {
-        const destination = nextUser.role === 'admin'
+      const result = await login(email, password);
+      if (result.user) {
+        const destination = result.user.role === 'admin'
           ? '/admin-dashboard'
-          : nextUser.role === 'organizer'
+          : result.user.role === 'organizer'
           ? '/dashboard'
           : '/my-events';
         navigate(destination);
       } else {
-        setError('Invalid email or password');
+        setError(result.error || 'Invalid email or password');
       }
     } catch (err) {
       setError('An error occurred during login');

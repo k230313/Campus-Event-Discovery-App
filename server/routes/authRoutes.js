@@ -5,7 +5,7 @@ const { hashPassword, verifyPassword } = require("../utils/passwords");
 const { createAuthToken } = require("../utils/authTokens");
 const { AUTH_COOKIE_NAME, requireAuth } = require("../middleware/auth");
 const { authRateLimit, clearAuthRateLimit } = require("../middleware/security");
-const { sendPasswordResetEmail } = require("../services/emailService");
+const { sendPasswordResetEmail, sendVerificationEmail } = require("../services/emailService");
 
 const router = express.Router();
 
@@ -38,6 +38,18 @@ function getResetPasswordUrl(token) {
   }
 
   const url = new URL("/reset-password", baseUrl);
+  url.searchParams.set("token", token);
+  return url.toString();
+}
+
+function getVerifyEmailUrl(token) {
+  const baseUrl = process.env.VERIFY_EMAIL_URL_BASE;
+
+  if (!baseUrl) {
+    throw new Error("VERIFY_EMAIL_URL_BASE is not configured");
+  }
+
+  const url = new URL("/verify-email", baseUrl);
   url.searchParams.set("token", token);
   return url.toString();
 }
@@ -150,11 +162,33 @@ router.post("/register", authRateLimit, async (req, res) => {
       [name.trim(), normalizedEmail, passwordHash, toDbRole(role)]
     );
 
-    const user = await loadUserById(result.insertId);
-    const token = createAuthToken({ userId: user.user_id });
-    setAuthCookie(res, token);
+    const verificationToken = crypto.randomBytes(32).toString("hex");
+    const verificationTokenHash = hashResetToken(verificationToken);
+    const verificationUrl = getVerifyEmailUrl(verificationToken);
+    const verificationExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    await pool.query(
+      "INSERT INTO email_verifications (user_id, token_hash, expires_at) VALUES (?, ?, ?)",
+      [result.insertId, verificationTokenHash, verificationExpiresAt]
+    );
+
+    const { error: emailError } = await sendVerificationEmail({
+      to: normalizedEmail,
+      verificationUrl,
+      idempotencyKey: `verify-email/${result.insertId}/${verificationTokenHash.slice(0, 12)}`,
+    });
+
+    if (emailError) {
+      console.error("POST /api/auth/register verification email error:", emailError);
+      await pool.query("DELETE FROM email_verifications WHERE user_id = ?", [result.insertId]);
+      await pool.query("DELETE FROM users WHERE user_id = ?", [result.insertId]);
+      return res.status(500).json({ error: "Failed to send verification email" });
+    }
+
     clearAuthRateLimit(req);
-    return res.status(201).json({ user: serializeUser(user) });
+    return res.status(201).json({
+      message: "Registration successful. Please check your email to verify your account before logging in.",
+    });
   } catch (error) {
     console.error("POST /api/auth/register error:", error);
     return res.status(500).json({ error: "Failed to register user" });
@@ -171,7 +205,7 @@ router.post("/login", authRateLimit, async (req, res) => {
   try {
     const normalizedEmail = String(email).trim().toLowerCase();
     const [rows] = await pool.query(
-      "SELECT user_id, full_name, email, role, password_hash FROM users WHERE email = ? LIMIT 1",
+      "SELECT user_id, full_name, email, role, password_hash, email_verified_at FROM users WHERE email = ? LIMIT 1",
       [normalizedEmail]
     );
 
@@ -183,6 +217,10 @@ router.post("/login", authRateLimit, async (req, res) => {
     const passwordMatches = await verifyPassword(password, user.password_hash);
     if (!passwordMatches) {
       return res.status(401).json({ error: "Invalid email or password" });
+    }
+
+    if (!user.email_verified_at) {
+      return res.status(403).json({ error: "Please verify your email address before logging in" });
     }
 
     const token = createAuthToken({ userId: user.user_id });
@@ -231,7 +269,7 @@ router.post("/forgot-password", authRateLimit, async (req, res) => {
     const { error } = await sendPasswordResetEmail({
       to: user.email,
       resetUrl,
-      idempotencyKey: `password-reset/${user.user_id}`,
+      idempotencyKey: `password-reset/${user.user_id}/${tokenHash.slice(0, 12)}`,
     });
 
     if (error) {
@@ -243,6 +281,49 @@ router.post("/forgot-password", authRateLimit, async (req, res) => {
   } catch (error) {
     console.error("POST /api/auth/forgot-password error:", error);
     return res.status(500).json({ error: "Failed to process password reset request" });
+  }
+});
+
+router.post("/verify-email", authRateLimit, async (req, res) => {
+  const token = String(req.body?.token || "").trim();
+
+  if (!token) {
+    return res.status(400).json({ error: "Verification token is required" });
+  }
+
+  try {
+    const tokenHash = hashResetToken(token);
+    const [rows] = await pool.query(
+      `SELECT verification_id, user_id
+       FROM email_verifications
+       WHERE token_hash = ?
+         AND used_at IS NULL
+         AND expires_at > NOW()
+       ORDER BY created_at DESC
+       LIMIT 1`,
+      [tokenHash]
+    );
+
+    const verificationRow = rows[0];
+    if (!verificationRow) {
+      return res.status(400).json({ error: "Verification link is invalid or has expired" });
+    }
+
+    await pool.query("UPDATE users SET email_verified_at = NOW() WHERE user_id = ?", [
+      verificationRow.user_id,
+    ]);
+    await pool.query("UPDATE email_verifications SET used_at = NOW() WHERE verification_id = ?", [
+      verificationRow.verification_id,
+    ]);
+    await pool.query(
+      "DELETE FROM email_verifications WHERE user_id = ? AND verification_id <> ?",
+      [verificationRow.user_id, verificationRow.verification_id]
+    );
+
+    return res.json({ message: "Email verified successfully. You can now log in." });
+  } catch (error) {
+    console.error("POST /api/auth/verify-email error:", error);
+    return res.status(500).json({ error: "Failed to verify email" });
   }
 });
 
