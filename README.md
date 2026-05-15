@@ -30,6 +30,7 @@ Supporting documents:
 - [Project Weekly Plan](./Docs/Project-Weekly-Plan.md)
 - [GitHub Team Guide](./Docs/GitHub-Team-Guide.md)
 - [Deployment Guide](./Docs/Deployment-Guide.md)
+- [CI/CD Deployment Guide](./Docs/CI-CD-Deployment-Guide.md)
 
 ## Notes
 
