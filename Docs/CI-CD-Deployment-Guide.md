@@ -6,7 +6,7 @@ This project now uses GitHub Actions to automate build checks and production dep
 
 The pipeline currently works like this:
 
-1. A push to `main` triggers the workflow in `.github/workflows/deploy.yml`
+1. A push to `main` that changes `client/**`, `server/**`, or `.github/workflows/deploy.yml` triggers the workflow in `.github/workflows/deploy.yml`
 2. GitHub Actions runs CI checks
 3. If CI passes, GitHub Actions connects to the private server through Tailscale
 4. The server updates to the latest `main`, installs dependencies, rebuilds the frontend, restarts PM2, and runs a health check
@@ -142,23 +142,17 @@ This was added because `npm ci` and frontend build steps on the server can excee
 
 ## Important Limitation
 
-### Docs-Only Pushes Still Trigger Deploy
+### Docs-Only Pushes Do Not Trigger Deploy
 
-At the moment, **any push to `main` triggers the full workflow**, including deployment.
+The workflow now has push path filters.
 
-That means a documentation-only commit still runs:
+Only changes to these paths trigger the workflow automatically:
 
-- CI
-- server deploy
-- health check
+- `client/**`
+- `server/**`
+- `.github/workflows/deploy.yml`
 
-This is because the workflow currently has no path filters.
-
-If desired later, the workflow can be changed to:
-
-- skip deploys for docs-only changes
-- run only CI for documentation changes
-- deploy only when `client/`, `server/`, or workflow files change
+That means documentation-only pushes, README-only pushes, and other unrelated repository changes do not trigger CI/CD automatically.
 
 ## Current Rollback Status
 
@@ -173,6 +167,5 @@ Current behavior:
 ## Recommended Next Improvements
 
 1. Add real backend tests instead of only syntax smoke checks
-2. Add workflow path filters so docs-only pushes do not deploy
-3. Add automatic rollback if the post-deploy health check fails
-4. Consider a release-based deployment strategy instead of hard-resetting the working tree
+2. Add automatic rollback if the post-deploy health check fails
+3. Consider a release-based deployment strategy instead of hard-resetting the working tree
