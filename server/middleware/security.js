@@ -127,12 +127,20 @@ const chatRateLimit = createRateLimit({
   message: "Too many chat requests. Try again later.",
 });
 
+const chatQuotaRateLimit = createRateLimit({
+  windowMs: 60 * 60 * 1000,
+  maxRequests: 40,
+  keyPrefix: "chat-quota",
+  message: "Chat usage limit reached. Try again later.",
+});
+
 module.exports = {
   corsOptions,
   securityHeaders,
   authRateLimit,
   adminRateLimit,
   chatRateLimit,
+  chatQuotaRateLimit,
   clearAuthRateLimit,
   generalWriteRateLimit,
   registrationRateLimit,

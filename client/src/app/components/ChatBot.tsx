@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { MessageCircle, X, Send, Sparkles } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card } from './ui/card';
@@ -13,6 +14,23 @@ interface Message {
   text: string;
   sender: 'user' | 'bot';
   timestamp: Date;
+  relatedEvents?: Array<{
+    id: string;
+    title: string;
+    date?: string;
+  }>;
+}
+
+function formatEventDate(date?: string) {
+  if (!date) {
+    return '';
+  }
+
+  return new Date(date).toLocaleDateString('en-AU', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
 }
 
 export function ChatBot() {
@@ -63,9 +81,10 @@ export function ChatBot() {
 
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: botResponse,
+        text: botResponse.reply,
         sender: 'bot',
         timestamp: new Date(),
+        relatedEvents: botResponse.events,
       };
 
       setMessages(prev => [...prev, botMessage]);
@@ -133,9 +152,33 @@ export function ChatBot() {
                         : 'bg-white border-2 border-gray-100'
                     }`}
                   >
-                    <p className={`text-sm leading-relaxed ${message.sender === 'bot' ? 'text-gray-800' : ''}`}>
-                      {message.text}
-                    </p>
+                    <div className={`text-sm leading-relaxed space-y-2 ${message.sender === 'bot' ? 'text-gray-800' : ''}`}>
+                      {message.text.split('\n').filter(Boolean).map((line, index) => (
+                        <p key={`${message.id}-line-${index}`}>{line.trim()}</p>
+                      ))}
+                      {message.sender === 'bot' && message.relatedEvents && message.relatedEvents.length > 0 && (
+                        <div className="pt-1">
+                          <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">
+                            Related events
+                          </p>
+                          <div className="space-y-2">
+                            {message.relatedEvents.map((event) => (
+                              <Link
+                                key={event.id}
+                                to={`/events/${event.id}`}
+                                onClick={() => setIsOpen(false)}
+                                className="block rounded-lg border border-[#EF9B28]/30 bg-[#FFF8ED] px-3 py-2 transition-colors hover:bg-[#FDE9C8]"
+                              >
+                                <span className="block font-medium text-[#1B2E55]">{event.title}</span>
+                                {event.date && (
+                                  <span className="block text-xs text-gray-500 mt-1">{formatEventDate(event.date)}</span>
+                                )}
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                     <p className={`text-xs mt-2 ${message.sender === 'user' ? 'text-white/70' : 'text-gray-400'}`}>
                       {message.timestamp.toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit' })}
                     </p>

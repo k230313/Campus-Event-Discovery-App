@@ -1,11 +1,20 @@
 import { Event } from '../types';
 import { csrfFetch } from './api';
 
+export interface ChatResponse {
+  reply: string;
+  events: Array<{
+    id: string;
+    title: string;
+    date?: string;
+  }>;
+}
+
 export async function generateAIResponse(
   userMessage: string,
   _events: Event[],
   conversationHistory: Array<{ role: 'user' | 'assistant'; content: string }>
-): Promise<string> {
+): Promise<ChatResponse> {
   const response = await csrfFetch('/api/chat', {
     method: 'POST',
     headers: {
@@ -27,5 +36,8 @@ export async function generateAIResponse(
     throw new Error('Chat response was invalid');
   }
 
-  return data.reply;
+  return {
+    reply: data.reply,
+    events: Array.isArray(data?.events) ? data.events : [],
+  };
 }

@@ -1,11 +1,14 @@
 const express = require("express");
+const crypto = require("crypto");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const pool = require("../config/db");
-const { chatRateLimit } = require("../middleware/security");
+const { chatQuotaRateLimit, chatRateLimit } = require("../middleware/security");
 
 const router = express.Router();
 
 const SYSTEM_PROMPT = "You are a campus event assistant. You only answer questions about the campus events provided to you. If asked anything unrelated, politely say you can only help with campus events.";
+const CHAT_CACHE_TTL_MS = 10 * 60 * 1000;
+const chatResponseCache = new Map();
 
 function normalizeHistory(conversationHistory) {
   if (!Array.isArray(conversationHistory)) {
@@ -68,7 +71,116 @@ async function loadEventContext() {
   }));
 }
 
-router.post("/", chatRateLimit, async (req, res) => {
+function getRelevantEvents(events, message) {
+  const query = message.toLowerCase();
+  const terms = query
+    .split(/[^a-z0-9]+/i)
+    .map((term) => term.trim())
+    .filter((term) => term.length >= 3);
+
+  const scored = events.map((event) => {
+    const haystack = [
+      event.title,
+      event.description,
+      event.category,
+      event.location,
+      event.organizerName,
+    ].join(" ").toLowerCase();
+
+    let score = 0;
+
+    for (const term of terms) {
+      if (haystack.includes(term)) {
+        score += 2;
+      }
+    }
+
+    if (query.includes("this month") || query.includes("this week") || query.includes("upcoming") || query.includes("soon")) {
+      score += 1;
+    }
+
+    return { event, score };
+  });
+
+  const matches = scored
+    .filter((entry) => entry.score > 0)
+    .sort((a, b) => b.score - a.score || a.event.date.localeCompare(b.event.date))
+    .slice(0, 3)
+    .map((entry) => ({
+      id: entry.event.id,
+      title: entry.event.title,
+      date: entry.event.date,
+    }));
+
+  if (matches.length > 0) {
+    return matches;
+  }
+
+  if (query.includes("this month") || query.includes("this week") || query.includes("upcoming") || query.includes("soon")) {
+    return events.slice(0, 3).map((event) => ({
+      id: event.id,
+      title: event.title,
+      date: event.date,
+    }));
+  }
+
+  return [];
+}
+
+function buildCacheKey(message, history, events) {
+  const historyKey = history.map((entry) => ({
+    role: entry.role,
+    content: entry.parts?.[0]?.text || "",
+  }));
+
+  const eventKey = events.map((event) => ({
+    id: event.id,
+    title: event.title,
+    date: event.date,
+    startTime: event.startTime,
+    category: event.category,
+  }));
+
+  return crypto
+    .createHash("sha256")
+    .update(JSON.stringify({
+      message: message.toLowerCase(),
+      history: historyKey,
+      events: eventKey,
+    }))
+    .digest("hex");
+}
+
+function getCachedReply(cacheKey) {
+  const cached = chatResponseCache.get(cacheKey);
+
+  if (!cached) {
+    return null;
+  }
+
+  if (Date.now() - cached.createdAt > CHAT_CACHE_TTL_MS) {
+    chatResponseCache.delete(cacheKey);
+    return null;
+  }
+
+  return cached.reply;
+}
+
+function setCachedReply(cacheKey, reply) {
+  chatResponseCache.set(cacheKey, {
+    reply,
+    createdAt: Date.now(),
+  });
+
+  if (chatResponseCache.size > 500) {
+    const oldestKey = chatResponseCache.keys().next().value;
+    if (oldestKey) {
+      chatResponseCache.delete(oldestKey);
+    }
+  }
+}
+
+router.post("/", chatRateLimit, chatQuotaRateLimit, async (req, res) => {
   const apiKey = process.env.GEMINI_API_KEY;
   const message = typeof req.body?.message === "string" ? req.body.message.trim() : "";
   const history = normalizeHistory(req.body?.conversationHistory);
@@ -88,6 +200,14 @@ router.post("/", chatRateLimit, async (req, res) => {
 
   try {
     const safeEvents = await loadEventContext();
+    const relatedEvents = getRelevantEvents(safeEvents, message);
+    const cacheKey = buildCacheKey(message, history, safeEvents);
+    const cachedReply = getCachedReply(cacheKey);
+
+    if (cachedReply) {
+      return res.json({ reply: cachedReply, events: relatedEvents, cached: true });
+    }
+
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({
       model: "gemini-2.5-flash-lite",
@@ -101,6 +221,9 @@ router.post("/", chatRateLimit, async (req, res) => {
     const prompt = [
       "These are the only campus events you may use to answer the user.",
       "If the user asks something unrelated to these campus events, say you can only help with campus events.",
+      "Keep the reply concise and easy to read for a public user.",
+      "Use short paragraphs or compact bullet-style lines in plain text.",
+      "Do not invent links.",
       "",
       "Campus events:",
       JSON.stringify(safeEvents, null, 2),
@@ -112,7 +235,9 @@ router.post("/", chatRateLimit, async (req, res) => {
     const response = await result.response;
     const reply = response.text().trim();
 
-    return res.json({ reply });
+    setCachedReply(cacheKey, reply);
+
+    return res.json({ reply, events: relatedEvents });
   } catch (error) {
     console.error("POST /api/chat error:", error);
     return res.status(500).json({ error: "Failed to generate chat response" });
