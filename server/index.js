@@ -11,6 +11,7 @@ const registrationRoutes = require("./routes/registrationRoutes");
 const userRoutes = require("./routes/userRoutes");
 const categoryRoutes = require("./routes/categoryRoutes");
 const adminRoutes = require("./routes/adminRoutes");
+const chatRoutes = require("./routes/chatRoutes");
 const { attachUser } = require("./middleware/auth");
 const { getSecret } = require("./utils/authTokens");
 const { corsOptions, securityHeaders } = require("./middleware/security");
@@ -63,6 +64,7 @@ app.use("/api/registrations", registrationRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/chat", chatRoutes);
 
 app.use((err, _req, res, _next) => {
   console.error("Unhandled server error:", err);

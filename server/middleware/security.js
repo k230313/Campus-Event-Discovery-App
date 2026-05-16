@@ -120,11 +120,19 @@ const registrationRateLimit = createRateLimit({
   message: "Too many registration requests. Try again later.",
 });
 
+const chatRateLimit = createRateLimit({
+  windowMs: 5 * 60 * 1000,
+  maxRequests: 15,
+  keyPrefix: "chat",
+  message: "Too many chat requests. Try again later.",
+});
+
 module.exports = {
   corsOptions,
   securityHeaders,
   authRateLimit,
   adminRateLimit,
+  chatRateLimit,
   clearAuthRateLimit,
   generalWriteRateLimit,
   registrationRateLimit,
