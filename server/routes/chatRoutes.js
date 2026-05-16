@@ -1,5 +1,6 @@
 const express = require("express");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
+const pool = require("../config/db");
 const { chatRateLimit } = require("../middleware/security");
 
 const router = express.Router();
@@ -11,7 +12,7 @@ function normalizeHistory(conversationHistory) {
     return [];
   }
 
-  return conversationHistory
+  const normalized = conversationHistory
     .filter((entry) => (
       entry &&
       (entry.role === "user" || entry.role === "assistant") &&
@@ -23,31 +24,53 @@ function normalizeHistory(conversationHistory) {
       role: entry.role === "assistant" ? "model" : "user",
       parts: [{ text: entry.content.trim() }],
     }));
-}
 
-function normalizeEvents(events) {
-  if (!Array.isArray(events)) {
-    return [];
+  while (normalized.length > 0 && normalized[0].role !== "user") {
+    normalized.shift();
   }
 
-  return events.slice(0, 50).map((event) => ({
-    id: event?.id ?? null,
-    title: event?.title ?? "",
-    description: event?.description ?? "",
-    date: event?.date ?? "",
-    startTime: event?.startTime ?? "",
-    endTime: event?.endTime ?? "",
-    location: event?.location ?? "",
-    category: event?.category ?? "",
-    organizerName: event?.organizerName ?? event?.organiser_name ?? "",
-    status: event?.status ?? "",
+  return normalized;
+}
+
+async function loadEventContext() {
+  const [rows] = await pool.query(
+    `SELECT
+       CAST(e.event_id AS CHAR) AS id,
+       e.title,
+       e.description,
+       DATE_FORMAT(e.event_date, '%Y-%m-%d') AS date,
+       TIME_FORMAT(e.start_time, '%H:%i:%s') AS startTime,
+       TIME_FORMAT(e.end_time, '%H:%i:%s') AS endTime,
+       e.location,
+       c.name AS category,
+       u.full_name AS organizerName,
+       e.status
+     FROM events e
+     INNER JOIN categories c ON c.category_id = e.category_id
+     INNER JOIN users u ON u.user_id = e.organiser_id
+     WHERE e.status = 'published'
+       AND e.event_date >= CURDATE()
+     ORDER BY e.event_date ASC, e.start_time ASC
+     LIMIT 50`
+  );
+
+  return rows.map((event) => ({
+    id: event.id,
+    title: event.title || "",
+    description: event.description || "",
+    date: event.date || "",
+    startTime: event.startTime || "",
+    endTime: event.endTime || "",
+    location: event.location || "",
+    category: event.category || "",
+    organizerName: event.organizerName || "",
+    status: event.status || "",
   }));
 }
 
 router.post("/", chatRateLimit, async (req, res) => {
   const apiKey = process.env.GEMINI_API_KEY;
   const message = typeof req.body?.message === "string" ? req.body.message.trim() : "";
-  const safeEvents = normalizeEvents(req.body?.events);
   const history = normalizeHistory(req.body?.conversationHistory);
 
   if (!apiKey) {
@@ -64,6 +87,7 @@ router.post("/", chatRateLimit, async (req, res) => {
   }
 
   try {
+    const safeEvents = await loadEventContext();
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({
       model: "gemini-2.5-flash-lite",

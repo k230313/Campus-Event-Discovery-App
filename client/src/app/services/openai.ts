@@ -3,7 +3,7 @@ import { csrfFetch } from './api';
 
 export async function generateAIResponse(
   userMessage: string,
-  events: Event[],
+  _events: Event[],
   conversationHistory: Array<{ role: 'user' | 'assistant'; content: string }>
 ): Promise<string> {
   const response = await csrfFetch('/api/chat', {
@@ -13,7 +13,6 @@ export async function generateAIResponse(
     },
     body: JSON.stringify({
       message: userMessage,
-      events,
       conversationHistory,
     }),
   });

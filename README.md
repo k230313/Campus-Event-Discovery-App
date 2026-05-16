@@ -38,6 +38,11 @@ This repository is being developed progressively based on weekly deliverables.
 
 ## Changelog
 
+### v3.2.0
+- Added Gemini-backed chatbot route at `/api/chat` and connected the existing global ChatBot UI to the backend
+- Made the chatbot public with dedicated server-side rate limiting to reduce abuse and quota exhaustion risk
+- Moved chatbot event context to the server so AI responses use trusted published event data from MySQL instead of client-supplied event lists
+
 ### v3.1.0
 - Added major security upgrade: email-based password reset and registration email verification
 - Integrated Resend for transactional account emails
