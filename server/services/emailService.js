@@ -22,9 +22,27 @@ function getEmailFrom() {
   return `CEDA <${process.env.EMAIL_FROM}>`;
 }
 
-function formatEventDate(dateString) {
-  const [year, month, day] = String(dateString).split("-").map(Number);
-  const date = new Date(Date.UTC(year, (month || 1) - 1, day || 1));
+function formatEventDate(dateValue) {
+  let date;
+
+  if (dateValue instanceof Date) {
+    date = new Date(Date.UTC(dateValue.getFullYear(), dateValue.getMonth(), dateValue.getDate()));
+  } else if (typeof dateValue === "string") {
+    const normalized = dateValue.trim();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(normalized)) {
+      const [year, month, day] = normalized.split("-").map(Number);
+      date = new Date(Date.UTC(year, month - 1, day));
+    } else {
+      date = new Date(normalized);
+    }
+  } else {
+    date = new Date(dateValue);
+  }
+
+  if (Number.isNaN(date.getTime())) {
+    throw new Error(`Invalid event date value: ${dateValue}`);
+  }
+
   return new Intl.DateTimeFormat("en-AU", {
     day: "numeric",
     month: "long",
