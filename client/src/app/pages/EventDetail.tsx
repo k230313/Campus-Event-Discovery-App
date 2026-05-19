@@ -36,7 +36,7 @@ export function EventDetail() {
     return date.toLocaleDateString('en-AU', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
   };
 
-  const handleRSVP = () => {
+  const handleRSVP = async () => {
     if (!user) {
       alert('Please log in to RSVP');
       navigate('/login');
@@ -58,13 +58,18 @@ export function EventDetail() {
       options.seatNumber = selectedSeat;
     }
 
-    addRSVP(event.id, attendeeType, options);
-    navigate('/registration-confirmation', {
-      state: {
-        eventTitle: event.title,
-        attendeeType: attendeeType,
-      },
-    });
+    try {
+      const result = await addRSVP(event.id, attendeeType, options);
+      navigate('/registration-confirmation', {
+        state: {
+          eventTitle: event.title,
+          attendeeType: attendeeType,
+          confirmationEmailStatus: result.confirmationEmailStatus,
+        },
+      });
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Failed to register for event');
+    }
   };
 
   const handleBookmarkToggle = () => {

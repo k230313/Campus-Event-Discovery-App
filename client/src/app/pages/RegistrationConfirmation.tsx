@@ -9,6 +9,7 @@ export function RegistrationConfirmation() {
   const navigate = useNavigate();
   const eventTitle = location.state?.eventTitle || 'the event';
   const attendeeType = location.state?.attendeeType || 'attendee';
+  const confirmationEmailStatus = location.state?.confirmationEmailStatus === 'sent' ? 'sent' : 'failed';
 
   useEffect(() => {
     // Redirect to events if no state is passed
@@ -40,7 +41,9 @@ export function RegistrationConfirmation() {
                   <div>
                     <p className="font-semibold text-[#1B2E55]">Confirmation Email</p>
                     <p className="text-sm text-muted-foreground">
-                      We've sent a confirmation email with event details to your registered email address
+                      {confirmationEmailStatus === 'sent'
+                        ? 'We sent a confirmation email with the event details to your registered email address.'
+                        : 'Your booking is confirmed, but we could not send the confirmation email right now.'}
                     </p>
                   </div>
                 </div>
@@ -50,9 +53,9 @@ export function RegistrationConfirmation() {
                     <span className="text-white font-bold text-sm">2</span>
                   </div>
                   <div>
-                    <p className="font-semibold text-[#1B2E55]">Event Reminder</p>
+                    <p className="font-semibold text-[#1B2E55]">Manage Registration</p>
                     <p className="text-sm text-muted-foreground">
-                      You'll receive a reminder 24 hours before the event starts
+                      You can review this booking at any time from My Events in your dashboard
                     </p>
                   </div>
                 </div>

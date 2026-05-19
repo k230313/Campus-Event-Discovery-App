@@ -4,6 +4,7 @@ const { requireAuth, requireRole } = require("../middleware/auth");
 const { registrationRateLimit } = require("../middleware/security");
 const { validateBody } = require("../middleware/validate");
 const { registrationCreateSchema } = require("../validation/schemas");
+const { sendBookingConfirmationEmail } = require("../services/emailService");
 
 const router = express.Router();
 
@@ -39,7 +40,10 @@ router.post("/", requireAuth, requireRole("student"), registrationRateLimit, val
 
   try {
     const [eventRows] = await pool.query(
-      "SELECT event_id, capacity, status FROM events WHERE event_id = ? LIMIT 1",
+      `SELECT event_id, title, event_date, start_time, end_time, location, capacity, status
+       FROM events
+       WHERE event_id = ?
+       LIMIT 1`,
       [eventId]
     );
 
@@ -83,7 +87,36 @@ router.post("/", requireAuth, requireRole("student"), registrationRateLimit, val
       [req.user.id, eventId]
     );
 
-    return res.status(201).json(rows[0]);
+    let confirmationEmailStatus = "failed";
+
+    try {
+      const { error } = await sendBookingConfirmationEmail({
+        to: req.user.email,
+        attendeeName: req.user.name,
+        event: {
+          id: eventRows[0].event_id,
+          title: eventRows[0].title,
+          date: eventRows[0].event_date,
+          startTime: eventRows[0].start_time,
+          endTime: eventRows[0].end_time,
+          location: eventRows[0].location,
+        },
+        idempotencyKey: `booking/${req.user.id}/${eventRows[0].event_id}`,
+      });
+
+      if (error) {
+        console.error("POST /api/registrations confirmation email error:", error);
+      } else {
+        confirmationEmailStatus = "sent";
+      }
+    } catch (emailError) {
+      console.error("POST /api/registrations confirmation email failed:", emailError);
+    }
+
+    return res.status(201).json({
+      ...rows[0],
+      confirmationEmailStatus,
+    });
   } catch (error) {
     console.error("POST /api/registrations error:", error);
     return res.status(500).json({ error: "Failed to register for event" });

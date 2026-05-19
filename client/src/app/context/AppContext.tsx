@@ -14,7 +14,11 @@ interface AppContextType {
   addBookmark: (eventId: string) => Promise<void>;
   removeBookmark: (eventId: string) => Promise<void>;
   isBookmarked: (eventId: string) => boolean;
-  addRSVP: (eventId: string, attendeeType: 'attendee' | 'volunteer', options?: { foodOption?: string; seatNumber?: number }) => Promise<void>;
+  addRSVP: (
+    eventId: string,
+    attendeeType: 'attendee' | 'volunteer',
+    options?: { foodOption?: string; seatNumber?: number }
+  ) => Promise<{ confirmationEmailStatus: 'sent' | 'failed' }>;
   removeRSVP: (eventId: string) => Promise<void>;
   hasRSVP: (eventId: string) => boolean;
   createEvent: (event: Omit<Event, 'id' | 'organizerId' | 'organizerName' | 'viewCount' | 'rsvpCount' | 'createdAt'>) => Promise<{ event: Event | null; error: string | null }>;
@@ -340,7 +344,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     attendeeType: 'attendee' | 'volunteer',
     options?: { foodOption?: string; seatNumber?: number }
   ) => {
-    if (!user || user.role !== 'student' || rsvps.some((r) => r.eventId === eventId && r.userId === user.id)) return;
+    if (!user || user.role !== 'student') {
+      throw new Error('Only students can register for events');
+    }
+
+    if (rsvps.some((r) => r.eventId === eventId && r.userId === user.id)) {
+      throw new Error('You have already RSVP\'d to this event');
+    }
 
     try {
       const response = await csrfFetch('/api/registrations', {
@@ -350,10 +360,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to register for event');
+        throw new Error(await getApiErrorMessage(response, 'Failed to register for event'));
       }
 
-      const rsvp: RSVP = await response.json();
+      const data = await response.json();
+      const rsvp: RSVP = data;
       setRSVPs((current) => [...current.filter((item) => !(item.eventId === eventId && item.userId === user.id)), rsvp]);
       setEvents((current) => current.map((event) => (
         event.id === eventId
@@ -367,8 +378,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             }
           : event
       )));
+      return {
+        confirmationEmailStatus: data.confirmationEmailStatus === 'sent' ? 'sent' : 'failed',
+      };
     } catch (error) {
       console.error('Add RSVP failed:', error);
+      throw error;
     }
   };
 
