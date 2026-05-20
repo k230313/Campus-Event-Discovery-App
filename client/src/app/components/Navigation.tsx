@@ -1,4 +1,4 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Calendar, LayoutDashboard, LogIn, LogOut, UserPlus, Home, PlusCircle, Bookmark, Users, User, Shield, BarChart, Tag, FileText, Mail, Info } from 'lucide-react';
 import { Button } from './ui/button';
 import { Logo } from './Logo';
@@ -8,8 +8,14 @@ import { Badge } from './ui/badge';
 export function Navigation() {
   const { user, logout } = useApp();
   const location = useLocation();
+  const navigate = useNavigate();
 
   const isActive = (path: string) => location.pathname === path;
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login', { replace: true });
+  };
 
   return (
     <nav className="border-b bg-[#1B2E55]">
@@ -291,7 +297,7 @@ export function Navigation() {
                 </div>
                 <Button
                   variant="ghost"
-                  onClick={logout}
+                  onClick={handleLogout}
                   className="text-white hover:text-white hover:bg-white/20"
                 >
                   <LogOut className="h-4 w-4 mr-2" />

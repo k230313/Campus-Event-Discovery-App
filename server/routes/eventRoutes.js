@@ -74,6 +74,20 @@ function getAllowedWriteStatuses(role) {
     : ["draft", "pending", "cancelled"];
 }
 
+function getEffectiveWriteStatus({ userRole, existingStatus = null, requestedStatus, fallbackStatus = "draft" }) {
+  const nextStatus = requestedStatus || fallbackStatus;
+
+  if (userRole === "admin") {
+    return nextStatus;
+  }
+
+  if (existingStatus === "published") {
+    return "pending";
+  }
+
+  return nextStatus;
+}
+
 function canViewEvent(row, user) {
   if (!row) {
     return false;
@@ -231,7 +245,11 @@ router.post("/", requireAuth, requireRole("organizer", "admin"), generalWriteRat
 
   try {
     const allowedStatuses = getAllowedWriteStatuses(req.user.role);
-    const requestedStatus = status || "draft";
+    const requestedStatus = getEffectiveWriteStatus({
+      userRole: req.user.role,
+      requestedStatus: status,
+      fallbackStatus: "draft",
+    });
 
     if (!allowedStatuses.includes(requestedStatus)) {
       return res.status(403).json({ error: "You are not allowed to use that event status" });
@@ -293,17 +311,27 @@ router.put("/:id", requireAuth, requireRole("organizer", "admin"), generalWriteR
   } = requestBody;
 
   try {
-    const ownerId = await getEventOwnerId(id);
-    if (!ownerId) {
+    const [existingRows] = await pool.query(
+      "SELECT organiser_id, status FROM events WHERE event_id = ? LIMIT 1",
+      [id]
+    );
+
+    const existingEvent = existingRows[0];
+    if (!existingEvent) {
       return res.status(404).json({ error: "Event not found" });
     }
 
-    if (req.user.role !== "admin" && Number(ownerId) !== Number(req.user.id)) {
+    if (req.user.role !== "admin" && Number(existingEvent.organiser_id) !== Number(req.user.id)) {
       return res.status(403).json({ error: "Forbidden" });
     }
 
     const allowedStatuses = getAllowedWriteStatuses(req.user.role);
-    const requestedStatus = status || "draft";
+    const requestedStatus = getEffectiveWriteStatus({
+      userRole: req.user.role,
+      existingStatus: existingEvent.status,
+      requestedStatus: status,
+      fallbackStatus: "draft",
+    });
 
     if (!allowedStatuses.includes(requestedStatus)) {
       return res.status(403).json({ error: "You are not allowed to use that event status" });
@@ -331,6 +359,10 @@ router.put("/:id", requireAuth, requireRole("organizer", "admin"), generalWriteR
 
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: "Event not found" });
+    }
+
+    if (req.user.role !== "admin" && existingEvent.status === "published") {
+      await pool.query("UPDATE events SET approved_by = NULL WHERE event_id = ?", [id]);
     }
 
     const [rows] = await pool.query(GET_EVENT_BY_ID_SQL, [id]);
@@ -368,3 +400,5 @@ router.delete("/:id", requireAuth, requireRole("organizer", "admin"), generalWri
 });
 
 module.exports = router;
+module.exports.canViewEvent = canViewEvent;
+module.exports.getEffectiveWriteStatus = getEffectiveWriteStatus;

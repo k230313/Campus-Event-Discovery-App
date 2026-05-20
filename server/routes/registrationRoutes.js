@@ -90,6 +90,10 @@ router.post("/", requireAuth, requireRole("student"), registrationRateLimit, val
     let confirmationEmailStatus = "failed";
 
     try {
+      console.log(
+        `POST /api/registrations confirmation email attempt: user=${req.user.id} event=${eventRows[0].event_id} to=${req.user.email}`
+      );
+
       const { error } = await sendBookingConfirmationEmail({
         to: req.user.email,
         attendeeName: req.user.name,
@@ -111,6 +115,9 @@ router.post("/", requireAuth, requireRole("student"), registrationRateLimit, val
         );
       } else {
         confirmationEmailStatus = "sent";
+        console.log(
+          `POST /api/registrations confirmation email sent: user=${req.user.id} event=${eventRows[0].event_id} to=${req.user.email}`
+        );
       }
     } catch (emailError) {
       console.error("POST /api/registrations confirmation email failed:", emailError);

@@ -34,6 +34,7 @@ export function EditEvent() {
   const [newFoodOption, setNewFoodOption] = useState('');
   const [notes, setNotes] = useState('');
   const [status, setStatus] = useState<'draft' | 'pending' | 'cancelled'>('pending');
+  const isPublishedEvent = event?.status === 'published';
 
   useEffect(() => {
     if (event) {
@@ -50,7 +51,7 @@ export function EditEvent() {
       setFoodProvided(event.foodProvided || false);
       setFoodOptions(event.foodOptions || []);
       setNotes(event.notes || '');
-      setStatus(event.status);
+      setStatus(event.status === 'published' ? 'pending' : event.status);
     }
   }, [event]);
 
@@ -195,6 +196,11 @@ export function EditEvent() {
                       <SelectItem value="cancelled">Cancelled</SelectItem>
                     </SelectContent>
                   </Select>
+                  {isPublishedEvent && (
+                    <p className="text-sm text-muted-foreground">
+                      Editing a published event will send it back to pending review for admin approval.
+                    </p>
+                  )}
                 </div>
               </div>
 
