@@ -15,6 +15,7 @@ const adminRoutes = require("./routes/adminRoutes");
 const chatRoutes = require("./routes/chatRoutes");
 const { attachUser } = require("./middleware/auth");
 const { getSecret } = require("./utils/authTokens");
+const { getErrorBody, getErrorStatus } = require("./utils/errorHandling");
 const { corsOptions, securityHeaders } = require("./middleware/security");
 
 const app = express();
@@ -69,7 +70,7 @@ app.use("/api/chat", chatRoutes);
 
 app.use((err, _req, res, _next) => {
   console.error("Unhandled server error:", err);
-  res.status(err.status || 500).json({ error: "Internal server error" });
+  res.status(getErrorStatus(err)).json(getErrorBody(err));
 });
 
 function logTransactionalEmailConfig() {

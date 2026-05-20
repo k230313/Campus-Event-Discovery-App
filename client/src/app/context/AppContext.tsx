@@ -247,6 +247,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
       const data = await response.json();
       const nextUser = normalizeUser(data.user);
+      clearCsrfToken();
       setCurrentUser(nextUser);
       return { user: nextUser, error: null };
     } catch (error) {
