@@ -101,11 +101,14 @@ router.post("/", requireAuth, requireRole("student"), registrationRateLimit, val
           endTime: eventRows[0].end_time,
           location: eventRows[0].location,
         },
-        idempotencyKey: `booking/${req.user.id}/${eventRows[0].event_id}`,
+        idempotencyKey: `booking/${req.user.id}/${eventRows[0].event_id}/${Date.now()}`,
       });
 
       if (error) {
-        console.error("POST /api/registrations confirmation email error:", error);
+        console.error(
+          "POST /api/registrations confirmation email error:",
+          error?.message || error
+        );
       } else {
         confirmationEmailStatus = "sent";
       }

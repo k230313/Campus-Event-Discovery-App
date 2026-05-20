@@ -15,11 +15,16 @@ function createResendClient(overrideClient) {
 }
 
 function getEmailFrom() {
-  if (!process.env.EMAIL_FROM) {
+  const from = process.env.EMAIL_FROM?.trim();
+  if (!from) {
     throw new Error("EMAIL_FROM is not configured");
   }
 
-  return `CEDA <${process.env.EMAIL_FROM}>`;
+  if (from.includes("<") && from.includes(">")) {
+    return from.startsWith("CEDA ") ? from : `CEDA ${from}`;
+  }
+
+  return `CEDA <${from}>`;
 }
 
 function formatEventDate(dateValue) {
@@ -51,9 +56,49 @@ function formatEventDate(dateValue) {
   }).format(date);
 }
 
-function formatEventTime(timeString) {
-  const [hour = "00", minute = "00"] = String(timeString).split(":");
-  const date = new Date(Date.UTC(2000, 0, 1, Number(hour), Number(minute), 0));
+function normalizeTimeParts(timeValue) {
+  if (timeValue == null) {
+    return { hour: 0, minute: 0 };
+  }
+
+  if (timeValue instanceof Date) {
+    if (Number.isNaN(timeValue.getTime())) {
+      throw new Error(`Invalid event time value: ${timeValue}`);
+    }
+
+    return {
+      hour: timeValue.getUTCHours(),
+      minute: timeValue.getUTCMinutes(),
+    };
+  }
+
+  if (typeof timeValue === "object" && "hours" in timeValue) {
+    return {
+      hour: Number(timeValue.hours) || 0,
+      minute: Number(timeValue.minutes) || 0,
+    };
+  }
+
+  const text = String(timeValue).trim();
+  const match = text.match(/(\d{1,2}):(\d{2})/);
+  if (match) {
+    return { hour: Number(match[1]), minute: Number(match[2]) };
+  }
+
+  const parsed = new Date(text);
+  if (!Number.isNaN(parsed.getTime())) {
+    return {
+      hour: parsed.getUTCHours(),
+      minute: parsed.getUTCMinutes(),
+    };
+  }
+
+  throw new Error(`Invalid event time value: ${timeValue}`);
+}
+
+function formatEventTime(timeValue) {
+  const { hour, minute } = normalizeTimeParts(timeValue);
+  const date = new Date(Date.UTC(2000, 0, 1, hour, minute, 0));
   return new Intl.DateTimeFormat("en-AU", {
     hour: "numeric",
     minute: "2-digit",

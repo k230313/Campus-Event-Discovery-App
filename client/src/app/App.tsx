@@ -35,8 +35,8 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 
 export default function App() {
   return (
-    <AppProvider>
-      <BrowserRouter>
+    <BrowserRouter>
+      <AppProvider>
         <div className="min-h-screen flex flex-col">
           <Navigation />
           <main className="flex-1">
@@ -83,7 +83,7 @@ export default function App() {
           <Footer />
           <ChatBot />
         </div>
-      </BrowserRouter>
-    </AppProvider>
+      </AppProvider>
+    </BrowserRouter>
   );
 }

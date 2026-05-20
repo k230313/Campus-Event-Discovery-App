@@ -1,8 +1,9 @@
+const path = require("path");
 const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const { doubleCsrf } = require("csrf-csrf");
-require("dotenv").config();
+require("dotenv").config({ path: path.join(__dirname, ".env") });
 const pool = require("./config/db");
 const eventRoutes = require("./routes/eventRoutes");
 const authRoutes = require("./routes/authRoutes");
@@ -71,9 +72,29 @@ app.use((err, _req, res, _next) => {
   res.status(err.status || 500).json({ error: "Internal server error" });
 });
 
+function logTransactionalEmailConfig() {
+  const missing = [];
+  if (!process.env.RESEND_API_KEY?.trim()) {
+    missing.push("RESEND_API_KEY");
+  }
+  if (!process.env.EMAIL_FROM?.trim()) {
+    missing.push("EMAIL_FROM");
+  }
+
+  if (missing.length) {
+    console.warn(
+      `[Email] Missing ${missing.join(", ")} in server/.env — booking, verification, and password-reset emails will fail.`
+    );
+    return;
+  }
+
+  console.log(`[Email] Resend configured (from: ${process.env.EMAIL_FROM.trim()})`);
+}
+
 const PORT = process.env.PORT || 5000;
 const server = app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  logTransactionalEmailConfig();
 });
 
 process.on("SIGTERM", async () => {

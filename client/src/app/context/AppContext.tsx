@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { User, Event, Bookmark, RSVP } from '../types';
 import { apiFetch, clearCsrfToken, csrfFetch } from '../services/api';
 
@@ -97,6 +98,7 @@ async function fetchWithTimeout(input: RequestInfo | URL, timeoutMs = 5000) {
 }
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
+  const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [events, setEvents] = useState<Event[]>([]);
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
@@ -260,6 +262,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setCurrentUser(null);
     localStorage.removeItem(LEGACY_AUTH_TOKEN_KEY);
     clearCsrfToken();
+    navigate('/login');
   };
 
   const register = async (
