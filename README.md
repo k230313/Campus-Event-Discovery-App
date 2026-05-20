@@ -38,6 +38,12 @@ This repository is being developed progressively based on weekly deliverables.
 
 ## Changelog
 
+### v3.3.0
+- Added booking confirmation emails for successful event registrations using Resend
+- Fixed CSRF handling for authenticated write actions so event bookings and other protected form submissions retry correctly after token refresh
+- Redirected users to the login page immediately on logout
+- Enforced admin approval workflow on public event visibility and organizer edits, including sending previously published organizer-edited events back to pending review
+
 ### v3.2.0
 - Added Gemini-backed chatbot route at `/api/chat` and connected the existing global ChatBot UI to the backend
 - Made the chatbot public with dedicated server-side rate limiting to reduce abuse and quota exhaustion risk
