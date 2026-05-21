@@ -166,6 +166,13 @@ const registrationRateLimit = createRateLimit({
   message: "Too many registration requests. Try again later.",
 });
 
+const contactRateLimit = createRateLimit({
+  windowMs: 60 * 60 * 1000,
+  maxRequests: 5,
+  keyPrefix: "contact",
+  message: "Too many contact form requests. Try again later.",
+});
+
 const chatRateLimit = createRateLimit({
   windowMs: 5 * 60 * 1000,
   maxRequests: 15,
@@ -188,6 +195,7 @@ module.exports = {
   chatRateLimit,
   chatQuotaRateLimit,
   clearAuthRateLimit,
+  contactRateLimit,
   generalWriteRateLimit,
   registrationRateLimit,
 };

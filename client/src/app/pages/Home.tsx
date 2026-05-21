@@ -57,7 +57,7 @@ export function Home() {
                 </Button>
               </Link>
               <Link to="/register">
-                <Button size="lg" variant="outline" className="text-white border-2 border-white hover:bg-white hover:text-[#1B2E55] shadow-lg transition-all duration-300 hover:scale-105">
+                <Button size="lg" variant="outline" className="bg-transparent text-white border-2 border-white hover:bg-white hover:text-[#1B2E55] shadow-lg transition-all duration-300 hover:scale-105">
                   Get Started
                 </Button>
               </Link>
@@ -182,7 +182,7 @@ export function Home() {
                 </Button>
               </Link>
               <Link to="/register">
-                <Button size="lg" variant="outline" className="text-white border-2 border-white hover:bg-white hover:text-[#1B2E55] shadow-lg transition-all duration-300 hover:scale-105">
+                <Button size="lg" variant="outline" className="bg-transparent text-white border-2 border-white hover:bg-white hover:text-[#1B2E55] shadow-lg transition-all duration-300 hover:scale-105">
                   Create Account
                 </Button>
               </Link>

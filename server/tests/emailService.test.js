@@ -10,6 +10,7 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 
 const {
+  sendContactMessageEmail,
   sendBookingConfirmationEmail,
   sendOrganizerEventFullEmail,
   sendOrganizerFirstRegistrationEmail,
@@ -284,5 +285,57 @@ test("sendOrganizerEventFullEmail sends the organizer a capacity-reached summary
   } finally {
     process.env.RESEND_API_KEY = originalApiKey;
     process.env.EMAIL_FROM = originalEmailFrom;
+  }
+});
+
+/**
+ * Executes the test case logic.
+ * @returns {*} Returns the resulting value.
+ */
+test("sendContactMessageEmail sends the message to the configured inbox and escapes HTML", async () => {
+  const originalApiKey = process.env.RESEND_API_KEY;
+  const originalEmailFrom = process.env.EMAIL_FROM;
+  const originalContactEmailTo = process.env.CONTACT_EMAIL_TO;
+
+  process.env.RESEND_API_KEY = "test-api-key";
+  process.env.EMAIL_FROM = "noreply@example.com";
+  process.env.CONTACT_EMAIL_TO = "school@example.edu";
+
+  const sentPayloads = [];
+  const resend = {
+    emails: {
+      /**
+       * Asynchronously executes the send logic.
+       * @param {*} payload - Represents the payload input.
+       * @returns {*} Returns the resulting value.
+       */
+      send: async (payload) => {
+        sentPayloads.push(payload);
+        return { data: { id: "email_333" }, error: null };
+      },
+    },
+  };
+
+  try {
+    const result = await sendContactMessageEmail({
+      resend,
+      name: "<Admin>",
+      email: "student@example.com",
+      subject: "Need <help>",
+      message: "Hello\n<script>alert('x')</script>",
+    });
+
+    assert.equal(result.error, null);
+    assert.equal(sentPayloads.length, 1);
+    assert.equal(sentPayloads[0].to[0], "school@example.edu");
+    assert.equal(sentPayloads[0].replyTo, "student@example.com");
+    assert.equal(sentPayloads[0].subject, "CEDA contact form: Need <help>");
+    assert.match(sentPayloads[0].html, /&lt;Admin&gt;/);
+    assert.match(sentPayloads[0].html, /&lt;script&gt;alert\(&#39;x&#39;\)&lt;\/script&gt;/);
+    assert.match(sentPayloads[0].html, /<br \/>/);
+  } finally {
+    process.env.RESEND_API_KEY = originalApiKey;
+    process.env.EMAIL_FROM = originalEmailFrom;
+    process.env.CONTACT_EMAIL_TO = originalContactEmailTo;
   }
 });

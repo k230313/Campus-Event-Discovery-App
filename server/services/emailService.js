@@ -45,6 +45,33 @@ function getEmailFrom() {
 }
 
 /**
+ * Resolves the destination inbox for contact form submissions.
+ * @returns {string} Configured destination email address.
+ */
+function getContactEmailTo() {
+  const to = process.env.CONTACT_EMAIL_TO?.trim();
+  if (!to) {
+    throw new Error("CONTACT_EMAIL_TO is not configured");
+  }
+
+  return to;
+}
+
+/**
+ * Escapes untrusted text before it is embedded into an HTML email body.
+ * @param {*} value - Raw user-supplied string content.
+ * @returns {string} HTML-safe string.
+ */
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+/**
  * Executes the format event date logic.
  * @param {*} dateValue - Represents the dateValue input.
  * @returns {*} Returns the resulting value.
@@ -293,10 +320,50 @@ async function sendOrganizerEventFullEmail({
   });
 }
 
+/**
+ * Sends a contact form submission to the configured project inbox.
+ * @param {object} params - Contact email payload.
+ * @param {*} params.resend - Optional Resend client override for tests.
+ * @param {string} params.name - Sender display name.
+ * @param {string} params.email - Sender email address.
+ * @param {string} params.subject - Contact form subject line.
+ * @param {string} params.message - Contact form message body.
+ * @returns {Promise<object>} Resend API response.
+ */
+async function sendContactMessageEmail({
+  resend,
+  name,
+  email,
+  subject,
+  message,
+}) {
+  const client = createResendClient(resend);
+  const safeName = escapeHtml(name);
+  const safeEmail = escapeHtml(email);
+  const safeSubject = escapeHtml(subject);
+  const safeMessage = escapeHtml(message).replace(/\r?\n/g, "<br />");
+
+  return client.emails.send({
+    from: getEmailFrom(),
+    to: [getContactEmailTo()],
+    replyTo: email,
+    subject: `CEDA contact form: ${subject}`,
+    html: `
+      <p>A new contact form submission was received.</p>
+      <p><strong>Name:</strong> ${safeName}</p>
+      <p><strong>Email:</strong> ${safeEmail}</p>
+      <p><strong>Subject:</strong> ${safeSubject}</p>
+      <p><strong>Message:</strong><br />${safeMessage}</p>
+    `,
+  });
+}
+
 module.exports = {
+  escapeHtml,
   formatEventDate,
   formatEventTime,
   sendBookingConfirmationEmail,
+  sendContactMessageEmail,
   sendOrganizerEventFullEmail,
   sendOrganizerFirstRegistrationEmail,
   sendPasswordResetEmail,

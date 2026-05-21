@@ -26,16 +26,40 @@ export function Footer() {
               Your centralized platform for discovering and managing all Kent Institute campus events.
             </p>
             <div className="flex gap-3 mt-4">
-              <a href="#" className="text-white/70 hover:text-[#EF9B28] transition-colors">
+              <a
+                href="https://www.facebook.com/kentinstituteaustralia"
+                target="_blank"
+                rel="noreferrer"
+                aria-label="Kent Institute Facebook"
+                className="text-white/70 hover:text-[#EF9B28] transition-colors"
+              >
                 <Facebook className="h-5 w-5" />
               </a>
-              <a href="#" className="text-white/70 hover:text-[#EF9B28] transition-colors">
+              <a
+                href="https://x.com/kent_institute"
+                target="_blank"
+                rel="noreferrer"
+                aria-label="Kent Institute X"
+                className="text-white/70 hover:text-[#EF9B28] transition-colors"
+              >
                 <Twitter className="h-5 w-5" />
               </a>
-              <a href="#" className="text-white/70 hover:text-[#EF9B28] transition-colors">
+              <a
+                href="https://www.instagram.com/kent_institute/"
+                target="_blank"
+                rel="noreferrer"
+                aria-label="Kent Institute Instagram"
+                className="text-white/70 hover:text-[#EF9B28] transition-colors"
+              >
                 <Instagram className="h-5 w-5" />
               </a>
-              <a href="#" className="text-white/70 hover:text-[#EF9B28] transition-colors">
+              <a
+                href="https://www.linkedin.com/school/kentinstituteaustralia/"
+                target="_blank"
+                rel="noreferrer"
+                aria-label="Kent Institute LinkedIn"
+                className="text-white/70 hover:text-[#EF9B28] transition-colors"
+              >
                 <Linkedin className="h-5 w-5" />
               </a>
             </div>

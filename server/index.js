@@ -21,6 +21,7 @@ const userRoutes = require("./routes/userRoutes");
 const categoryRoutes = require("./routes/categoryRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const chatRoutes = require("./routes/chatRoutes");
+const contactRoutes = require("./routes/contactRoutes");
 const { attachUser } = require("./middleware/auth");
 const { getSecret } = require("./utils/authTokens");
 const { getErrorBody, getErrorStatus } = require("./utils/errorHandling");
@@ -89,6 +90,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/chat", chatRoutes);
+app.use("/api/contact", contactRoutes);
 
 app.use((err, _req, res, _next) => {
   console.error("Unhandled server error:", err);
@@ -116,6 +118,10 @@ function logTransactionalEmailConfig() {
   }
 
   console.log(`[Email] Resend configured (from: ${process.env.EMAIL_FROM.trim()})`);
+
+  if (!process.env.CONTACT_EMAIL_TO?.trim()) {
+    console.warn("[Email] Missing CONTACT_EMAIL_TO in server/.env — contact form submissions will fail.");
+  }
 }
 
 const PORT = process.env.PORT || 5000;

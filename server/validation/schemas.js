@@ -70,6 +70,13 @@ const forgotPasswordSchema = z.object({
   email: emailSchema,
 });
 
+const contactSchema = z.object({
+  name: nonEmptyTrimmedString("Name", 100),
+  email: emailSchema,
+  subject: nonEmptyTrimmedString("Subject", 150),
+  message: nonEmptyTrimmedString("Message", 5000),
+});
+
 const verifyEmailSchema = z.object({
   token: tokenSchema.min(1, "Verification token is required"),
 });
@@ -163,6 +170,7 @@ module.exports = {
   adminUserUpdateSchema,
   bookmarkCreateSchema,
   categorySchema,
+  contactSchema,
   eventStatusSchema,
   eventWriteSchema,
   forgotPasswordSchema,

@@ -30,6 +30,17 @@ export function Navigation() {
   const isActive = (path: string) => location.pathname === path;
 
   /**
+   * Returns dark-header button styles that keep navigation labels readable in both active and inactive states.
+   * @param {string} path - Route path associated with the navigation button.
+   * @returns {string} Tailwind class list for the navigation button.
+   */
+  const getNavButtonClasses = (path: string) => (
+    isActive(path)
+      ? 'text-white bg-white/20 hover:text-white hover:bg-white/25'
+      : 'text-white bg-transparent hover:text-white hover:bg-white/20'
+  );
+
+  /**
    * Logs out the current user and returns them to the login screen.
    * @returns {void} Does not return a value.
    */
@@ -53,8 +64,8 @@ export function Navigation() {
                 <>
                   <Link to="/">
                     <Button
-                      variant={isActive('/') ? 'secondary' : 'ghost'}
-                      className="text-white hover:text-white hover:bg-white/20"
+                      variant="ghost"
+                      className={getNavButtonClasses('/')}
                     >
                       <Home className="h-4 w-4 mr-2" />
                       Home
@@ -62,8 +73,8 @@ export function Navigation() {
                   </Link>
                   <Link to="/events">
                     <Button
-                      variant={isActive('/events') ? 'secondary' : 'ghost'}
-                      className="text-white hover:text-white hover:bg-white/20"
+                      variant="ghost"
+                      className={getNavButtonClasses('/events')}
                     >
                       <Calendar className="h-4 w-4 mr-2" />
                       Browse Events
@@ -71,8 +82,8 @@ export function Navigation() {
                   </Link>
                   <Link to="/about">
                     <Button
-                      variant={isActive('/about') ? 'secondary' : 'ghost'}
-                      className="text-white hover:text-white hover:bg-white/20"
+                      variant="ghost"
+                      className={getNavButtonClasses('/about')}
                     >
                       <Info className="h-4 w-4 mr-2" />
                       About Us
@@ -80,8 +91,8 @@ export function Navigation() {
                   </Link>
                   <Link to="/contact">
                     <Button
-                      variant={isActive('/contact') ? 'secondary' : 'ghost'}
-                      className="text-white hover:text-white hover:bg-white/20"
+                      variant="ghost"
+                      className={getNavButtonClasses('/contact')}
                     >
                       <Mail className="h-4 w-4 mr-2" />
                       Contact Us
@@ -95,8 +106,8 @@ export function Navigation() {
                 <>
                   <Link to="/">
                     <Button
-                      variant={isActive('/') ? 'secondary' : 'ghost'}
-                      className="text-white hover:text-white hover:bg-white/20"
+                      variant="ghost"
+                      className={getNavButtonClasses('/')}
                     >
                       <Home className="h-4 w-4 mr-2" />
                       Home
@@ -104,8 +115,8 @@ export function Navigation() {
                   </Link>
                   <Link to="/events">
                     <Button
-                      variant={isActive('/events') ? 'secondary' : 'ghost'}
-                      className="text-white hover:text-white hover:bg-white/20"
+                      variant="ghost"
+                      className={getNavButtonClasses('/events')}
                     >
                       <Calendar className="h-4 w-4 mr-2" />
                       Browse Events
@@ -113,8 +124,8 @@ export function Navigation() {
                   </Link>
                   <Link to="/my-bookmarks">
                     <Button
-                      variant={isActive('/my-bookmarks') ? 'secondary' : 'ghost'}
-                      className="text-white hover:text-white hover:bg-white/20"
+                      variant="ghost"
+                      className={getNavButtonClasses('/my-bookmarks')}
                     >
                       <Bookmark className="h-4 w-4 mr-2" />
                       My Bookmarks
@@ -122,8 +133,8 @@ export function Navigation() {
                   </Link>
                   <Link to="/my-events">
                     <Button
-                      variant={isActive('/my-events') ? 'secondary' : 'ghost'}
-                      className="text-white hover:text-white hover:bg-white/20"
+                      variant="ghost"
+                      className={getNavButtonClasses('/my-events')}
                     >
                       <FileText className="h-4 w-4 mr-2" />
                       My Events
@@ -131,8 +142,8 @@ export function Navigation() {
                   </Link>
                   <Link to="/profile">
                     <Button
-                      variant={isActive('/profile') ? 'secondary' : 'ghost'}
-                      className="text-white hover:text-white hover:bg-white/20"
+                      variant="ghost"
+                      className={getNavButtonClasses('/profile')}
                     >
                       <User className="h-4 w-4 mr-2" />
                       Profile
@@ -146,8 +157,8 @@ export function Navigation() {
                 <>
                   <Link to="/">
                     <Button
-                      variant={isActive('/') ? 'secondary' : 'ghost'}
-                      className="text-white hover:text-white hover:bg-white/20"
+                      variant="ghost"
+                      className={getNavButtonClasses('/')}
                     >
                       <Home className="h-4 w-4 mr-2" />
                       Home
@@ -155,8 +166,8 @@ export function Navigation() {
                   </Link>
                   <Link to="/events">
                     <Button
-                      variant={isActive('/events') ? 'secondary' : 'ghost'}
-                      className="text-white hover:text-white hover:bg-white/20"
+                      variant="ghost"
+                      className={getNavButtonClasses('/events')}
                     >
                       <Calendar className="h-4 w-4 mr-2" />
                       Browse Events
@@ -164,8 +175,8 @@ export function Navigation() {
                   </Link>
                   <Link to="/my-bookmarks">
                     <Button
-                      variant={isActive('/my-bookmarks') ? 'secondary' : 'ghost'}
-                      className="text-white hover:text-white hover:bg-white/20"
+                      variant="ghost"
+                      className={getNavButtonClasses('/my-bookmarks')}
                     >
                       <Bookmark className="h-4 w-4 mr-2" />
                       My Bookmarks
@@ -173,8 +184,8 @@ export function Navigation() {
                   </Link>
                   <Link to="/dashboard">
                     <Button
-                      variant={isActive('/dashboard') ? 'secondary' : 'ghost'}
-                      className="text-white hover:text-white hover:bg-white/20"
+                      variant="ghost"
+                      className={getNavButtonClasses('/dashboard')}
                     >
                       <LayoutDashboard className="h-4 w-4 mr-2" />
                       Dashboard
@@ -182,8 +193,8 @@ export function Navigation() {
                   </Link>
                   <Link to="/create-event">
                     <Button
-                      variant={isActive('/create-event') ? 'secondary' : 'ghost'}
-                      className="text-white hover:text-white hover:bg-white/20"
+                      variant="ghost"
+                      className={getNavButtonClasses('/create-event')}
                     >
                       <PlusCircle className="h-4 w-4 mr-2" />
                       Create Event
@@ -191,8 +202,8 @@ export function Navigation() {
                   </Link>
                   <Link to="/manage-events">
                     <Button
-                      variant={isActive('/manage-events') ? 'secondary' : 'ghost'}
-                      className="text-white hover:text-white hover:bg-white/20"
+                      variant="ghost"
+                      className={getNavButtonClasses('/manage-events')}
                     >
                       <Calendar className="h-4 w-4 mr-2" />
                       Manage Events
@@ -200,8 +211,8 @@ export function Navigation() {
                   </Link>
                   <Link to="/profile">
                     <Button
-                      variant={isActive('/profile') ? 'secondary' : 'ghost'}
-                      className="text-white hover:text-white hover:bg-white/20"
+                      variant="ghost"
+                      className={getNavButtonClasses('/profile')}
                     >
                       <User className="h-4 w-4 mr-2" />
                       Profile
@@ -215,8 +226,8 @@ export function Navigation() {
                 <>
                   <Link to="/">
                     <Button
-                      variant={isActive('/') ? 'secondary' : 'ghost'}
-                      className="text-white hover:text-white hover:bg-white/20"
+                      variant="ghost"
+                      className={getNavButtonClasses('/')}
                     >
                       <Home className="h-4 w-4 mr-2" />
                       Home
@@ -224,8 +235,8 @@ export function Navigation() {
                   </Link>
                   <Link to="/events">
                     <Button
-                      variant={isActive('/events') ? 'secondary' : 'ghost'}
-                      className="text-white hover:text-white hover:bg-white/20"
+                      variant="ghost"
+                      className={getNavButtonClasses('/events')}
                     >
                       <Calendar className="h-4 w-4 mr-2" />
                       Browse Events
@@ -233,8 +244,8 @@ export function Navigation() {
                   </Link>
                   <Link to="/admin-dashboard">
                     <Button
-                      variant={isActive('/admin-dashboard') ? 'secondary' : 'ghost'}
-                      className="text-white hover:text-white hover:bg-white/20"
+                      variant="ghost"
+                      className={getNavButtonClasses('/admin-dashboard')}
                     >
                       <Shield className="h-4 w-4 mr-2" />
                       Admin Dashboard
@@ -242,8 +253,8 @@ export function Navigation() {
                   </Link>
                   <Link to="/manage-users">
                     <Button
-                      variant={isActive('/manage-users') ? 'secondary' : 'ghost'}
-                      className="text-white hover:text-white hover:bg-white/20"
+                      variant="ghost"
+                      className={getNavButtonClasses('/manage-users')}
                     >
                       <Users className="h-4 w-4 mr-2" />
                       Manage Users
@@ -251,8 +262,8 @@ export function Navigation() {
                   </Link>
                   <Link to="/admin-manage-events">
                     <Button
-                      variant={isActive('/admin-manage-events') ? 'secondary' : 'ghost'}
-                      className="text-white hover:text-white hover:bg-white/20"
+                      variant="ghost"
+                      className={getNavButtonClasses('/admin-manage-events')}
                     >
                       <Calendar className="h-4 w-4 mr-2" />
                       Manage Events
@@ -260,8 +271,8 @@ export function Navigation() {
                   </Link>
                   <Link to="/categories">
                     <Button
-                      variant={isActive('/categories') ? 'secondary' : 'ghost'}
-                      className="text-white hover:text-white hover:bg-white/20"
+                      variant="ghost"
+                      className={getNavButtonClasses('/categories')}
                     >
                       <Tag className="h-4 w-4 mr-2" />
                       Categories
@@ -269,8 +280,8 @@ export function Navigation() {
                   </Link>
                   <Link to="/reports">
                     <Button
-                      variant={isActive('/reports') ? 'secondary' : 'ghost'}
-                      className="text-white hover:text-white hover:bg-white/20"
+                      variant="ghost"
+                      className={getNavButtonClasses('/reports')}
                     >
                       <BarChart className="h-4 w-4 mr-2" />
                       Reports

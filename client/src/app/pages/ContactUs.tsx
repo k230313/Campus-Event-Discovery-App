@@ -13,6 +13,7 @@ import { Input } from '../components/ui/input';
 import { Textarea } from '../components/ui/textarea';
 import { Label } from '../components/ui/label';
 import { useState } from 'react';
+import { csrfFetch } from '../services/api';
 
 /**
  * Renders the ContactUs component for the application interface.
@@ -25,16 +26,62 @@ export function ContactUs() {
     subject: '',
     message: '',
   });
+  const [submitState, setSubmitState] = useState<{
+    type: 'idle' | 'success' | 'error';
+    message: string;
+  }>({
+    type: 'idle',
+    message: '',
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   /**
-   * Asynchronously executes the handle submit logic.
-   * @param {*} e - Represents the e input.
-   * @returns {*} Returns the resulting value.
+   * Submits the contact form to the backend contact endpoint.
+   * @param {React.FormEvent} e - Form submit event from the contact form.
+   * @returns {Promise<void>} Resolves after the submission attempt finishes.
    */
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    alert('Thank you for your message! We will get back to you soon.');
-    setFormData({ name: '', email: '', subject: '', message: '' });
+
+    setIsSubmitting(true);
+    setSubmitState({ type: 'idle', message: '' });
+
+    try {
+      const response = await csrfFetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const payload = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        const errorMessage = Array.isArray(payload?.errors)
+          ? payload.errors.join(' ')
+          : payload?.error || 'We could not send your message right now. Please try again later.';
+
+        setSubmitState({
+          type: 'error',
+          message: errorMessage,
+        });
+        return;
+      }
+
+      setSubmitState({
+        type: 'success',
+        message: 'Thank you for your message. We will get back to you soon.',
+      });
+      setFormData({ name: '', email: '', subject: '', message: '' });
+    } catch (_error) {
+      setSubmitState({
+        type: 'error',
+        message: 'We could not send your message right now. Please try again later.',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -100,10 +147,19 @@ export function ContactUs() {
                       required
                     />
                   </div>
-                  <Button type="submit" className="w-full bg-[#EF9B28] hover:bg-[#EF9B28]/90">
+                  <Button
+                    type="submit"
+                    className="w-full bg-[#EF9B28] hover:bg-[#EF9B28]/90"
+                    disabled={isSubmitting}
+                  >
                     <Send className="mr-2 h-4 w-4" />
-                    Send Message
+                    {isSubmitting ? 'Sending Message...' : 'Send Message'}
                   </Button>
+                  {submitState.type !== 'idle' ? (
+                    <p className={submitState.type === 'success' ? 'text-sm text-green-700' : 'text-sm text-red-600'}>
+                      {submitState.message}
+                    </p>
+                  ) : null}
                 </form>
               </CardContent>
             </Card>
