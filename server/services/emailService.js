@@ -169,10 +169,95 @@ async function sendBookingConfirmationEmail({
   });
 }
 
+async function sendWaitlistPromotionEmail({
+  resend,
+  to,
+  attendeeName,
+  event,
+  idempotencyKey,
+}) {
+  const client = createResendClient(resend);
+  const eventDate = formatEventDate(event.date);
+  const startTime = formatEventTime(event.startTime);
+  const endTime = formatEventTime(event.endTime);
+
+  return client.emails.send({
+    from: getEmailFrom(),
+    to: [to],
+    subject: "Your CEDA waitlist spot is now confirmed",
+    html: `
+      <p>Hello ${attendeeName},</p>
+      <p>Good news. A seat has opened up and your waitlist entry for <strong>${event.title}</strong> is now a confirmed registration.</p>
+      <p><strong>Date:</strong> ${eventDate}</p>
+      <p><strong>Time:</strong> ${startTime} - ${endTime}</p>
+      <p><strong>Location:</strong> ${event.location}</p>
+      <p>You can view your updated registration in your CEDA dashboard at any time.</p>
+    `,
+    idempotencyKey,
+  });
+}
+
+async function sendOrganizerFirstRegistrationEmail({
+  resend,
+  to,
+  organizerName,
+  event,
+  idempotencyKey,
+}) {
+  const client = createResendClient(resend);
+  const eventDate = formatEventDate(event.date);
+  const startTime = formatEventTime(event.startTime);
+  const endTime = formatEventTime(event.endTime);
+
+  return client.emails.send({
+    from: getEmailFrom(),
+    to: [to],
+    subject: "Your event has its first registration",
+    html: `
+      <p>Hello ${organizerName},</p>
+      <p>Your event <strong>${event.title}</strong> has received its first registration.</p>
+      <p><strong>Date:</strong> ${eventDate}</p>
+      <p><strong>Time:</strong> ${startTime} - ${endTime}</p>
+      <p><strong>Location:</strong> ${event.location}</p>
+    `,
+    idempotencyKey,
+  });
+}
+
+async function sendOrganizerEventFullEmail({
+  resend,
+  to,
+  organizerName,
+  event,
+  idempotencyKey,
+}) {
+  const client = createResendClient(resend);
+  const eventDate = formatEventDate(event.date);
+  const startTime = formatEventTime(event.startTime);
+  const endTime = formatEventTime(event.endTime);
+
+  return client.emails.send({
+    from: getEmailFrom(),
+    to: [to],
+    subject: "Your event is now full",
+    html: `
+      <p>Hello ${organizerName},</p>
+      <p>Your event <strong>${event.title}</strong> has reached its capacity of <strong>${event.capacity}</strong> registrations.</p>
+      <p><strong>Date:</strong> ${eventDate}</p>
+      <p><strong>Time:</strong> ${startTime} - ${endTime}</p>
+      <p><strong>Location:</strong> ${event.location}</p>
+    `,
+    idempotencyKey,
+  });
+}
+
 module.exports = {
   formatEventDate,
   formatEventTime,
   sendBookingConfirmationEmail,
+  sendOrganizerEventFullEmail,
+  sendOrganizerFirstRegistrationEmail,
   sendPasswordResetEmail,
+  sendWaitlistPromotionEmail,
   sendVerificationEmail,
 };
