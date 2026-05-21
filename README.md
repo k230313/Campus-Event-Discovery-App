@@ -50,6 +50,22 @@ It opens separate terminal windows for the backend and frontend. MySQL must alre
 
 ## Changelog
 
+### v3.4.0
+- Added real Contact Us form support through a backend `/api/contact` endpoint
+- Secured contact submissions with validation, CSRF protection, HTML escaping, and dedicated rate limiting
+- Added organizer email notifications for first confirmed registration and when an event becomes full
+- Added waitlist support for full events, including automatic promotion when seats open
+- Added best-effort waitlist promotion emails
+- Added organizer attendee list viewing and CSV export
+- Added organizer dashboard analytics for confirmed registrations, waitlisted students, average fill rate, and top-performing events
+- Added admin moderation feedback with rejection reasons, approval notes, and review timestamps
+- Enforced public visibility for published events only, and returned organizer-edited published events back to pending review
+- Improved chatbot reliability with graceful limited-mode fallback when the AI provider is unavailable or rate-limited
+- Fixed logout redirect behavior
+- Fixed homepage and navigation button visibility for screenshots and demo use
+- Added real Kent Institute social links in the footer
+- Reorganized project documentation and added separate local demo setup and user-manual support guides
+
 ### v3.3.0
 - Added booking confirmation emails for successful event registrations using Resend
 - Fixed CSRF handling for authenticated write actions so event bookings and other protected form submissions retry correctly after token refresh
