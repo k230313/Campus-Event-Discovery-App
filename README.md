@@ -8,29 +8,36 @@ Students can miss important campus events because information is often scattered
 
 ## Repository Structure
 
-- `Docs/` - project documentation and planning files
+- `Docs/` - organized project documentation and planning files
 - `client/` - frontend implementation
 - `server/` - backend implementation
 
 ## Documentation
 
+Documentation index:
+
+- [Docs README](./Docs/README.md)
+
 Core project documentation in order:
 
-1. [Problem Statement](./Docs/Problem%20Statement.md)
-2. [Market Research](./Docs/Market%20Research.md)
-3. [Software Requirements Specification](./Docs/SRS%20Report.md)
-4. [Week 5 Database and API Design](./Docs/Week5-Database-and-API-Design.md)
-5. [Week 6 Backend Development](./Docs/Week6-Backend-Development.md)
-6. [Week 7 Backend CRUD](./Docs/Week7-Backend-CRUD.md)
-7. [Week 8 Frontend Version 1](./Docs/Week8-Frontend-Version-1.md)
-8. [Week 9 Frontend Version 2 Integration](./Docs/Week9-Frontend-Backend-Integration.md)
+1. [Problem Statement](./Docs/01_Project_Foundation/01_Problem_Statement.md)
+2. [Market Research](./Docs/01_Project_Foundation/02_Market_Research.md)
+3. [Software Requirements Specification](./Docs/01_Project_Foundation/03_SRS_Report.md)
+4. [Week 5 Database and API Design](./Docs/02_Weekly_Deliverables/05_Week5_Database_and_API_Design.md)
+5. [Week 6 Backend Development](./Docs/02_Weekly_Deliverables/06_Week6_Backend_Development.md)
+6. [Week 7 Backend CRUD](./Docs/02_Weekly_Deliverables/07_Week7_Backend_CRUD.md)
+7. [Week 8 Frontend Version 1](./Docs/02_Weekly_Deliverables/08_Week8_Frontend_Version_1.md)
+8. [Week 9 Frontend Version 2 Integration](./Docs/02_Weekly_Deliverables/09_Week9_Frontend_Backend_Integration.md)
 
 Supporting documents:
 
-- [Project Weekly Plan](./Docs/Project-Weekly-Plan.md)
-- [GitHub Team Guide](./Docs/GitHub-Team-Guide.md)
-- [Deployment Guide](./Docs/Deployment-Guide.md)
-- [CI/CD Deployment Guide](./Docs/CI-CD-Deployment-Guide.md)
+- [Project Weekly Plan](./Docs/01_Project_Foundation/04_Project_Weekly_Plan.md)
+- [GitHub Team Guide](./Docs/01_Project_Foundation/05_GitHub_Team_Guide.md)
+- [Deployment Guide](./Docs/03_Deployment_and_Setup/01_Deployment_Guide.md)
+- [CI/CD Deployment Guide](./Docs/03_Deployment_and_Setup/02_CICD_Deployment_Guide.md)
+- [Local Demo Setup Guide](./Docs/03_Deployment_and_Setup/03_Local_Demo_Setup_Guide.md)
+- [Demo Feature Checklist](./Docs/04_Demo_and_Manual/01_Demo_Feature_Checklist.md)
+- [User Manual Screenshot Guide](./Docs/04_Demo_and_Manual/02_User_Manual_Screenshot_Guide.md)
 
 ## Notes
 
