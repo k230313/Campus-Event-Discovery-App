@@ -1,3 +1,11 @@
+// ============================================
+// File:    hover-card.tsx
+// Author:  Navroop Kaur
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Renders the hover card frontend component.
+// ============================================
+
 "use client";
 
 import * as React from "react";
@@ -5,12 +13,22 @@ import * as HoverCardPrimitive from "@radix-ui/react-hover-card";
 
 import { cn } from "./utils";
 
+/**
+ * Renders the HoverCard component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function HoverCard({
   ...props
 }: React.ComponentProps<typeof HoverCardPrimitive.Root>) {
   return <HoverCardPrimitive.Root data-slot="hover-card" {...props} />;
 }
 
+/**
+ * Renders the HoverCardTrigger component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function HoverCardTrigger({
   ...props
 }: React.ComponentProps<typeof HoverCardPrimitive.Trigger>) {
@@ -19,6 +37,11 @@ function HoverCardTrigger({
   );
 }
 
+/**
+ * Renders the HoverCardContent component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function HoverCardContent({
   className,
   align = "center",

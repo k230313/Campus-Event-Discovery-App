@@ -1,11 +1,29 @@
+// ============================================
+// File:    api.ts
+// Author:  Adamson Buliboli
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Provides frontend service logic for api.
+// ============================================
+
 let csrfToken: string | null = null;
 let csrfTokenRequest: Promise<string> | null = null;
 
+/**
+ * Executes the is mutating method logic.
+ * @param {*} method - Represents the method input.
+ * @returns {*} Returns the resulting value.
+ */
 function isMutatingMethod(method?: string) {
   const normalizedMethod = (method || "GET").toUpperCase();
   return ["POST", "PUT", "PATCH", "DELETE"].includes(normalizedMethod);
 }
 
+/**
+ * Executes the build request options logic.
+ * @param {*} init - Represents the init input.
+ * @returns {*} Returns the resulting value.
+ */
 function buildRequestOptions(init?: RequestInit): RequestInit {
   return {
     credentials: "include",
@@ -13,6 +31,10 @@ function buildRequestOptions(init?: RequestInit): RequestInit {
   };
 }
 
+/**
+ * Asynchronously executes the fetch csrf token logic.
+ * @returns {*} Returns the resulting value.
+ */
 async function fetchCsrfToken() {
   const response = await fetch("/api/csrf-token", buildRequestOptions());
 
@@ -29,6 +51,10 @@ async function fetchCsrfToken() {
   return csrfToken;
 }
 
+/**
+ * Asynchronously executes the get csrf token logic.
+ * @returns {*} Returns the resulting value.
+ */
 export async function getCsrfToken() {
   if (csrfToken) {
     return csrfToken;
@@ -43,15 +69,31 @@ export async function getCsrfToken() {
   return csrfTokenRequest;
 }
 
+/**
+ * Executes the clear csrf token logic.
+ * @returns {*} Returns the resulting value.
+ */
 export function clearCsrfToken() {
   csrfToken = null;
   csrfTokenRequest = null;
 }
 
+/**
+ * Asynchronously executes the api fetch logic.
+ * @param {*} input - Represents the input input.
+ * @param {*} init - Represents the init input.
+ * @returns {*} Returns the resulting value.
+ */
 export async function apiFetch(input: RequestInfo | URL, init?: RequestInit) {
   return fetch(input, buildRequestOptions(init));
 }
 
+/**
+ * Asynchronously executes the csrf fetch logic.
+ * @param {*} input - Represents the input input.
+ * @param {*} init - Represents the init input.
+ * @returns {*} Returns the resulting value.
+ */
 export async function csrfFetch(input: RequestInfo | URL, init?: RequestInit) {
   const method = init?.method || "GET";
 

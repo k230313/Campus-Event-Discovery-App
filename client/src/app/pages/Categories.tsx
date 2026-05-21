@@ -1,3 +1,11 @@
+// ============================================
+// File:    Categories.tsx
+// Author:  Navroop Kaur
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Renders the Categories page for the frontend application.
+// ============================================
+
 import { useApp } from '../context/AppContext';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
@@ -10,6 +18,10 @@ import { useEffect, useState } from 'react';
 import { Category } from '../types';
 import { apiFetch, csrfFetch } from '../services/api';
 
+/**
+ * Renders the Categories component for the application interface.
+ * @returns {JSX.Element} Renders the component output.
+ */
 export function Categories() {
   const { user, events } = useApp();
   const navigate = useNavigate();
@@ -24,6 +36,10 @@ export function Categories() {
   }
 
   useEffect(() => {
+    /**
+     * Asynchronously executes the load categories logic.
+     * @returns {*} Returns the resulting value.
+     */
     async function loadCategories() {
       try {
         const response = await apiFetch('/api/categories');
@@ -41,6 +57,10 @@ export function Categories() {
     loadCategories();
   }, []);
 
+  /**
+   * Asynchronously executes the handle add category logic.
+   * @returns {*} Returns the resulting value.
+   */
   const handleAddCategory = async () => {
     if (!newCategory.trim()) return;
 
@@ -63,6 +83,11 @@ export function Categories() {
     }
   };
 
+  /**
+   * Asynchronously executes the handle save edit logic.
+   * @param {*} categoryId - Represents the categoryId input.
+   * @returns {*} Returns the resulting value.
+   */
   const handleSaveEdit = async (categoryId: string) => {
     if (!editingName.trim()) return;
 
@@ -86,6 +111,11 @@ export function Categories() {
     }
   };
 
+  /**
+   * Asynchronously executes the handle delete category logic.
+   * @param {*} category - Represents the category input.
+   * @returns {*} Returns the resulting value.
+   */
   const handleDeleteCategory = async (category: Category) => {
     if (!window.confirm(`Delete category "${category.name}"?`)) {
       return;
@@ -244,4 +274,3 @@ export function Categories() {
     </div>
   );
 }
-

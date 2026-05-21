@@ -1,3 +1,11 @@
+// ============================================
+// File:    ForgotPassword.tsx
+// Author:  Navroop Kaur
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Displays the password reset request form and success state for email delivery.
+// ============================================
+
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Mail, ArrowLeft, CheckCircle } from 'lucide-react';
@@ -7,11 +15,20 @@ import { Label } from '../components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../components/ui/card';
 import { csrfFetch } from '../services/api';
 
+/**
+ * Renders the password reset request page for users who forgot their password.
+ * @returns {JSX.Element} Password reset request form with success feedback after submission.
+ */
 export function ForgotPassword() {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
+  /**
+   * Asynchronously submits the forgot-password request to the backend.
+   * @param {React.FormEvent} e - Form submit event from the reset request form.
+   * @returns {Promise<void>} Resolves after the request and UI state updates complete.
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSuccess(false);
@@ -135,4 +152,3 @@ export function ForgotPassword() {
     </div>
   );
 }
-

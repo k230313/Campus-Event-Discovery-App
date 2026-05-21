@@ -1,3 +1,11 @@
+// ============================================
+// File:    alert-dialog.tsx
+// Author:  Navroop Kaur
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Renders the alert dialog frontend component.
+// ============================================
+
 "use client";
 
 import * as React from "react";
@@ -6,12 +14,22 @@ import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog";
 import { cn } from "./utils";
 import { buttonVariants } from "./button";
 
+/**
+ * Renders the AlertDialog component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function AlertDialog({
   ...props
 }: React.ComponentProps<typeof AlertDialogPrimitive.Root>) {
   return <AlertDialogPrimitive.Root data-slot="alert-dialog" {...props} />;
 }
 
+/**
+ * Renders the AlertDialogTrigger component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function AlertDialogTrigger({
   ...props
 }: React.ComponentProps<typeof AlertDialogPrimitive.Trigger>) {
@@ -20,6 +38,11 @@ function AlertDialogTrigger({
   );
 }
 
+/**
+ * Renders the AlertDialogPortal component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function AlertDialogPortal({
   ...props
 }: React.ComponentProps<typeof AlertDialogPrimitive.Portal>) {
@@ -28,6 +51,11 @@ function AlertDialogPortal({
   );
 }
 
+/**
+ * Renders the AlertDialogOverlay component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function AlertDialogOverlay({
   className,
   ...props
@@ -44,6 +72,11 @@ function AlertDialogOverlay({
   );
 }
 
+/**
+ * Renders the AlertDialogContent component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function AlertDialogContent({
   className,
   ...props
@@ -63,6 +96,11 @@ function AlertDialogContent({
   );
 }
 
+/**
+ * Renders the AlertDialogHeader component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function AlertDialogHeader({
   className,
   ...props
@@ -76,6 +114,11 @@ function AlertDialogHeader({
   );
 }
 
+/**
+ * Renders the AlertDialogFooter component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function AlertDialogFooter({
   className,
   ...props
@@ -92,6 +135,11 @@ function AlertDialogFooter({
   );
 }
 
+/**
+ * Renders the AlertDialogTitle component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function AlertDialogTitle({
   className,
   ...props
@@ -105,6 +153,11 @@ function AlertDialogTitle({
   );
 }
 
+/**
+ * Renders the AlertDialogDescription component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function AlertDialogDescription({
   className,
   ...props
@@ -118,6 +171,11 @@ function AlertDialogDescription({
   );
 }
 
+/**
+ * Renders the AlertDialogAction component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function AlertDialogAction({
   className,
   ...props
@@ -130,6 +188,11 @@ function AlertDialogAction({
   );
 }
 
+/**
+ * Renders the AlertDialogCancel component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function AlertDialogCancel({
   className,
   ...props

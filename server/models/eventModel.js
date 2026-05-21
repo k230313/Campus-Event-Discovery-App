@@ -1,3 +1,11 @@
+// ============================================
+// File:    eventModel.js
+// Author:  Adamson Buliboli
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Implements event Model for the backend.
+// ============================================
+
 const eventFields = {
   eventId: "number",
   title: "string",

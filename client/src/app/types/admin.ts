@@ -1,3 +1,11 @@
+// ============================================
+// File:    admin.ts
+// Author:  Adamson Buliboli
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Defines TypeScript types for admin.
+// ============================================
+
 export interface AdminOverview {
   totals: {
     totalUsers: number;

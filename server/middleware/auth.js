@@ -1,13 +1,31 @@
+// ============================================
+// File:    auth.js
+// Author:  Adamson Buliboli
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Implements auth for the backend.
+// ============================================
+
 const crypto = require("crypto");
 const pool = require("../config/db");
 const { verifyAuthToken } = require("../utils/authTokens");
 const AUTH_COOKIE_NAME = "ceda_auth";
 const ADMIN_UNLOCK_TTL_MS = 30 * 60 * 1000;
 
+/**
+ * Executes the to client role logic.
+ * @param {*} dbRole - Represents the dbRole input.
+ * @returns {*} Returns the resulting value.
+ */
 function toClientRole(dbRole) {
   return dbRole === "organiser" ? "organizer" : dbRole;
 }
 
+/**
+ * Executes the get auth token from request logic.
+ * @param {*} req - Represents the req input.
+ * @returns {*} Returns the resulting value.
+ */
 function getAuthTokenFromRequest(req) {
   const authHeader = req.headers.authorization || "";
   if (authHeader.startsWith("Bearer ")) {
@@ -25,6 +43,13 @@ function getAuthTokenFromRequest(req) {
   return decodeURIComponent(authCookie.slice(AUTH_COOKIE_NAME.length + 1));
 }
 
+/**
+ * Asynchronously executes the attach user logic.
+ * @param {*} req - Represents the req input.
+ * @param {*} _res - Represents the _res input.
+ * @param {*} next - Represents the next input.
+ * @returns {*} Returns the resulting value.
+ */
 async function attachUser(req, _res, next) {
   const token = getAuthTokenFromRequest(req);
 
@@ -62,6 +87,13 @@ async function attachUser(req, _res, next) {
   }
 }
 
+/**
+ * Executes the require auth logic.
+ * @param {*} req - Represents the req input.
+ * @param {*} res - Represents the res input.
+ * @param {*} next - Represents the next input.
+ * @returns {*} Returns the resulting value.
+ */
 function requireAuth(req, res, next) {
   if (!req.user) {
     return res.status(401).json({ error: "Unauthorized" });
@@ -70,6 +102,11 @@ function requireAuth(req, res, next) {
   return next();
 }
 
+/**
+ * Executes the require role logic.
+ * @param {*} roles - Represents the roles input.
+ * @returns {*} Returns the resulting value.
+ */
 function requireRole(...roles) {
   return (req, res, next) => {
     if (!req.user) {
@@ -84,6 +121,11 @@ function requireRole(...roles) {
   };
 }
 
+/**
+ * Executes the get unlock token from request logic.
+ * @param {*} req - Represents the req input.
+ * @returns {*} Returns the resulting value.
+ */
 function getUnlockTokenFromRequest(req) {
   const authHeader = req.headers.authorization || "";
   if (authHeader.startsWith("Unlock ")) {
@@ -97,6 +139,13 @@ function getUnlockTokenFromRequest(req) {
   return null;
 }
 
+/**
+ * Asynchronously executes the require unlock logic.
+ * @param {*} req - Represents the req input.
+ * @param {*} res - Represents the res input.
+ * @param {*} next - Represents the next input.
+ * @returns {*} Returns the resulting value.
+ */
 async function requireUnlock(req, res, next) {
   const token = getUnlockTokenFromRequest(req);
   const payload = verifyAuthToken(token);

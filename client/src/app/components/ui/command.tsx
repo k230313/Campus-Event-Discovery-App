@@ -1,3 +1,11 @@
+// ============================================
+// File:    command.tsx
+// Author:  Navroop Kaur
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Renders the command frontend component.
+// ============================================
+
 "use client";
 
 import * as React from "react";
@@ -13,6 +21,11 @@ import {
   DialogTitle,
 } from "./dialog";
 
+/**
+ * Renders the Command component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function Command({
   className,
   ...props
@@ -29,6 +42,11 @@ function Command({
   );
 }
 
+/**
+ * Renders the CommandDialog component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function CommandDialog({
   title = "Command Palette",
   description = "Search for a command to run...",
@@ -53,6 +71,11 @@ function CommandDialog({
   );
 }
 
+/**
+ * Renders the CommandInput component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function CommandInput({
   className,
   ...props
@@ -75,6 +98,11 @@ function CommandInput({
   );
 }
 
+/**
+ * Renders the CommandList component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function CommandList({
   className,
   ...props
@@ -91,6 +119,11 @@ function CommandList({
   );
 }
 
+/**
+ * Renders the CommandEmpty component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function CommandEmpty({
   ...props
 }: React.ComponentProps<typeof CommandPrimitive.Empty>) {
@@ -103,6 +136,11 @@ function CommandEmpty({
   );
 }
 
+/**
+ * Renders the CommandGroup component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function CommandGroup({
   className,
   ...props
@@ -119,6 +157,11 @@ function CommandGroup({
   );
 }
 
+/**
+ * Renders the CommandSeparator component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function CommandSeparator({
   className,
   ...props
@@ -132,6 +175,11 @@ function CommandSeparator({
   );
 }
 
+/**
+ * Renders the CommandItem component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function CommandItem({
   className,
   ...props
@@ -148,6 +196,11 @@ function CommandItem({
   );
 }
 
+/**
+ * Renders the CommandShortcut component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function CommandShortcut({
   className,
   ...props

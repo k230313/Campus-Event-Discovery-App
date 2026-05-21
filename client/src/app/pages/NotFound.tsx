@@ -1,7 +1,19 @@
+// ============================================
+// File:    NotFound.tsx
+// Author:  Navroop Kaur
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Renders the Not Found page for the frontend application.
+// ============================================
+
 import { Link } from 'react-router-dom';
 import { Home, Search, ArrowLeft } from 'lucide-react';
 import { Button } from '../components/ui/button';
 
+/**
+ * Renders the NotFound component for the application interface.
+ * @returns {JSX.Element} Renders the component output.
+ */
 export function NotFound() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-[#F0F3F9] flex items-center justify-center px-4">
@@ -44,4 +56,3 @@ export function NotFound() {
     </div>
   );
 }
-

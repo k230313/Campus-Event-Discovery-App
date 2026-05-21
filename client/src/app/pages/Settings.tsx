@@ -1,3 +1,11 @@
+// ============================================
+// File:    Settings.tsx
+// Author:  Navroop Kaur
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Renders the Settings page for the frontend application.
+// ============================================
+
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
@@ -9,6 +17,10 @@ import { Settings as SettingsIcon, Bell, Mail, Shield, Palette } from 'lucide-re
 
 const SETTINGS_STORAGE_KEY = 'ceda_settings';
 
+/**
+ * Renders the Settings component for the application interface.
+ * @returns {JSX.Element} Renders the component output.
+ */
 export function Settings() {
   const { user } = useApp();
   const navigate = useNavigate();
@@ -51,6 +63,10 @@ export function Settings() {
     }
   }, []);
 
+  /**
+   * Asynchronously executes the handle save logic.
+   * @returns {*} Returns the resulting value.
+   */
   const handleSave = () => {
     setSaveError('');
 

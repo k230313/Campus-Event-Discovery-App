@@ -1,8 +1,20 @@
+// ============================================
+// File:    Unauthorized.tsx
+// Author:  Navroop Kaur
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Renders the Unauthorized page for the frontend application.
+// ============================================
+
 import { Link } from 'react-router-dom';
 import { ShieldX, Home, ArrowLeft } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { useApp } from '../context/AppContext';
 
+/**
+ * Renders the Unauthorized component for the application interface.
+ * @returns {JSX.Element} Renders the component output.
+ */
 export function Unauthorized() {
   const { user } = useApp();
 
@@ -52,4 +64,3 @@ export function Unauthorized() {
     </div>
   );
 }
-

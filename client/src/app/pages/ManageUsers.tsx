@@ -1,3 +1,11 @@
+// ============================================
+// File:    ManageUsers.tsx
+// Author:  Navroop Kaur
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Renders the Manage Users page for the frontend application.
+// ============================================
+
 import { useApp } from '../context/AppContext';
 import { Card, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
@@ -26,6 +34,10 @@ interface EditingUser {
   status: string;
 }
 
+/**
+ * Renders the ManageUsers component for the application interface.
+ * @returns {JSX.Element} Renders the component output.
+ */
 export function ManageUsers() {
   const { user } = useApp();
   const navigate = useNavigate();
@@ -43,6 +55,10 @@ export function ManageUsers() {
   const [isUnlocking, setIsUnlocking] = useState(false);
   const [now, setNow] = useState(Date.now());
 
+  /**
+   * Asynchronously executes the clear unlock state logic.
+   * @returns {*} Returns the resulting value.
+   */
   const clearUnlockState = () => {
     setIsUnlocked(false);
     setUnlockToken('');
@@ -58,6 +74,10 @@ export function ManageUsers() {
   }
 
   useEffect(() => {
+    /**
+     * Asynchronously executes the load users logic.
+     * @returns {*} Returns the resulting value.
+     */
     async function loadUsers() {
       try {
         const response = await apiFetch('/api/users');
@@ -115,6 +135,11 @@ export function ManageUsers() {
       u.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  /**
+   * Asynchronously executes the handle edit user logic.
+   * @param {*} u - Represents the u input.
+   * @returns {*} Returns the resulting value.
+   */
   const handleEditUser = (u: typeof users[number]) => {
     setEditingUser({
       id: u.id,
@@ -125,6 +150,10 @@ export function ManageUsers() {
     });
   };
 
+  /**
+   * Asynchronously executes the handle save user logic.
+   * @returns {*} Returns the resulting value.
+   */
   const handleSaveUser = async () => {
     if (!editingUser) return;
 
@@ -147,6 +176,10 @@ export function ManageUsers() {
     }
   };
 
+  /**
+   * Asynchronously executes the handle unlock deletion logic.
+   * @returns {*} Returns the resulting value.
+   */
   const handleUnlockDeletion = async () => {
     if (!masterPassword) {
       setUnlockError('Master password is required.');
@@ -185,6 +218,12 @@ export function ManageUsers() {
     }
   };
 
+  /**
+   * Asynchronously executes the handle delete user logic.
+   * @param {*} userId - Represents the userId input.
+   * @param {*} userName - Represents the userName input.
+   * @returns {*} Returns the resulting value.
+   */
   const handleDeleteUser = async (userId: string, userName: string) => {
     if (!deletionUnlocked) {
       setShowUnlockDialog(true);
@@ -528,4 +567,3 @@ export function ManageUsers() {
     </div>
   );
 }
-

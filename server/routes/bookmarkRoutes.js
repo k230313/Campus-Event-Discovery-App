@@ -1,3 +1,11 @@
+// ============================================
+// File:    bookmarkRoutes.js
+// Author:  Adamson Buliboli
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Implements bookmark Routes for the backend.
+// ============================================
+
 const express = require("express");
 const pool = require("../config/db");
 const { requireAuth, requireRole } = require("../middleware/auth");
@@ -7,6 +15,12 @@ const { bookmarkCreateSchema } = require("../validation/schemas");
 
 const router = express.Router();
 
+/**
+ * Asynchronously executes the route handler logic.
+ * @param {*} req - Represents the req input.
+ * @param {*} res - Represents the res input.
+ * @returns {*} Returns the resulting value.
+ */
 router.get("/", requireAuth, requireRole("student", "organizer"), async (req, res) => {
   try {
     const [rows] = await pool.query(
@@ -24,6 +38,12 @@ router.get("/", requireAuth, requireRole("student", "organizer"), async (req, re
   }
 });
 
+/**
+ * Asynchronously executes the route handler logic.
+ * @param {*} req - Represents the req input.
+ * @param {*} res - Represents the res input.
+ * @returns {*} Returns the resulting value.
+ */
 router.post("/", requireAuth, requireRole("student", "organizer"), generalWriteRateLimit, validateBody(bookmarkCreateSchema), async (req, res) => {
   const { eventId } = req.body;
 
@@ -61,6 +81,12 @@ router.post("/", requireAuth, requireRole("student", "organizer"), generalWriteR
   }
 });
 
+/**
+ * Asynchronously executes the route handler logic.
+ * @param {*} req - Represents the req input.
+ * @param {*} res - Represents the res input.
+ * @returns {*} Returns the resulting value.
+ */
 router.delete("/:eventId", requireAuth, requireRole("student", "organizer"), generalWriteRateLimit, async (req, res) => {
   try {
     await pool.query(

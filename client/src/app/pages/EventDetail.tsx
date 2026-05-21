@@ -1,3 +1,11 @@
+// ============================================
+// File:    EventDetail.tsx
+// Author:  Navroop Kaur
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Displays a single event with booking, waitlist, and bookmark interactions.
+// ============================================
+
 import { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Calendar, Clock, MapPin, Users, ArrowLeft, Bookmark, BookmarkCheck, Utensils, Armchair } from 'lucide-react';
@@ -9,10 +17,14 @@ import { Label } from '../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { useApp } from '../context/AppContext';
 
+/**
+ * Renders the detailed event view with registration and bookmarking actions.
+ * @returns {JSX.Element} Event details page with RSVP, waitlist, and organizer information.
+ */
 export function EventDetail() {
   const { eventId } = useParams<{ eventId: string }>();
   const navigate = useNavigate();
-  const { events, user, isBookmarked, addBookmark, removeBookmark, addRSVP, hasRSVP } = useApp();
+  const { events, user, rsvps, isBookmarked, addBookmark, removeBookmark, addRSVP, hasRSVP } = useApp();
   const [attendeeType, setAttendeeType] = useState<'attendee' | 'volunteer'>('attendee');
   const [selectedFood, setSelectedFood] = useState<string>('');
   const [selectedSeat, setSelectedSeat] = useState<number | undefined>();
@@ -31,11 +43,20 @@ export function EventDetail() {
     );
   }
 
+  /**
+   * Formats the event date for the detail page header.
+   * @param {string} dateString - ISO-style event date string.
+   * @returns {string} Human-readable Australian date string with weekday information.
+   */
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-AU', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
   };
 
+  /**
+   * Asynchronously submits the current user's RSVP for the displayed event.
+   * @returns {Promise<void>} Resolves after the RSVP flow completes or redirects to login.
+   */
   const handleRSVP = async () => {
     if (!user) {
       alert('Please log in to RSVP');
@@ -48,7 +69,7 @@ export function EventDetail() {
       return;
     }
 
-    const options: { foodOption?: string; seatNumber?: number } = {};
+    const options: { foodOption?: string; seatNumber?: number; waitlistIfFull?: boolean } = {};
 
     if (event.foodProvided && selectedFood) {
       options.foodOption = selectedFood;
@@ -65,6 +86,7 @@ export function EventDetail() {
           eventTitle: event.title,
           attendeeType: attendeeType,
           confirmationEmailStatus: result.confirmationEmailStatus,
+          registrationStatus: result.registrationStatus,
         },
       });
     } catch (error) {
@@ -72,6 +94,10 @@ export function EventDetail() {
     }
   };
 
+  /**
+   * Adds or removes the event from the current user's bookmarks.
+   * @returns {void} Does not return a value.
+   */
   const handleBookmarkToggle = () => {
     if (!user) {
       alert('Please log in to bookmark events');
@@ -98,6 +124,7 @@ export function EventDetail() {
 
   // Check if registration is closed
   const isRegistrationClosed = isEventPast || (event.status === 'cancelled');
+  const currentRSVP = user ? rsvps.find((rsvp) => rsvp.eventId === event.id && rsvp.userId === user.id) : null;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-[#F0F3F9]">
@@ -337,9 +364,37 @@ export function EventDetail() {
                     <p className="text-amber-700 mb-4">
                       This event has reached maximum capacity
                     </p>
-                    <p className="text-sm text-amber-600">
-                      Contact the organizer for waitlist information
-                    </p>
+                    {!hasRSVP(event.id) ? (
+                      <>
+                        <p className="text-sm text-amber-600 mb-4">
+                          You can still join the waitlist and we will keep your place in line.
+                        </p>
+                        <Button
+                          onClick={async () => {
+                            try {
+                              const result = await addRSVP(event.id, attendeeType, { waitlistIfFull: true });
+                              navigate('/registration-confirmation', {
+                                state: {
+                                  eventTitle: event.title,
+                                  attendeeType,
+                                  confirmationEmailStatus: result.confirmationEmailStatus,
+                                  registrationStatus: result.registrationStatus,
+                                },
+                              });
+                            } catch (error) {
+                              alert(error instanceof Error ? error.message : 'Failed to join waitlist');
+                            }
+                          }}
+                          className="bg-amber-500 hover:bg-amber-600 text-white"
+                        >
+                          Join Waitlist
+                        </Button>
+                      </>
+                    ) : (
+                      <p className="text-sm text-amber-600">
+                        You already have a registration record for this event.
+                      </p>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -433,6 +488,20 @@ export function EventDetail() {
                   )}
                 </CardContent>
               </Card>
+            ) : currentRSVP?.status === 'waitlisted' ? (
+              <Card className="shadow-xl border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-sky-50">
+                <CardContent className="pt-8 pb-8">
+                  <div className="text-center">
+                    <div className="bg-gradient-to-br from-blue-500 to-sky-600 text-white rounded-2xl p-4 inline-block mb-4 shadow-lg">
+                      <Users className="h-8 w-8" />
+                    </div>
+                    <h3 className="font-bold text-2xl text-blue-900 mb-2">You're On The Waitlist</h3>
+                    <p className="text-blue-700">
+                      The event is currently full, but your place on the waitlist has been saved.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
             ) : (
               <Card className="shadow-xl border-2 border-green-200 bg-gradient-to-br from-green-50 to-emerald-50">
                 <CardContent className="pt-8 pb-8">
@@ -472,4 +541,3 @@ export function EventDetail() {
     </div>
   );
 }
-

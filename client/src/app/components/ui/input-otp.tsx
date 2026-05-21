@@ -1,3 +1,11 @@
+// ============================================
+// File:    input-otp.tsx
+// Author:  Navroop Kaur
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Renders the input otp frontend component.
+// ============================================
+
 "use client";
 
 import * as React from "react";
@@ -6,6 +14,11 @@ import { MinusIcon } from "lucide-react";
 
 import { cn } from "./utils";
 
+/**
+ * Renders the InputOTP component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function InputOTP({
   className,
   containerClassName,
@@ -26,6 +39,11 @@ function InputOTP({
   );
 }
 
+/**
+ * Renders the InputOTPGroup component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function InputOTPGroup({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -36,6 +54,11 @@ function InputOTPGroup({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
+/**
+ * Renders the InputOTPSlot component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function InputOTPSlot({
   index,
   className,
@@ -66,6 +89,11 @@ function InputOTPSlot({
   );
 }
 
+/**
+ * Renders the InputOTPSeparator component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function InputOTPSeparator({ ...props }: React.ComponentProps<"div">) {
   return (
     <div data-slot="input-otp-separator" role="separator" {...props}>

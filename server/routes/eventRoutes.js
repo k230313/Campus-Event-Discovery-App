@@ -1,3 +1,11 @@
+// ============================================
+// File:    eventRoutes.js
+// Author:  Adamson Buliboli
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Handles event listing, moderation, creation, editing, and deletion endpoints.
+// ============================================
+
 const express = require("express");
 const router = express.Router();
 const pool = require("../config/db");
@@ -7,6 +15,7 @@ const { requireAuth, requireRole } = require("../middleware/auth");
 const { validateBody } = require("../middleware/validate");
 const { adminRateLimit, generalWriteRateLimit } = require("../middleware/security");
 const { eventStatusSchema } = require("../validation/schemas");
+const { promoteWaitlistedRegistrations } = require("../utils/waitlist");
 
 const EVENT_SELECT_SQL = [
   "SELECT",
@@ -22,6 +31,8 @@ const EVENT_SELECT_SQL = [
   "u.full_name AS organiser_name,",
   "e.banner_image_url AS image,",
   "e.status,",
+  "e.review_notes AS reviewNotes,",
+  "DATE_FORMAT(e.reviewed_at, '%Y-%m-%dT%H:%i:%sZ') AS reviewedAt,",
   "0 AS viewCount,",
   "(",
   "SELECT COUNT(*)",
@@ -38,6 +49,12 @@ const EVENT_SELECT_SQL = [
   "WHERE r.event_id = e.event_id",
   "AND r.status = 'registered'",
   ") AS seatsBooked,",
+  "(",
+  "SELECT COUNT(*)",
+  "FROM registrations r",
+  "WHERE r.event_id = e.event_id",
+  "AND r.status = 'waitlisted'",
+  ") AS waitlistCount,",
   "0 AS foodProvided,",
   "NULL AS foodOptions,",
   "e.notes,",
@@ -68,12 +85,22 @@ const UPDATE_EVENT_SQL = [
   "WHERE event_id = ?"
 ].join(" ");
 
+/**
+ * Returns the event statuses a user is allowed to write directly.
+ * @param {string} role - Authenticated user role.
+ * @returns {string[]} List of statuses permitted for that role.
+ */
 function getAllowedWriteStatuses(role) {
   return role === "admin"
     ? ["draft", "pending", "published", "rejected", "cancelled"]
     : ["draft", "pending", "cancelled"];
 }
 
+/**
+ * Calculates the status that should actually be saved for an event write request.
+ * @param {object} params - Inputs describing the user role, current status, and requested status.
+ * @returns {string} Effective status to persist.
+ */
 function getEffectiveWriteStatus({ userRole, existingStatus = null, requestedStatus, fallbackStatus = "draft" }) {
   const nextStatus = requestedStatus || fallbackStatus;
 
@@ -88,6 +115,41 @@ function getEffectiveWriteStatus({ userRole, existingStatus = null, requestedSta
   return nextStatus;
 }
 
+/**
+ * Builds the moderation metadata that accompanies an admin status decision.
+ * @param {object} params - Inputs describing the new status, review notes, and acting admin.
+ * @returns {{status: string, approvedBy: number|null, reviewNotes: string|null, reviewedAt: Date|null}} Moderation fields to persist.
+ */
+function getModerationUpdate({ status, reviewNotes, adminUserId }) {
+  const trimmedReviewNotes = typeof reviewNotes === "string" ? reviewNotes.trim() : "";
+
+  if (status === "pending") {
+    return {
+      status,
+      approvedBy: null,
+      reviewNotes: null,
+      reviewedAt: null,
+    };
+  }
+
+  if (status === "rejected" && !trimmedReviewNotes) {
+    throw new Error("Rejection reason is required");
+  }
+
+  return {
+    status,
+    approvedBy: adminUserId,
+    reviewNotes: trimmedReviewNotes || null,
+    reviewedAt: new Date(),
+  };
+}
+
+/**
+ * Determines whether a viewer is allowed to access an event row.
+ * @param {object} row - Event row returned from the database.
+ * @param {object|null} user - Authenticated user, if any.
+ * @returns {boolean} True when the event should be visible to the viewer.
+ */
 function canViewEvent(row, user) {
   if (!row) {
     return false;
@@ -108,6 +170,44 @@ function canViewEvent(row, user) {
   return user.role === "organizer" && Number(row.organizerId) === Number(user.id);
 }
 
+/**
+ * Determines whether a viewer may see internal moderation metadata for an event.
+ * @param {object} row - Event row returned from the database.
+ * @param {object|null} user - Authenticated user, if any.
+ * @returns {boolean} True when moderation fields should be exposed.
+ */
+function canViewModerationFields(row, user) {
+  if (!row || !user) {
+    return false;
+  }
+
+  if (user.role === "admin") {
+    return true;
+  }
+
+  return user.role === "organizer" && Number(row.organizerId) === Number(user.id);
+}
+
+/**
+ * Removes moderation-only fields from an event response when the viewer is not entitled to them.
+ * @param {object} row - Event row returned from the database.
+ * @param {object|null} user - Authenticated user, if any.
+ * @returns {object} Event payload filtered for the current viewer.
+ */
+function sanitizeEventForViewer(row, user) {
+  if (canViewModerationFields(row, user)) {
+    return row;
+  }
+
+  const { reviewNotes, reviewedAt, waitlistCount, ...rest } = row;
+  return rest;
+}
+
+/**
+ * Asynchronously resolves a category name to its primary key.
+ * @param {string} categoryName - Category name supplied by the client.
+ * @returns {Promise<number>} Matching category identifier.
+ */
 async function resolveCategoryId(categoryName) {
   try {
     const [rows] = await pool.query(
@@ -126,6 +226,11 @@ async function resolveCategoryId(categoryName) {
   }
 }
 
+/**
+ * Asynchronously resolves the organiser ID for an admin-created event.
+ * @param {number|string|undefined} organizerId - Explicit organiser ID, if one was supplied.
+ * @returns {Promise<number>} Organizer ID to store on the event.
+ */
 async function resolveOrganizerId(organizerId) {
   try {
     if (organizerId) {
@@ -147,6 +252,11 @@ async function resolveOrganizerId(organizerId) {
   }
 }
 
+/**
+ * Asynchronously loads the owner ID for a single event.
+ * @param {number|string} eventId - Event identifier to inspect.
+ * @returns {Promise<number|null>} Owning organiser ID or null when the event does not exist.
+ */
 async function getEventOwnerId(eventId) {
   const [rows] = await pool.query(
     "SELECT organiser_id FROM events WHERE event_id = ? LIMIT 1",
@@ -156,23 +266,45 @@ async function getEventOwnerId(eventId) {
   return rows[0]?.organiser_id || null;
 }
 
+/**
+ * Asynchronously returns the event list filtered to what the current viewer is allowed to see.
+ * @param {import("express").Request} req - Express request with optional authenticated user context.
+ * @param {import("express").Response} res - Express response used to return the event list.
+ * @returns {Promise<import("express").Response>} JSON response containing visible events.
+ */
 router.get("/", async (req, res) => {
   try {
     const [rows] = await pool.query(LIST_EVENTS_SQL);
-    return res.json(rows.filter((row) => canViewEvent(row, req.user)));
+    return res.json(
+      rows
+        .filter((row) => canViewEvent(row, req.user))
+        .map((row) => sanitizeEventForViewer(row, req.user))
+    );
   } catch (error) {
     console.error("GET /api/events error:", error);
     return res.status(500).json({ error: "Failed to fetch events" });
   }
 });
 
+/**
+ * Returns the frontend event-field schema used by the event form.
+ * @param {import("express").Request} req - Express request object.
+ * @param {import("express").Response} res - Express response used to return the schema.
+ * @returns {void} Does not return a value.
+ */
 router.get("/schema", (req, res) => {
   res.json(eventFields);
 });
 
+/**
+ * Asynchronously applies an admin moderation status change to an event.
+ * @param {import("express").Request} req - Authenticated admin request containing the new status.
+ * @param {import("express").Response} res - Express response used to return the updated event.
+ * @returns {Promise<import("express").Response>} JSON response containing the updated event or an error.
+ */
 router.patch("/:id/status", requireAuth, requireRole("admin"), adminRateLimit, validateBody(eventStatusSchema), async (req, res) => {
   const { id } = req.params;
-  const { status } = req.body;
+  const { status, reviewNotes } = req.body;
   const allowedStatuses = ["draft", "pending", "published", "rejected", "cancelled"];
 
   if (!allowedStatuses.includes(status)) {
@@ -180,9 +312,21 @@ router.patch("/:id/status", requireAuth, requireRole("admin"), adminRateLimit, v
   }
 
   try {
+    const moderationUpdate = getModerationUpdate({
+      status,
+      reviewNotes,
+      adminUserId: req.user.id,
+    });
+
     const [result] = await pool.query(
-      "UPDATE events SET status = ?, approved_by = ? WHERE event_id = ?",
-      [status, req.user.id, id]
+      "UPDATE events SET status = ?, approved_by = ?, review_notes = ?, reviewed_at = ? WHERE event_id = ?",
+      [
+        moderationUpdate.status,
+        moderationUpdate.approvedBy,
+        moderationUpdate.reviewNotes,
+        moderationUpdate.reviewedAt,
+        id,
+      ]
     );
 
     if (!result.affectedRows) {
@@ -190,13 +334,19 @@ router.patch("/:id/status", requireAuth, requireRole("admin"), adminRateLimit, v
     }
 
     const [rows] = await pool.query(GET_EVENT_BY_ID_SQL, [id]);
-    return res.json(rows[0]);
+    return res.json(sanitizeEventForViewer(rows[0], req.user));
   } catch (error) {
     console.error("PATCH /api/events/:id/status error:", error);
     return res.status(500).json({ error: "Failed to update event status" });
   }
 });
 
+/**
+ * Asynchronously returns a single event when the current viewer is allowed to access it.
+ * @param {import("express").Request} req - Express request containing the event ID.
+ * @param {import("express").Response} res - Express response used to return the event.
+ * @returns {Promise<import("express").Response>} JSON response containing the event or a not-found error.
+ */
 router.get("/:id", async (req, res) => {
   const { id } = req.params;
 
@@ -218,6 +368,12 @@ router.get("/:id", async (req, res) => {
   }
 });
 
+/**
+ * Asynchronously creates a new event for an organizer or admin.
+ * @param {import("express").Request} req - Authenticated write request containing event form data.
+ * @param {import("express").Response} res - Express response used to return the created event.
+ * @returns {Promise<import("express").Response>} JSON response containing the created event or an error.
+ */
 router.post("/", requireAuth, requireRole("organizer", "admin"), generalWriteRateLimit, async (req, res) => {
   const validation = validateEvent(req.body);
 
@@ -285,6 +441,12 @@ router.post("/", requireAuth, requireRole("organizer", "admin"), generalWriteRat
   }
 });
 
+/**
+ * Asynchronously updates an existing event and re-applies moderation rules where required.
+ * @param {import("express").Request} req - Authenticated write request containing event updates.
+ * @param {import("express").Response} res - Express response used to return the updated event.
+ * @returns {Promise<import("express").Response>} JSON response containing the updated event or an error.
+ */
 router.put("/:id", requireAuth, requireRole("organizer", "admin"), generalWriteRateLimit, async (req, res) => {
   const { id } = req.params;
   const validation = validateEvent(req.body);
@@ -312,7 +474,7 @@ router.put("/:id", requireAuth, requireRole("organizer", "admin"), generalWriteR
 
   try {
     const [existingRows] = await pool.query(
-      "SELECT organiser_id, status FROM events WHERE event_id = ? LIMIT 1",
+      "SELECT organiser_id, status, capacity FROM events WHERE event_id = ? LIMIT 1",
       [id]
     );
 
@@ -361,8 +523,27 @@ router.put("/:id", requireAuth, requireRole("organizer", "admin"), generalWriteR
       return res.status(404).json({ error: "Event not found" });
     }
 
-    if (req.user.role !== "admin" && existingEvent.status === "published") {
-      await pool.query("UPDATE events SET approved_by = NULL WHERE event_id = ?", [id]);
+    if (req.user.role !== "admin" && (existingEvent.status === "published" || requestedStatus === "pending")) {
+      await pool.query(
+        "UPDATE events SET approved_by = NULL, review_notes = NULL, reviewed_at = NULL WHERE event_id = ?",
+        [id]
+      );
+    }
+
+    const previousCapacity = existingEvent.capacity === null || existingEvent.capacity === undefined
+      ? null
+      : Number(existingEvent.capacity);
+    const nextCapacity = capacity === null || capacity === undefined
+      ? null
+      : Number(capacity);
+
+    if (
+      requestedStatus === "published" &&
+      nextCapacity !== null &&
+      !Number.isNaN(nextCapacity) &&
+      (previousCapacity === null || nextCapacity > previousCapacity)
+    ) {
+      await promoteWaitlistedRegistrations(id);
     }
 
     const [rows] = await pool.query(GET_EVENT_BY_ID_SQL, [id]);
@@ -373,6 +554,12 @@ router.put("/:id", requireAuth, requireRole("organizer", "admin"), generalWriteR
   }
 });
 
+/**
+ * Asynchronously deletes an event owned by the organizer or targeted by an admin.
+ * @param {import("express").Request} req - Authenticated delete request containing the event ID.
+ * @param {import("express").Response} res - Express response used to confirm deletion.
+ * @returns {Promise<import("express").Response>} JSON response confirming deletion or describing the failure.
+ */
 router.delete("/:id", requireAuth, requireRole("organizer", "admin"), generalWriteRateLimit, async (req, res) => {
   const { id } = req.params;
 
@@ -402,3 +589,5 @@ router.delete("/:id", requireAuth, requireRole("organizer", "admin"), generalWri
 module.exports = router;
 module.exports.canViewEvent = canViewEvent;
 module.exports.getEffectiveWriteStatus = getEffectiveWriteStatus;
+module.exports.getModerationUpdate = getModerationUpdate;
+module.exports.sanitizeEventForViewer = sanitizeEventForViewer;

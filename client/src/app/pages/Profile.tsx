@@ -1,3 +1,11 @@
+// ============================================
+// File:    Profile.tsx
+// Author:  Navroop Kaur
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Renders the Profile page for the frontend application.
+// ============================================
+
 import { useApp } from '../context/AppContext';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
@@ -9,6 +17,10 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { csrfFetch } from '../services/api';
 
+/**
+ * Renders the Profile component for the application interface.
+ * @returns {JSX.Element} Renders the component output.
+ */
 export function Profile() {
   const { user, setCurrentUser } = useApp();
   const navigate = useNavigate();
@@ -42,6 +54,10 @@ export function Profile() {
     });
   }, [user]);
 
+  /**
+   * Asynchronously executes the handle save logic.
+   * @returns {*} Returns the resulting value.
+   */
   const handleSave = async () => {
     setProfileError('');
     setProfileSuccess('');
@@ -75,6 +91,10 @@ export function Profile() {
     }
   };
 
+  /**
+   * Asynchronously executes the handle password save logic.
+   * @returns {*} Returns the resulting value.
+   */
   const handlePasswordSave = async () => {
     setPasswordError('');
     setPasswordSuccess('');
@@ -365,4 +385,3 @@ export function Profile() {
     </div>
   );
 }
-

@@ -1,3 +1,11 @@
+// ============================================
+// File:    chatRoutes.js
+// Author:  Adamson Buliboli
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Implements chat Routes for the backend.
+// ============================================
+
 const express = require("express");
 const crypto = require("crypto");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
@@ -10,6 +18,13 @@ const SYSTEM_PROMPT = "Answer only from provided campus events. Use conversation
 const CHAT_CACHE_TTL_MS = 10 * 60 * 1000;
 const chatResponseCache = new Map();
 
+const CHAT_FALLBACK_PREFIX = "CEDA Assistant is temporarily in limited mode";
+
+/**
+ * Executes the normalize history logic.
+ * @param {*} conversationHistory - Represents the conversationHistory input.
+ * @returns {*} Returns the resulting value.
+ */
 function normalizeHistory(conversationHistory) {
   if (!Array.isArray(conversationHistory)) {
     return [];
@@ -35,6 +50,10 @@ function normalizeHistory(conversationHistory) {
   return normalized;
 }
 
+/**
+ * Asynchronously executes the load event context logic.
+ * @returns {*} Returns the resulting value.
+ */
 async function loadEventContext() {
   const [rows] = await pool.query(
     `SELECT
@@ -67,6 +86,12 @@ async function loadEventContext() {
   }));
 }
 
+/**
+ * Executes the filter events for message logic.
+ * @param {*} events - Represents the events input.
+ * @param {*} message - Represents the message input.
+ * @returns {*} Returns the resulting value.
+ */
 function filterEventsForMessage(events, message) {
   const query = message.toLowerCase();
   const terms = query
@@ -92,6 +117,12 @@ function filterEventsForMessage(events, message) {
   return matches.length > 0 ? matches.slice(0, 10) : events.slice(0, 10);
 }
 
+/**
+ * Executes the get relevant events logic.
+ * @param {*} events - Represents the events input.
+ * @param {*} message - Represents the message input.
+ * @returns {*} Returns the resulting value.
+ */
 function getRelevantEvents(events, message) {
   const query = message.toLowerCase();
   const terms = query
@@ -148,6 +179,58 @@ function getRelevantEvents(events, message) {
   return [];
 }
 
+/**
+ * Builds a deterministic fallback reply when the AI provider is unavailable.
+ * @param {Array<{ id: string, title: string, date?: string }>} relatedEvents - Events relevant to the current query.
+ * @returns {string} User-facing fallback reply that keeps the chatbot useful during degraded operation.
+ */
+function buildFallbackReply(relatedEvents) {
+  if (Array.isArray(relatedEvents) && relatedEvents.length > 0) {
+    const eventSummary = relatedEvents
+      .slice(0, 3)
+      .map((event) => {
+        if (event.date) {
+          return `${event.title} (${event.date})`;
+        }
+
+        return event.title;
+      })
+      .join("; ");
+
+    return `${CHAT_FALLBACK_PREFIX} due to service limits. You can still check these events: ${eventSummary}.`;
+  }
+
+  return `${CHAT_FALLBACK_PREFIX} due to service limits. Please browse the Events page or try your question again shortly.`;
+}
+
+/**
+ * Identifies whether an AI provider failure should degrade gracefully instead of surfacing as a hard error.
+ * @param {unknown} error - Error raised while generating a chatbot response.
+ * @returns {boolean} True when the failure is suitable for fallback-mode handling.
+ */
+function shouldUseFallbackMode(error) {
+  const message = typeof error?.message === "string" ? error.message.toLowerCase() : "";
+  const status = Number(error?.status || 0);
+
+  return (
+    status === 400 ||
+    status === 429 ||
+    status === 500 ||
+    message.includes("quota") ||
+    message.includes("rate limit") ||
+    message.includes("api key") ||
+    message.includes("not configured") ||
+    message.includes("temporarily unavailable")
+  );
+}
+
+/**
+ * Executes the build cache key logic.
+ * @param {*} message - Represents the message input.
+ * @param {*} history - Represents the history input.
+ * @param {*} events - Represents the events input.
+ * @returns {*} Returns the resulting value.
+ */
 function buildCacheKey(message, history, events) {
   const historyKey = history.map((entry) => ({
     role: entry.role,
@@ -172,6 +255,11 @@ function buildCacheKey(message, history, events) {
     .digest("hex");
 }
 
+/**
+ * Executes the get cached reply logic.
+ * @param {*} cacheKey - Represents the cacheKey input.
+ * @returns {*} Returns the resulting value.
+ */
 function getCachedReply(cacheKey) {
   const cached = chatResponseCache.get(cacheKey);
 
@@ -187,6 +275,12 @@ function getCachedReply(cacheKey) {
   return cached.reply;
 }
 
+/**
+ * Executes the set cached reply logic.
+ * @param {*} cacheKey - Represents the cacheKey input.
+ * @param {*} reply - Represents the reply input.
+ * @returns {*} Returns the resulting value.
+ */
 function setCachedReply(cacheKey, reply) {
   chatResponseCache.set(cacheKey, {
     reply,
@@ -201,15 +295,16 @@ function setCachedReply(cacheKey, reply) {
   }
 }
 
+/**
+ * Asynchronously executes the route handler logic.
+ * @param {*} req - Represents the req input.
+ * @param {*} res - Represents the res input.
+ * @returns {*} Returns the resulting value.
+ */
 router.post("/", chatRateLimit, chatQuotaRateLimit, async (req, res) => {
   const apiKey = process.env.GEMINI_API_KEY;
   const message = typeof req.body?.message === "string" ? req.body.message.trim() : "";
   const history = normalizeHistory(req.body?.conversationHistory);
-
-  if (!apiKey) {
-    console.error("POST /api/chat error: GEMINI_API_KEY is not configured");
-    return res.status(500).json({ error: "Chat service is not configured" });
-  }
 
   if (!message) {
     return res.status(400).json({ error: "message is required" });
@@ -223,6 +318,16 @@ router.post("/", chatRateLimit, chatQuotaRateLimit, async (req, res) => {
     const allEvents = await loadEventContext();
     const safeEvents = filterEventsForMessage(allEvents, message);
     const relatedEvents = getRelevantEvents(allEvents, message);
+
+    if (!apiKey) {
+      console.error("POST /api/chat error: GEMINI_API_KEY is not configured");
+      return res.json({
+        reply: buildFallbackReply(relatedEvents),
+        events: relatedEvents,
+        degraded: true,
+      });
+    }
+
     const cacheKey = buildCacheKey(message, history, safeEvents);
     const cachedReply = getCachedReply(cacheKey);
 
@@ -265,8 +370,29 @@ router.post("/", chatRateLimit, chatQuotaRateLimit, async (req, res) => {
     return res.json({ reply, events: relatedEvents });
   } catch (error) {
     console.error("POST /api/chat error:", error);
+
+    if (shouldUseFallbackMode(error)) {
+      try {
+        const allEvents = await loadEventContext();
+        const relatedEvents = getRelevantEvents(allEvents, message);
+
+        return res.json({
+          reply: buildFallbackReply(relatedEvents),
+          events: relatedEvents,
+          degraded: true,
+        });
+      } catch (fallbackError) {
+        console.error("POST /api/chat fallback error:", fallbackError);
+      }
+    }
+
     return res.status(500).json({ error: "Failed to generate chat response" });
   }
 });
+
+router._test = {
+  buildFallbackReply,
+  shouldUseFallbackMode,
+};
 
 module.exports = router;

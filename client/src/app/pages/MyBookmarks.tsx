@@ -1,3 +1,11 @@
+// ============================================
+// File:    MyBookmarks.tsx
+// Author:  Navroop Kaur
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Renders the My Bookmarks page for the frontend application.
+// ============================================
+
 import { useApp } from '../context/AppContext';
 import { Card, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
@@ -5,6 +13,10 @@ import { Badge } from '../components/ui/badge';
 import { Bookmark, Calendar, MapPin, Users, X } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 
+/**
+ * Renders the MyBookmarks component for the application interface.
+ * @returns {JSX.Element} Renders the component output.
+ */
 export function MyBookmarks() {
   const { user, events, bookmarks, removeBookmark } = useApp();
   const navigate = useNavigate();
@@ -106,4 +118,3 @@ export function MyBookmarks() {
     </div>
   );
 }
-

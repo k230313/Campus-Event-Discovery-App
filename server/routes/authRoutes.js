@@ -1,3 +1,11 @@
+// ============================================
+// File:    authRoutes.js
+// Author:  Adamson Buliboli
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Handles authentication, email verification, session, and password reset endpoints.
+// ============================================
+
 const express = require("express");
 const crypto = require("crypto");
 const rateLimit = require("express-rate-limit");
@@ -25,14 +33,29 @@ const registrationRateLimit = rateLimit({
   legacyHeaders: false,
 });
 
+/**
+ * Converts a database role value into the frontend-facing role name.
+ * @param {string} dbRole - Role value stored in the database.
+ * @returns {string} Normalized role string for API responses.
+ */
 function toClientRole(dbRole) {
   return dbRole === "organiser" ? "organizer" : dbRole;
 }
 
+/**
+ * Converts a frontend role value into the role name stored in MySQL.
+ * @param {string} clientRole - Role value supplied by the client.
+ * @returns {string} Normalized role string for database writes.
+ */
 function toDbRole(clientRole) {
   return clientRole === "organizer" ? "organiser" : clientRole;
 }
 
+/**
+ * Maps a user row from MySQL into the API response shape.
+ * @param {object} row - Raw user row returned from the database.
+ * @returns {{id: string, name: string, email: string, role: string}} Serialized user payload.
+ */
 function serializeUser(row) {
   return {
     id: String(row.user_id),
@@ -42,10 +65,20 @@ function serializeUser(row) {
   };
 }
 
+/**
+ * Hashes a verification or password-reset token before persistence.
+ * @param {string} token - Plain-text token sent to the user.
+ * @returns {string} SHA-256 token hash.
+ */
 function hashResetToken(token) {
   return crypto.createHash("sha256").update(token).digest("hex");
 }
 
+/**
+ * Asynchronously generates a cryptographically secure random token.
+ * @param {number} size - Number of random bytes to generate.
+ * @returns {Promise<string>} Hex-encoded token.
+ */
 async function createRandomHexToken(size = 32) {
   return new Promise((resolve, reject) => {
     crypto.randomBytes(size, (err, buf) => (
@@ -54,6 +87,11 @@ async function createRandomHexToken(size = 32) {
   });
 }
 
+/**
+ * Builds the password reset URL included in reset emails.
+ * @param {string} token - Plain-text password reset token.
+ * @returns {string} Fully-qualified reset URL.
+ */
 function getResetPasswordUrl(token) {
   const baseUrl = process.env.RESET_PASSWORD_URL_BASE;
 
@@ -66,6 +104,11 @@ function getResetPasswordUrl(token) {
   return url.toString();
 }
 
+/**
+ * Builds the email verification URL included in verification emails.
+ * @param {string} token - Plain-text email verification token.
+ * @returns {string} Fully-qualified verification URL.
+ */
 function getVerifyEmailUrl(token) {
   const baseUrl = process.env.VERIFY_EMAIL_URL_BASE;
 
@@ -78,6 +121,11 @@ function getVerifyEmailUrl(token) {
   return url.toString();
 }
 
+/**
+ * Asynchronously loads a user record by primary key.
+ * @param {number|string} userId - User identifier to fetch.
+ * @returns {Promise<object|null>} Matching database row or null when not found.
+ */
 async function loadUserById(userId) {
   try {
     const [rows] = await pool.query(
@@ -92,6 +140,12 @@ async function loadUserById(userId) {
   }
 }
 
+/**
+ * Asynchronously verifies a Cloudflare Turnstile token with the verification API.
+ * @param {string} token - Client-side Turnstile token.
+ * @param {string} remoteIp - Request IP address forwarded to Turnstile.
+ * @returns {Promise<boolean>} True when the token is accepted by Cloudflare.
+ */
 async function verifyTurnstileToken(token, remoteIp) {
   try {
     const secret = process.env.TURNSTILE_SECRET_KEY;
@@ -124,6 +178,10 @@ async function verifyTurnstileToken(token, remoteIp) {
   }
 }
 
+/**
+ * Returns the standard cookie options used for the auth session cookie.
+ * @returns {object} Cookie configuration shared by auth routes.
+ */
 function getAuthCookieOptions() {
   return {
     httpOnly: true,
@@ -134,10 +192,21 @@ function getAuthCookieOptions() {
   };
 }
 
+/**
+ * Attaches the signed auth token to the HTTP-only session cookie.
+ * @param {import("express").Response} res - Express response object.
+ * @param {string} token - Signed authentication token.
+ * @returns {void} Does not return a value.
+ */
 function setAuthCookie(res, token) {
   res.cookie(AUTH_COOKIE_NAME, token, getAuthCookieOptions());
 }
 
+/**
+ * Clears the HTTP-only auth cookie during logout or session reset.
+ * @param {import("express").Response} res - Express response object.
+ * @returns {void} Does not return a value.
+ */
 function clearAuthCookie(res) {
   res.clearCookie(AUTH_COOKIE_NAME, {
     httpOnly: true,
@@ -147,6 +216,12 @@ function clearAuthCookie(res) {
   });
 }
 
+/**
+ * Asynchronously registers a new student or organizer account and sends a verification email.
+ * @param {import("express").Request} req - Express request containing registration data.
+ * @param {import("express").Response} res - Express response used to return the registration outcome.
+ * @returns {Promise<import("express").Response>} JSON response describing the registration result.
+ */
 router.post("/register", registrationRateLimit, authRateLimit, validateBody(registerSchema), async (req, res) => {
   const { name, email, password, role, turnstileToken } = req.body;
 
@@ -229,6 +304,12 @@ router.post("/register", registrationRateLimit, authRateLimit, validateBody(regi
   }
 });
 
+/**
+ * Asynchronously authenticates a verified user and sets the session cookie.
+ * @param {import("express").Request} req - Express request containing login credentials.
+ * @param {import("express").Response} res - Express response used to return the authenticated user.
+ * @returns {Promise<import("express").Response>} JSON response containing the signed-in user or an error.
+ */
 router.post("/login", authRateLimit, validateBody(loginSchema), async (req, res) => {
   const { email, password } = req.body;
 
@@ -267,6 +348,12 @@ router.post("/login", authRateLimit, validateBody(loginSchema), async (req, res)
   }
 });
 
+/**
+ * Asynchronously creates a password reset token and sends the reset email when the account exists.
+ * @param {import("express").Request} req - Express request containing the submitted email address.
+ * @param {import("express").Response} res - Express response used to return a generic reset message.
+ * @returns {Promise<import("express").Response>} JSON response acknowledging the reset request.
+ */
 router.post("/forgot-password", authRateLimit, validateBody(forgotPasswordSchema), async (req, res) => {
   const email = String(req.body?.email || "").trim().toLowerCase();
 
@@ -318,6 +405,12 @@ router.post("/forgot-password", authRateLimit, validateBody(forgotPasswordSchema
   }
 });
 
+/**
+ * Asynchronously verifies an email verification token and marks the account as verified.
+ * @param {import("express").Request} req - Express request containing the verification token.
+ * @param {import("express").Response} res - Express response used to confirm verification.
+ * @returns {Promise<import("express").Response>} JSON response describing the verification outcome.
+ */
 router.post("/verify-email", authRateLimit, validateBody(verifyEmailSchema), async (req, res) => {
   const token = String(req.body?.token || "").trim();
 
@@ -361,6 +454,12 @@ router.post("/verify-email", authRateLimit, validateBody(verifyEmailSchema), asy
   }
 });
 
+/**
+ * Asynchronously resets a user's password when the supplied reset token is still valid.
+ * @param {import("express").Request} req - Express request containing the reset token and new password.
+ * @param {import("express").Response} res - Express response used to report the reset result.
+ * @returns {Promise<import("express").Response>} JSON response describing the password reset outcome.
+ */
 router.post("/reset-password", authRateLimit, validateBody(resetPasswordSchema), async (req, res) => {
   const token = String(req.body?.token || "").trim();
   const password = String(req.body?.password || "");
@@ -412,6 +511,12 @@ router.post("/reset-password", authRateLimit, validateBody(resetPasswordSchema),
   }
 });
 
+/**
+ * Asynchronously returns the authenticated user's current session profile.
+ * @param {import("express").Request} req - Authenticated Express request.
+ * @param {import("express").Response} res - Express response used to return the current user.
+ * @returns {Promise<import("express").Response>} JSON response containing the current user.
+ */
 router.get("/me", requireAuth, async (req, res) => {
   if (!req.user) {
     return res.status(401).json({ error: "Unauthorized" });
@@ -430,6 +535,12 @@ router.get("/me", requireAuth, async (req, res) => {
   }
 });
 
+/**
+ * Clears the auth cookie and ends the current session.
+ * @param {import("express").Request} req - Express request object.
+ * @param {import("express").Response} res - Express response used to return the logout result.
+ * @returns {import("express").Response} Empty response confirming logout.
+ */
 router.post("/logout", (_req, res) => {
   clearAuthCookie(res);
   return res.status(204).send();

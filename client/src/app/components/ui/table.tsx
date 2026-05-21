@@ -1,9 +1,22 @@
+// ============================================
+// File:    table.tsx
+// Author:  Navroop Kaur
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Renders the table frontend component.
+// ============================================
+
 "use client";
 
 import * as React from "react";
 
 import { cn } from "./utils";
 
+/**
+ * Renders the Table component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function Table({ className, ...props }: React.ComponentProps<"table">) {
   return (
     <div
@@ -19,6 +32,11 @@ function Table({ className, ...props }: React.ComponentProps<"table">) {
   );
 }
 
+/**
+ * Renders the TableHeader component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function TableHeader({ className, ...props }: React.ComponentProps<"thead">) {
   return (
     <thead
@@ -29,6 +47,11 @@ function TableHeader({ className, ...props }: React.ComponentProps<"thead">) {
   );
 }
 
+/**
+ * Renders the TableBody component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function TableBody({ className, ...props }: React.ComponentProps<"tbody">) {
   return (
     <tbody
@@ -39,6 +62,11 @@ function TableBody({ className, ...props }: React.ComponentProps<"tbody">) {
   );
 }
 
+/**
+ * Renders the TableFooter component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function TableFooter({ className, ...props }: React.ComponentProps<"tfoot">) {
   return (
     <tfoot
@@ -52,6 +80,11 @@ function TableFooter({ className, ...props }: React.ComponentProps<"tfoot">) {
   );
 }
 
+/**
+ * Renders the TableRow component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
   return (
     <tr
@@ -65,6 +98,11 @@ function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
   );
 }
 
+/**
+ * Renders the TableHead component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function TableHead({ className, ...props }: React.ComponentProps<"th">) {
   return (
     <th
@@ -78,6 +116,11 @@ function TableHead({ className, ...props }: React.ComponentProps<"th">) {
   );
 }
 
+/**
+ * Renders the TableCell component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function TableCell({ className, ...props }: React.ComponentProps<"td">) {
   return (
     <td
@@ -91,6 +134,11 @@ function TableCell({ className, ...props }: React.ComponentProps<"td">) {
   );
 }
 
+/**
+ * Renders the TableCaption component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function TableCaption({
   className,
   ...props

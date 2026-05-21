@@ -1,3 +1,11 @@
+// ============================================
+// File:    emailService.test.js
+// Author:  Adamson Buliboli
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Implements email Service.test for the backend.
+// ============================================
+
 const test = require("node:test");
 const assert = require("node:assert/strict");
 
@@ -7,6 +15,10 @@ const {
   sendOrganizerFirstRegistrationEmail,
 } = require("../services/emailService");
 
+/**
+ * Executes the test case logic.
+ * @returns {*} Returns the resulting value.
+ */
 test("sendBookingConfirmationEmail sends booking details through Resend", async () => {
   const originalApiKey = process.env.RESEND_API_KEY;
   const originalEmailFrom = process.env.EMAIL_FROM;
@@ -17,6 +29,11 @@ test("sendBookingConfirmationEmail sends booking details through Resend", async 
   const sentPayloads = [];
   const resend = {
     emails: {
+      /**
+       * Asynchronously executes the send logic.
+       * @param {*} payload - Represents the payload input.
+       * @returns {*} Returns the resulting value.
+       */
       send: async (payload) => {
         sentPayloads.push(payload);
         return { data: { id: "email_123" }, error: null };
@@ -53,6 +70,10 @@ test("sendBookingConfirmationEmail sends booking details through Resend", async 
   }
 });
 
+/**
+ * Executes the test case logic.
+ * @returns {*} Returns the resulting value.
+ */
 test("sendBookingConfirmationEmail supports Date objects for event times from MySQL", async () => {
   const originalApiKey = process.env.RESEND_API_KEY;
   const originalEmailFrom = process.env.EMAIL_FROM;
@@ -63,6 +84,11 @@ test("sendBookingConfirmationEmail supports Date objects for event times from My
   const sentPayloads = [];
   const resend = {
     emails: {
+      /**
+       * Asynchronously executes the send logic.
+       * @param {*} payload - Represents the payload input.
+       * @returns {*} Returns the resulting value.
+       */
       send: async (payload) => {
         sentPayloads.push(payload);
         return { data: { id: "email_789" }, error: null };
@@ -96,6 +122,10 @@ test("sendBookingConfirmationEmail supports Date objects for event times from My
   }
 });
 
+/**
+ * Executes the test case logic.
+ * @returns {*} Returns the resulting value.
+ */
 test("sendBookingConfirmationEmail supports Date objects for event dates", async () => {
   const originalApiKey = process.env.RESEND_API_KEY;
   const originalEmailFrom = process.env.EMAIL_FROM;
@@ -106,6 +136,11 @@ test("sendBookingConfirmationEmail supports Date objects for event dates", async
   const sentPayloads = [];
   const resend = {
     emails: {
+      /**
+       * Asynchronously executes the send logic.
+       * @param {*} payload - Represents the payload input.
+       * @returns {*} Returns the resulting value.
+       */
       send: async (payload) => {
         sentPayloads.push(payload);
         return { data: { id: "email_456" }, error: null };
@@ -142,6 +177,10 @@ test("sendBookingConfirmationEmail supports Date objects for event dates", async
   }
 });
 
+/**
+ * Executes the test case logic.
+ * @returns {*} Returns the resulting value.
+ */
 test("sendOrganizerFirstRegistrationEmail sends the organizer a first-booking summary", async () => {
   const originalApiKey = process.env.RESEND_API_KEY;
   const originalEmailFrom = process.env.EMAIL_FROM;
@@ -152,6 +191,11 @@ test("sendOrganizerFirstRegistrationEmail sends the organizer a first-booking su
   const sentPayloads = [];
   const resend = {
     emails: {
+      /**
+       * Asynchronously executes the send logic.
+       * @param {*} payload - Represents the payload input.
+       * @returns {*} Returns the resulting value.
+       */
       send: async (payload) => {
         sentPayloads.push(payload);
         return { data: { id: "email_111" }, error: null };
@@ -187,6 +231,10 @@ test("sendOrganizerFirstRegistrationEmail sends the organizer a first-booking su
   }
 });
 
+/**
+ * Executes the test case logic.
+ * @returns {*} Returns the resulting value.
+ */
 test("sendOrganizerEventFullEmail sends the organizer a capacity-reached summary", async () => {
   const originalApiKey = process.env.RESEND_API_KEY;
   const originalEmailFrom = process.env.EMAIL_FROM;
@@ -197,6 +245,11 @@ test("sendOrganizerEventFullEmail sends the organizer a capacity-reached summary
   const sentPayloads = [];
   const resend = {
     emails: {
+      /**
+       * Asynchronously executes the send logic.
+       * @param {*} payload - Represents the payload input.
+       * @returns {*} Returns the resulting value.
+       */
       send: async (payload) => {
         sentPayloads.push(payload);
         return { data: { id: "email_222" }, error: null };

@@ -1,3 +1,11 @@
+// ============================================
+// File:    ChatBot.tsx
+// Author:  Navroop Kaur
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Renders the Chat Bot frontend component.
+// ============================================
+
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { MessageCircle, X, Send, Sparkles } from 'lucide-react';
@@ -14,6 +22,7 @@ interface Message {
   text: string;
   sender: 'user' | 'bot';
   timestamp: Date;
+  degraded?: boolean;
   relatedEvents?: Array<{
     id: string;
     title: string;
@@ -21,6 +30,11 @@ interface Message {
   }>;
 }
 
+/**
+ * Executes the format event date logic.
+ * @param {*} date - Represents the date input.
+ * @returns {*} Returns the resulting value.
+ */
 function formatEventDate(date?: string) {
   if (!date) {
     return '';
@@ -33,6 +47,10 @@ function formatEventDate(date?: string) {
   });
 }
 
+/**
+ * Renders the ChatBot component for the application interface.
+ * @returns {JSX.Element} Renders the component output.
+ */
 export function ChatBot() {
   const { events } = useApp();
   const [isOpen, setIsOpen] = useState(false);
@@ -54,6 +72,10 @@ export function ChatBot() {
     }
   }, [messages, isTyping]);
 
+  /**
+   * Asynchronously executes the handle send logic.
+   * @returns {*} Returns the resulting value.
+   */
   const handleSend = async () => {
     if (!inputValue.trim() || isTyping) return;
 
@@ -84,6 +106,7 @@ export function ChatBot() {
         text: botResponse.reply,
         sender: 'bot',
         timestamp: new Date(),
+        degraded: Boolean(botResponse.degraded),
         relatedEvents: botResponse.events,
       };
 
@@ -153,6 +176,11 @@ export function ChatBot() {
                     }`}
                   >
                     <div className={`text-sm leading-relaxed space-y-2 ${message.sender === 'bot' ? 'text-gray-800' : ''}`}>
+                      {message.degraded && (
+                        <Badge variant="outline" className="border-amber-300 bg-amber-50 text-amber-700">
+                          Limited mode
+                        </Badge>
+                      )}
                       {message.text.split('\n').filter(Boolean).map((line, index) => (
                         <p key={`${message.id}-line-${index}`}>{line.trim()}</p>
                       ))}

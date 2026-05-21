@@ -1,3 +1,11 @@
+// ============================================
+// File:    CreateEvent.tsx
+// Author:  Navroop Kaur
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Displays the organizer event-creation form and supporting category/option controls.
+// ============================================
+
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calendar, Plus, X } from 'lucide-react';
@@ -11,6 +19,10 @@ import { Switch } from '../components/ui/switch';
 import { useApp } from '../context/AppContext';
 import { Category, EventCategory } from '../types';
 
+/**
+ * Renders the event creation page for organizers.
+ * @returns {JSX.Element | null} Event creation form, or null while redirecting unauthorized users.
+ */
 export function CreateEvent() {
   const navigate = useNavigate();
   const { user, createEvent } = useApp();
@@ -40,6 +52,10 @@ export function CreateEvent() {
   }
 
   useEffect(() => {
+    /**
+     * Asynchronously loads available event categories for the creation form.
+     * @returns {Promise<void>} Resolves after category options are fetched and stored.
+     */
     async function loadCategories() {
       try {
         const response = await fetch('/api/categories');
@@ -57,6 +73,10 @@ export function CreateEvent() {
     loadCategories();
   }, []);
 
+  /**
+   * Adds a food option to the event form when food service is enabled.
+   * @returns {void} Does not return a value.
+   */
   const handleAddFoodOption = () => {
     if (newFoodOption.trim()) {
       setFoodOptions([...foodOptions, newFoodOption.trim()]);
@@ -64,10 +84,20 @@ export function CreateEvent() {
     }
   };
 
+  /**
+   * Removes a food option from the event form by index.
+   * @param {number} index - Position of the food option to remove.
+   * @returns {void} Does not return a value.
+   */
   const handleRemoveFoodOption = (index: number) => {
     setFoodOptions(foodOptions.filter((_, i) => i !== index));
   };
 
+  /**
+   * Asynchronously submits the completed event creation form to the backend.
+   * @param {React.FormEvent} e - Form submit event from the create-event page.
+   * @returns {Promise<void>} Resolves after submission handling and navigation complete.
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -352,4 +382,3 @@ export function CreateEvent() {
     </div>
   );
 }
-

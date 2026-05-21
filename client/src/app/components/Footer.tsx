@@ -1,7 +1,19 @@
+// ============================================
+// File:    Footer.tsx
+// Author:  Navroop Kaur
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Renders the Footer frontend component.
+// ============================================
+
 import { Link } from 'react-router-dom';
 import { Logo } from './Logo';
 import { Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin } from 'lucide-react';
 
+/**
+ * Renders the Footer component for the application interface.
+ * @returns {JSX.Element} Renders the component output.
+ */
 export function Footer() {
   return (
     <footer className="bg-[#1B2E55] text-white mt-auto">
@@ -118,4 +130,3 @@ export function Footer() {
     </footer>
   );
 }
-

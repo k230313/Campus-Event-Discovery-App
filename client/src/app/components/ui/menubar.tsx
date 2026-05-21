@@ -1,3 +1,11 @@
+// ============================================
+// File:    menubar.tsx
+// Author:  Navroop Kaur
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Renders the menubar frontend component.
+// ============================================
+
 "use client";
 
 import * as React from "react";
@@ -6,6 +14,11 @@ import { CheckIcon, ChevronRightIcon, CircleIcon } from "lucide-react";
 
 import { cn } from "./utils";
 
+/**
+ * Renders the Menubar component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function Menubar({
   className,
   ...props
@@ -22,24 +35,44 @@ function Menubar({
   );
 }
 
+/**
+ * Renders the MenubarMenu component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function MenubarMenu({
   ...props
 }: React.ComponentProps<typeof MenubarPrimitive.Menu>) {
   return <MenubarPrimitive.Menu data-slot="menubar-menu" {...props} />;
 }
 
+/**
+ * Renders the MenubarGroup component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function MenubarGroup({
   ...props
 }: React.ComponentProps<typeof MenubarPrimitive.Group>) {
   return <MenubarPrimitive.Group data-slot="menubar-group" {...props} />;
 }
 
+/**
+ * Renders the MenubarPortal component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function MenubarPortal({
   ...props
 }: React.ComponentProps<typeof MenubarPrimitive.Portal>) {
   return <MenubarPrimitive.Portal data-slot="menubar-portal" {...props} />;
 }
 
+/**
+ * Renders the MenubarRadioGroup component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function MenubarRadioGroup({
   ...props
 }: React.ComponentProps<typeof MenubarPrimitive.RadioGroup>) {
@@ -48,6 +81,11 @@ function MenubarRadioGroup({
   );
 }
 
+/**
+ * Renders the MenubarTrigger component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function MenubarTrigger({
   className,
   ...props
@@ -64,6 +102,11 @@ function MenubarTrigger({
   );
 }
 
+/**
+ * Renders the MenubarContent component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function MenubarContent({
   className,
   align = "start",
@@ -88,6 +131,11 @@ function MenubarContent({
   );
 }
 
+/**
+ * Renders the MenubarItem component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function MenubarItem({
   className,
   inset,
@@ -111,6 +159,11 @@ function MenubarItem({
   );
 }
 
+/**
+ * Renders the MenubarCheckboxItem component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function MenubarCheckboxItem({
   className,
   children,
@@ -137,6 +190,11 @@ function MenubarCheckboxItem({
   );
 }
 
+/**
+ * Renders the MenubarRadioItem component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function MenubarRadioItem({
   className,
   children,
@@ -161,6 +219,11 @@ function MenubarRadioItem({
   );
 }
 
+/**
+ * Renders the MenubarLabel component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function MenubarLabel({
   className,
   inset,
@@ -181,6 +244,11 @@ function MenubarLabel({
   );
 }
 
+/**
+ * Renders the MenubarSeparator component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function MenubarSeparator({
   className,
   ...props
@@ -194,6 +262,11 @@ function MenubarSeparator({
   );
 }
 
+/**
+ * Renders the MenubarShortcut component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function MenubarShortcut({
   className,
   ...props
@@ -210,12 +283,22 @@ function MenubarShortcut({
   );
 }
 
+/**
+ * Renders the MenubarSub component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function MenubarSub({
   ...props
 }: React.ComponentProps<typeof MenubarPrimitive.Sub>) {
   return <MenubarPrimitive.Sub data-slot="menubar-sub" {...props} />;
 }
 
+/**
+ * Renders the MenubarSubTrigger component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function MenubarSubTrigger({
   className,
   inset,
@@ -240,6 +323,11 @@ function MenubarSubTrigger({
   );
 }
 
+/**
+ * Renders the MenubarSubContent component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function MenubarSubContent({
   className,
   ...props

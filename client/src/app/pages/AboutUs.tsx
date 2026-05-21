@@ -1,6 +1,18 @@
+// ============================================
+// File:    AboutUs.tsx
+// Author:  Navroop Kaur
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Renders the About Us page for the frontend application.
+// ============================================
+
 import { Calendar, Users, Target, Award } from 'lucide-react';
 import { Card, CardContent } from '../components/ui/card';
 
+/**
+ * Renders the AboutUs component for the application interface.
+ * @returns {JSX.Element} Renders the component output.
+ */
 export function AboutUs() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-[#F0F3F9]">

@@ -1,3 +1,11 @@
+// ============================================
+// File:    ResetPassword.tsx
+// Author:  Navroop Kaur
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Displays the password reset form and confirmation state for reset-token flows.
+// ============================================
+
 import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Lock, CheckCircle } from 'lucide-react';
@@ -7,6 +15,10 @@ import { Label } from '../components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../components/ui/card';
 import { csrfFetch } from '../services/api';
 
+/**
+ * Renders the password reset page for users arriving from a reset-email link.
+ * @returns {JSX.Element} Password reset form with error and success states.
+ */
 export function ResetPassword() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -16,6 +28,11 @@ export function ResetPassword() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState('');
 
+  /**
+   * Asynchronously submits the new password together with the reset token from the URL.
+   * @param {React.FormEvent} e - Form submit event from the password reset form.
+   * @returns {Promise<void>} Resolves after reset handling and redirect setup complete.
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -162,4 +179,3 @@ export function ResetPassword() {
     </div>
   );
 }
-

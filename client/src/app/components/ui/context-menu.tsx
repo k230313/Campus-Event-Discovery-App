@@ -1,3 +1,11 @@
+// ============================================
+// File:    context-menu.tsx
+// Author:  Navroop Kaur
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Renders the context menu frontend component.
+// ============================================
+
 "use client";
 
 import * as React from "react";
@@ -6,12 +14,22 @@ import { CheckIcon, ChevronRightIcon, CircleIcon } from "lucide-react";
 
 import { cn } from "./utils";
 
+/**
+ * Renders the ContextMenu component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function ContextMenu({
   ...props
 }: React.ComponentProps<typeof ContextMenuPrimitive.Root>) {
   return <ContextMenuPrimitive.Root data-slot="context-menu" {...props} />;
 }
 
+/**
+ * Renders the ContextMenuTrigger component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function ContextMenuTrigger({
   ...props
 }: React.ComponentProps<typeof ContextMenuPrimitive.Trigger>) {
@@ -20,6 +38,11 @@ function ContextMenuTrigger({
   );
 }
 
+/**
+ * Renders the ContextMenuGroup component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function ContextMenuGroup({
   ...props
 }: React.ComponentProps<typeof ContextMenuPrimitive.Group>) {
@@ -28,6 +51,11 @@ function ContextMenuGroup({
   );
 }
 
+/**
+ * Renders the ContextMenuPortal component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function ContextMenuPortal({
   ...props
 }: React.ComponentProps<typeof ContextMenuPrimitive.Portal>) {
@@ -36,12 +64,22 @@ function ContextMenuPortal({
   );
 }
 
+/**
+ * Renders the ContextMenuSub component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function ContextMenuSub({
   ...props
 }: React.ComponentProps<typeof ContextMenuPrimitive.Sub>) {
   return <ContextMenuPrimitive.Sub data-slot="context-menu-sub" {...props} />;
 }
 
+/**
+ * Renders the ContextMenuRadioGroup component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function ContextMenuRadioGroup({
   ...props
 }: React.ComponentProps<typeof ContextMenuPrimitive.RadioGroup>) {
@@ -53,6 +91,11 @@ function ContextMenuRadioGroup({
   );
 }
 
+/**
+ * Renders the ContextMenuSubTrigger component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function ContextMenuSubTrigger({
   className,
   inset,
@@ -77,6 +120,11 @@ function ContextMenuSubTrigger({
   );
 }
 
+/**
+ * Renders the ContextMenuSubContent component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function ContextMenuSubContent({
   className,
   ...props
@@ -93,6 +141,11 @@ function ContextMenuSubContent({
   );
 }
 
+/**
+ * Renders the ContextMenuContent component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function ContextMenuContent({
   className,
   ...props
@@ -111,6 +164,11 @@ function ContextMenuContent({
   );
 }
 
+/**
+ * Renders the ContextMenuItem component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function ContextMenuItem({
   className,
   inset,
@@ -134,6 +192,11 @@ function ContextMenuItem({
   );
 }
 
+/**
+ * Renders the ContextMenuCheckboxItem component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function ContextMenuCheckboxItem({
   className,
   children,
@@ -160,6 +223,11 @@ function ContextMenuCheckboxItem({
   );
 }
 
+/**
+ * Renders the ContextMenuRadioItem component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function ContextMenuRadioItem({
   className,
   children,
@@ -184,6 +252,11 @@ function ContextMenuRadioItem({
   );
 }
 
+/**
+ * Renders the ContextMenuLabel component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function ContextMenuLabel({
   className,
   inset,
@@ -204,6 +277,11 @@ function ContextMenuLabel({
   );
 }
 
+/**
+ * Renders the ContextMenuSeparator component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function ContextMenuSeparator({
   className,
   ...props
@@ -217,6 +295,11 @@ function ContextMenuSeparator({
   );
 }
 
+/**
+ * Renders the ContextMenuShortcut component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function ContextMenuShortcut({
   className,
   ...props

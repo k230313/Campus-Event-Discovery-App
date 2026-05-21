@@ -1,3 +1,11 @@
+// ============================================
+// File:    carousel.tsx
+// Author:  Navroop Kaur
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Renders the carousel frontend component.
+// ============================================
+
 "use client";
 
 import * as React from "react";
@@ -24,7 +32,15 @@ type CarouselProps = {
 type CarouselContextProps = {
   carouselRef: ReturnType<typeof useEmblaCarousel>[0];
   api: ReturnType<typeof useEmblaCarousel>[1];
+  /**
+   * Asynchronously executes the scroll prev logic.
+   * @returns {*} Returns the resulting value.
+   */
   scrollPrev: () => void;
+  /**
+   * Asynchronously executes the scroll next logic.
+   * @returns {*} Returns the resulting value.
+   */
   scrollNext: () => void;
   canScrollPrev: boolean;
   canScrollNext: boolean;
@@ -32,6 +48,10 @@ type CarouselContextProps = {
 
 const CarouselContext = React.createContext<CarouselContextProps | null>(null);
 
+/**
+ * Executes the use carousel logic.
+ * @returns {*} Returns the resulting value.
+ */
 function useCarousel() {
   const context = React.useContext(CarouselContext);
 
@@ -42,6 +62,11 @@ function useCarousel() {
   return context;
 }
 
+/**
+ * Renders the Carousel component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function Carousel({
   orientation = "horizontal",
   opts,
@@ -132,6 +157,11 @@ function Carousel({
   );
 }
 
+/**
+ * Renders the CarouselContent component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function CarouselContent({ className, ...props }: React.ComponentProps<"div">) {
   const { carouselRef, orientation } = useCarousel();
 
@@ -153,6 +183,11 @@ function CarouselContent({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
+/**
+ * Renders the CarouselItem component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function CarouselItem({ className, ...props }: React.ComponentProps<"div">) {
   const { orientation } = useCarousel();
 
@@ -171,6 +206,11 @@ function CarouselItem({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
+/**
+ * Renders the CarouselPrevious component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function CarouselPrevious({
   className,
   variant = "outline",
@@ -201,6 +241,11 @@ function CarouselPrevious({
   );
 }
 
+/**
+ * Renders the CarouselNext component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function CarouselNext({
   className,
   variant = "outline",

@@ -1,3 +1,11 @@
+// ============================================
+// File:    App.tsx
+// Author:  Adamson Buliboli
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Defines the top-level router, layout shell, and protected routes for the frontend.
+// ============================================
+
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AppProvider } from './context/AppContext';
 import { Navigation } from './components/Navigation';
@@ -33,6 +41,10 @@ import { Settings } from './pages/Settings';
 import { RegistrationConfirmation } from './pages/RegistrationConfirmation';
 import { ProtectedRoute } from './components/ProtectedRoute';
 
+/**
+ * Renders the application's global providers, shared layout, and route tree.
+ * @returns {JSX.Element} Browser router, shared shell, and page routes for the app.
+ */
 export default function App() {
   return (
     <BrowserRouter>

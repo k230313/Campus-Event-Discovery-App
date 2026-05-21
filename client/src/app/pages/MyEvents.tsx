@@ -1,3 +1,11 @@
+// ============================================
+// File:    MyEvents.tsx
+// Author:  Navroop Kaur
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Renders the My Events page for the frontend application.
+// ============================================
+
 import { useApp } from '../context/AppContext';
 import { Card, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
@@ -6,6 +14,10 @@ import { Calendar, MapPin, Users, Ticket, User, UserMinus } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 
+/**
+ * Renders the MyEvents component for the application interface.
+ * @returns {JSX.Element} Renders the component output.
+ */
 export function MyEvents() {
   const { user, events, rsvps, removeRSVP } = useApp();
   const [unregisteringEventId, setUnregisteringEventId] = useState<string | null>(null);
@@ -21,10 +33,21 @@ export function MyEvents() {
     myRSVPs.some((rsvp) => rsvp.eventId === event.id)
   );
 
+  /**
+   * Asynchronously executes the get rsvpdetails logic.
+   * @param {*} eventId - Represents the eventId input.
+   * @returns {*} Returns the resulting value.
+   */
   const getRSVPDetails = (eventId: string) => {
     return myRSVPs.find((rsvp) => rsvp.eventId === eventId);
   };
 
+  /**
+   * Asynchronously executes the handle unregister logic.
+   * @param {*} eventId - Represents the eventId input.
+   * @param {*} eventTitle - Represents the eventTitle input.
+   * @returns {*} Returns the resulting value.
+   */
   const handleUnregister = (eventId: string, eventTitle: string) => {
     if (confirm(`Are you sure you want to unregister from "${eventTitle}"?`)) {
       setUnregisteringEventId(eventId);
@@ -44,6 +67,7 @@ export function MyEvents() {
               My Events
             </h1>
             <p className="text-muted-foreground">Events you've registered for</p>
+            <p className="text-sm text-muted-foreground mt-1">Confirmed registrations and waitlist entries both appear here.</p>
           </div>
 
           {myEvents.length === 0 ? (
@@ -85,6 +109,11 @@ export function MyEvents() {
                         <div className="md:col-span-2">
                           <div className="flex items-start gap-3 mb-3">
                             <Badge>{event.category}</Badge>
+                            {rsvpDetails?.status === 'waitlisted' && (
+                              <Badge variant="outline" className="bg-blue-500/10 text-blue-600 border-blue-500">
+                                Waitlisted
+                              </Badge>
+                            )}
                             {rsvpDetails?.attendeeType === 'volunteer' && (
                               <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500">
                                 Volunteering
@@ -119,6 +148,12 @@ export function MyEvents() {
                                 <User className="h-3 w-3 text-muted-foreground" />
                                 <span className="text-muted-foreground">
                                   {rsvpDetails?.attendeeType === 'volunteer' ? 'Volunteer' : 'Attendee'}
+                                </span>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">Status: </span>
+                                <span className="font-medium">
+                                  {rsvpDetails?.status === 'waitlisted' ? 'Waitlisted' : 'Registered'}
                                 </span>
                               </div>
                               {rsvpDetails?.selectedFoodOption && (
@@ -162,4 +197,3 @@ export function MyEvents() {
     </div>
   );
 }
-

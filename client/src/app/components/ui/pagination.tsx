@@ -1,3 +1,11 @@
+// ============================================
+// File:    pagination.tsx
+// Author:  Navroop Kaur
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Renders the pagination frontend component.
+// ============================================
+
 import * as React from "react";
 import {
   ChevronLeftIcon,
@@ -8,6 +16,11 @@ import {
 import { cn } from "./utils";
 import { Button, buttonVariants } from "./button";
 
+/**
+ * Renders the Pagination component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function Pagination({ className, ...props }: React.ComponentProps<"nav">) {
   return (
     <nav
@@ -20,6 +33,11 @@ function Pagination({ className, ...props }: React.ComponentProps<"nav">) {
   );
 }
 
+/**
+ * Renders the PaginationContent component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function PaginationContent({
   className,
   ...props
@@ -33,6 +51,11 @@ function PaginationContent({
   );
 }
 
+/**
+ * Renders the PaginationItem component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function PaginationItem({ ...props }: React.ComponentProps<"li">) {
   return <li data-slot="pagination-item" {...props} />;
 }
@@ -42,6 +65,11 @@ type PaginationLinkProps = {
 } & Pick<React.ComponentProps<typeof Button>, "size"> &
   React.ComponentProps<"a">;
 
+/**
+ * Renders the PaginationLink component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function PaginationLink({
   className,
   isActive,
@@ -65,6 +93,11 @@ function PaginationLink({
   );
 }
 
+/**
+ * Renders the PaginationPrevious component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function PaginationPrevious({
   className,
   ...props
@@ -82,6 +115,11 @@ function PaginationPrevious({
   );
 }
 
+/**
+ * Renders the PaginationNext component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function PaginationNext({
   className,
   ...props
@@ -99,6 +137,11 @@ function PaginationNext({
   );
 }
 
+/**
+ * Renders the PaginationEllipsis component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function PaginationEllipsis({
   className,
   ...props

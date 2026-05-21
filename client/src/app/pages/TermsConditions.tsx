@@ -1,6 +1,18 @@
+// ============================================
+// File:    TermsConditions.tsx
+// Author:  Navroop Kaur
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Renders the Terms Conditions page for the frontend application.
+// ============================================
+
 import { FileText } from 'lucide-react';
 import { Card, CardContent } from '../components/ui/card';
 
+/**
+ * Renders the TermsConditions component for the application interface.
+ * @returns {JSX.Element} Renders the component output.
+ */
 export function TermsConditions() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-[#F0F3F9] py-12">

@@ -1,7 +1,20 @@
+// ============================================
+// File:    input.tsx
+// Author:  Navroop Kaur
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Renders the input frontend component.
+// ============================================
+
 import * as React from "react";
 
 import { cn } from "./utils";
 
+/**
+ * Renders the Input component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function Input({ className, type, ...props }: React.ComponentProps<"input">) {
   return (
     <input

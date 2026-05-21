@@ -1,3 +1,11 @@
+// ============================================
+// File:    userRoutes.js
+// Author:  Adamson Buliboli
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Implements user Routes for the backend.
+// ============================================
+
 const express = require("express");
 const pool = require("../config/db");
 const { requireAuth, requireRole, requireUnlock } = require("../middleware/auth");
@@ -12,18 +20,37 @@ const {
 
 const router = express.Router();
 
+/**
+ * Executes the to client role logic.
+ * @param {*} dbRole - Represents the dbRole input.
+ * @returns {*} Returns the resulting value.
+ */
 function toClientRole(dbRole) {
   return dbRole === "organiser" ? "organizer" : dbRole;
 }
 
+/**
+ * Executes the to db role logic.
+ * @param {*} clientRole - Represents the clientRole input.
+ * @returns {*} Returns the resulting value.
+ */
 function toDbRole(clientRole) {
   return clientRole === "organizer" ? "organiser" : clientRole;
 }
 
+/**
+ * Executes the is valid email logic.
+ * @param {*} email - Represents the email input.
+ * @returns {*} Returns the resulting value.
+ */
 function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
+/**
+ * Asynchronously executes the count admins logic.
+ * @returns {*} Returns the resulting value.
+ */
 async function countAdmins() {
   try {
     const [[row]] = await pool.query(
@@ -37,6 +64,12 @@ async function countAdmins() {
   }
 }
 
+/**
+ * Asynchronously executes the route handler logic.
+ * @param {*} req - Represents the req input.
+ * @param {*} res - Represents the res input.
+ * @returns {*} Returns the resulting value.
+ */
 router.patch("/me", requireAuth, validateBody(profileUpdateSchema), async (req, res) => {
   const fullName = String(req.body?.full_name || "").trim();
   const normalizedEmail = String(req.body?.email || "").trim().toLowerCase();
@@ -92,6 +125,12 @@ router.patch("/me", requireAuth, validateBody(profileUpdateSchema), async (req, 
   }
 });
 
+/**
+ * Asynchronously executes the route handler logic.
+ * @param {*} req - Represents the req input.
+ * @param {*} res - Represents the res input.
+ * @returns {*} Returns the resulting value.
+ */
 router.patch("/me/password", requireAuth, validateBody(passwordUpdateSchema), async (req, res) => {
   const currentPassword = String(req.body?.currentPassword || "");
   const newPassword = String(req.body?.newPassword || "");
@@ -133,6 +172,12 @@ router.patch("/me/password", requireAuth, validateBody(passwordUpdateSchema), as
   }
 });
 
+/**
+ * Asynchronously executes the route handler logic.
+ * @param {*} req - Represents the req input.
+ * @param {*} res - Represents the res input.
+ * @returns {*} Returns the resulting value.
+ */
 router.get("/", requireAuth, requireRole("admin"), adminRateLimit, async (_req, res) => {
   try {
     const [rows] = await pool.query(
@@ -154,6 +199,12 @@ router.get("/", requireAuth, requireRole("admin"), adminRateLimit, async (_req, 
   }
 });
 
+/**
+ * Asynchronously executes the route handler logic.
+ * @param {*} req - Represents the req input.
+ * @param {*} res - Represents the res input.
+ * @returns {*} Returns the resulting value.
+ */
 router.put("/:id", requireAuth, requireRole("admin"), adminRateLimit, validateBody(adminUserUpdateSchema), async (req, res) => {
   const { name, email, role } = req.body;
 
@@ -219,6 +270,12 @@ router.put("/:id", requireAuth, requireRole("admin"), adminRateLimit, validateBo
   }
 });
 
+/**
+ * Asynchronously executes the route handler logic.
+ * @param {*} req - Represents the req input.
+ * @param {*} res - Represents the res input.
+ * @returns {*} Returns the resulting value.
+ */
 router.delete("/:id", requireAuth, requireRole("admin"), requireUnlock, adminRateLimit, async (req, res) => {
   if (String(req.user.id) === String(req.params.id)) {
     return res.status(400).json({ error: "You cannot delete your own admin account" });

@@ -1,3 +1,11 @@
+// ============================================
+// File:    VerifyEmail.tsx
+// Author:  Navroop Kaur
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Displays email verification progress and outcome for verification-link visits.
+// ============================================
+
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { CheckCircle, MailCheck, XCircle } from 'lucide-react';
@@ -5,6 +13,10 @@ import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../components/ui/card';
 import { csrfFetch } from '../services/api';
 
+/**
+ * Renders the email verification page shown after a user opens a verification link.
+ * @returns {JSX.Element} Verification status page with success or failure messaging.
+ */
 export function VerifyEmail() {
   const [searchParams] = useSearchParams();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
@@ -19,6 +31,10 @@ export function VerifyEmail() {
       return;
     }
 
+    /**
+     * Asynchronously verifies the email token supplied in the URL query string.
+     * @returns {Promise<void>} Resolves after the verification request updates the page state.
+     */
     async function verifyEmail() {
       try {
         const response = await csrfFetch('/api/auth/verify-email', {

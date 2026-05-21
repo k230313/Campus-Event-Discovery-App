@@ -1,3 +1,11 @@
+// ============================================
+// File:    calendar.tsx
+// Author:  Navroop Kaur
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Renders the calendar frontend component.
+// ============================================
+
 "use client";
 
 import * as React from "react";
@@ -7,6 +15,11 @@ import { DayPicker } from "react-day-picker";
 import { cn } from "./utils";
 import { buttonVariants } from "./button";
 
+/**
+ * Renders the Calendar component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function Calendar({
   className,
   classNames,
@@ -60,9 +73,19 @@ function Calendar({
         ...classNames,
       }}
       components={{
+        /**
+         * Renders the IconLeft component for the application interface.
+         * @param {object} props - Component props.
+         * @returns {JSX.Element} Renders the component output.
+         */
         IconLeft: ({ className, ...props }) => (
           <ChevronLeft className={cn("size-4", className)} {...props} />
         ),
+        /**
+         * Renders the IconRight component for the application interface.
+         * @param {object} props - Component props.
+         * @returns {JSX.Element} Renders the component output.
+         */
         IconRight: ({ className, ...props }) => (
           <ChevronRight className={cn("size-4", className)} {...props} />
         ),

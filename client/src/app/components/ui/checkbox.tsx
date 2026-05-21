@@ -1,3 +1,11 @@
+// ============================================
+// File:    checkbox.tsx
+// Author:  Navroop Kaur
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Renders the checkbox frontend component.
+// ============================================
+
 "use client";
 
 import * as React from "react";
@@ -6,6 +14,11 @@ import { CheckIcon } from "lucide-react";
 
 import { cn } from "./utils";
 
+/**
+ * Renders the Checkbox component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function Checkbox({
   className,
   ...props

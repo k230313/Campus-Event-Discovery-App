@@ -1,3 +1,11 @@
+// ============================================
+// File:    EditEvent.tsx
+// Author:  Navroop Kaur
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Displays the event editing form for organizers and admins, including moderation-aware status changes.
+// ============================================
+
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Calendar, Plus, X } from 'lucide-react';
@@ -11,6 +19,10 @@ import { Switch } from '../components/ui/switch';
 import { useApp } from '../context/AppContext';
 import { Category, EventCategory } from '../types';
 
+/**
+ * Renders the event editing page for organizers and admins.
+ * @returns {JSX.Element | null} Event edit form, or null while redirecting unauthorized users.
+ */
 export function EditEvent() {
   const { eventId } = useParams<{ eventId: string }>();
   const navigate = useNavigate();
@@ -33,7 +45,7 @@ export function EditEvent() {
   const [foodOptions, setFoodOptions] = useState<string[]>([]);
   const [newFoodOption, setNewFoodOption] = useState('');
   const [notes, setNotes] = useState('');
-  const [status, setStatus] = useState<'draft' | 'pending' | 'cancelled'>('pending');
+  const [status, setStatus] = useState<'draft' | 'pending' | 'published' | 'rejected' | 'cancelled'>('pending');
   const isPublishedEvent = event?.status === 'published';
 
   useEffect(() => {
@@ -56,6 +68,10 @@ export function EditEvent() {
   }, [event]);
 
   useEffect(() => {
+    /**
+     * Asynchronously loads available event categories for the edit form.
+     * @returns {Promise<void>} Resolves after category options are fetched and stored.
+     */
     async function loadCategories() {
       try {
         const response = await fetch('/api/categories');
@@ -70,7 +86,7 @@ export function EditEvent() {
     loadCategories();
   }, []);
 
-  if (!user || user.role !== 'organizer') {
+  if (!user || (user.role !== 'organizer' && user.role !== 'admin')) {
     navigate('/login');
     return null;
   }
@@ -84,7 +100,7 @@ export function EditEvent() {
     );
   }
 
-  if (event.organizerId !== user.id) {
+  if (user.role !== 'admin' && event.organizerId !== user.id) {
     return (
       <div className="container mx-auto px-4 py-12 text-center">
         <h2 className="text-2xl font-bold mb-4">Unauthorized</h2>
@@ -94,6 +110,10 @@ export function EditEvent() {
     );
   }
 
+  /**
+   * Adds a food option to the event form when food service is enabled.
+   * @returns {void} Does not return a value.
+   */
   const handleAddFoodOption = () => {
     if (newFoodOption.trim()) {
       setFoodOptions([...foodOptions, newFoodOption.trim()]);
@@ -101,10 +121,20 @@ export function EditEvent() {
     }
   };
 
+  /**
+   * Removes a food option from the event form by index.
+   * @param {number} index - Position of the food option to remove.
+   * @returns {void} Does not return a value.
+   */
   const handleRemoveFoodOption = (index: number) => {
     setFoodOptions(foodOptions.filter((_, i) => i !== index));
   };
 
+  /**
+   * Submits the updated event details and returns the user to the dashboard.
+   * @param {React.FormEvent} e - Form submit event from the edit-event page.
+   * @returns {void} Does not return a value.
+   */
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -186,14 +216,26 @@ export function EditEvent() {
 
                 <div className="space-y-2">
                   <Label htmlFor="status">Status *</Label>
-                  <Select value={status} onValueChange={(value) => setStatus(value as 'draft' | 'pending' | 'cancelled')}>
+                  <Select value={status} onValueChange={(value) => setStatus(value as 'draft' | 'pending' | 'published' | 'rejected' | 'cancelled')}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="pending">Submit for Review</SelectItem>
-                      <SelectItem value="draft">Draft</SelectItem>
-                      <SelectItem value="cancelled">Cancelled</SelectItem>
+                      {user.role === 'admin' ? (
+                        <>
+                          <SelectItem value="published">Published</SelectItem>
+                          <SelectItem value="pending">Pending</SelectItem>
+                          <SelectItem value="draft">Draft</SelectItem>
+                          <SelectItem value="rejected">Rejected</SelectItem>
+                          <SelectItem value="cancelled">Cancelled</SelectItem>
+                        </>
+                      ) : (
+                        <>
+                          <SelectItem value="pending">Submit for Review</SelectItem>
+                          <SelectItem value="draft">Draft</SelectItem>
+                          <SelectItem value="cancelled">Cancelled</SelectItem>
+                        </>
+                      )}
                     </SelectContent>
                   </Select>
                   {isPublishedEvent && (
@@ -367,4 +409,3 @@ export function EditEvent() {
     </div>
   );
 }
-

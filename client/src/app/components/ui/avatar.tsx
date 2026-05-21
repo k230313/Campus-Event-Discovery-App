@@ -1,3 +1,11 @@
+// ============================================
+// File:    avatar.tsx
+// Author:  Navroop Kaur
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Renders the avatar frontend component.
+// ============================================
+
 "use client";
 
 import * as React from "react";
@@ -5,6 +13,11 @@ import * as AvatarPrimitive from "@radix-ui/react-avatar";
 
 import { cn } from "./utils";
 
+/**
+ * Renders the Avatar component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function Avatar({
   className,
   ...props
@@ -21,6 +34,11 @@ function Avatar({
   );
 }
 
+/**
+ * Renders the AvatarImage component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function AvatarImage({
   className,
   ...props
@@ -34,6 +52,11 @@ function AvatarImage({
   );
 }
 
+/**
+ * Renders the AvatarFallback component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function AvatarFallback({
   className,
   ...props

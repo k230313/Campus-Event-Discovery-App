@@ -1,3 +1,11 @@
+// ============================================
+// File:    popover.tsx
+// Author:  Navroop Kaur
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Renders the popover frontend component.
+// ============================================
+
 "use client";
 
 import * as React from "react";
@@ -5,18 +13,33 @@ import * as PopoverPrimitive from "@radix-ui/react-popover";
 
 import { cn } from "./utils";
 
+/**
+ * Renders the Popover component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function Popover({
   ...props
 }: React.ComponentProps<typeof PopoverPrimitive.Root>) {
   return <PopoverPrimitive.Root data-slot="popover" {...props} />;
 }
 
+/**
+ * Renders the PopoverTrigger component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function PopoverTrigger({
   ...props
 }: React.ComponentProps<typeof PopoverPrimitive.Trigger>) {
   return <PopoverPrimitive.Trigger data-slot="popover-trigger" {...props} />;
 }
 
+/**
+ * Renders the PopoverContent component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function PopoverContent({
   className,
   align = "center",
@@ -39,6 +62,11 @@ function PopoverContent({
   );
 }
 
+/**
+ * Renders the PopoverAnchor component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function PopoverAnchor({
   ...props
 }: React.ComponentProps<typeof PopoverPrimitive.Anchor>) {

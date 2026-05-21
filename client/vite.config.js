@@ -1,3 +1,11 @@
+// ============================================
+// File:    vite.config.js
+// Author:  Adamson Buliboli
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Configures the Vite frontend build pipeline.
+// ============================================
+
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'

@@ -1,3 +1,11 @@
+// ============================================
+// File:    sidebar.tsx
+// Author:  Navroop Kaur
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Renders the sidebar frontend component.
+// ============================================
+
 "use client";
 
 import * as React from "react";
@@ -35,15 +43,33 @@ const SIDEBAR_KEYBOARD_SHORTCUT = "b";
 type SidebarContextProps = {
   state: "expanded" | "collapsed";
   open: boolean;
+  /**
+   * Asynchronously executes the set open logic.
+   * @param {*} open - Represents the open input.
+   * @returns {*} Returns the resulting value.
+   */
   setOpen: (open: boolean) => void;
   openMobile: boolean;
+  /**
+   * Asynchronously executes the set open mobile logic.
+   * @param {*} open - Represents the open input.
+   * @returns {*} Returns the resulting value.
+   */
   setOpenMobile: (open: boolean) => void;
   isMobile: boolean;
+  /**
+   * Asynchronously executes the toggle sidebar logic.
+   * @returns {*} Returns the resulting value.
+   */
   toggleSidebar: () => void;
 };
 
 const SidebarContext = React.createContext<SidebarContextProps | null>(null);
 
+/**
+ * Executes the use sidebar logic.
+ * @returns {*} Returns the resulting value.
+ */
 function useSidebar() {
   const context = React.useContext(SidebarContext);
   if (!context) {
@@ -53,6 +79,11 @@ function useSidebar() {
   return context;
 }
 
+/**
+ * Renders the SidebarProvider component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function SidebarProvider({
   defaultOpen = true,
   open: openProp,
@@ -95,6 +126,11 @@ function SidebarProvider({
 
   // Adds a keyboard shortcut to toggle the sidebar.
   React.useEffect(() => {
+    /**
+     * Asynchronously executes the handle key down logic.
+     * @param {*} event - Represents the event input.
+     * @returns {*} Returns the resulting value.
+     */
     const handleKeyDown = (event: KeyboardEvent) => {
       if (
         event.key === SIDEBAR_KEYBOARD_SHORTCUT &&
@@ -151,6 +187,11 @@ function SidebarProvider({
   );
 }
 
+/**
+ * Renders the Sidebar component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function Sidebar({
   side = "left",
   variant = "sidebar",
@@ -253,6 +294,11 @@ function Sidebar({
   );
 }
 
+/**
+ * Renders the SidebarTrigger component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function SidebarTrigger({
   className,
   onClick,
@@ -279,6 +325,11 @@ function SidebarTrigger({
   );
 }
 
+/**
+ * Renders the SidebarRail component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function SidebarRail({ className, ...props }: React.ComponentProps<"button">) {
   const { toggleSidebar } = useSidebar();
 
@@ -304,6 +355,11 @@ function SidebarRail({ className, ...props }: React.ComponentProps<"button">) {
   );
 }
 
+/**
+ * Renders the SidebarInset component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function SidebarInset({ className, ...props }: React.ComponentProps<"main">) {
   return (
     <main
@@ -318,6 +374,11 @@ function SidebarInset({ className, ...props }: React.ComponentProps<"main">) {
   );
 }
 
+/**
+ * Renders the SidebarInput component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function SidebarInput({
   className,
   ...props
@@ -332,6 +393,11 @@ function SidebarInput({
   );
 }
 
+/**
+ * Renders the SidebarHeader component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function SidebarHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -343,6 +409,11 @@ function SidebarHeader({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
+/**
+ * Renders the SidebarFooter component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function SidebarFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -354,6 +425,11 @@ function SidebarFooter({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
+/**
+ * Renders the SidebarSeparator component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function SidebarSeparator({
   className,
   ...props
@@ -368,6 +444,11 @@ function SidebarSeparator({
   );
 }
 
+/**
+ * Renders the SidebarContent component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function SidebarContent({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -382,6 +463,11 @@ function SidebarContent({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
+/**
+ * Renders the SidebarGroup component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function SidebarGroup({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -393,6 +479,11 @@ function SidebarGroup({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
+/**
+ * Renders the SidebarGroupLabel component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function SidebarGroupLabel({
   className,
   asChild = false,
@@ -414,6 +505,11 @@ function SidebarGroupLabel({
   );
 }
 
+/**
+ * Renders the SidebarGroupAction component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function SidebarGroupAction({
   className,
   asChild = false,
@@ -437,6 +533,11 @@ function SidebarGroupAction({
   );
 }
 
+/**
+ * Renders the SidebarGroupContent component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function SidebarGroupContent({
   className,
   ...props
@@ -451,6 +552,11 @@ function SidebarGroupContent({
   );
 }
 
+/**
+ * Renders the SidebarMenu component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function SidebarMenu({ className, ...props }: React.ComponentProps<"ul">) {
   return (
     <ul
@@ -462,6 +568,11 @@ function SidebarMenu({ className, ...props }: React.ComponentProps<"ul">) {
   );
 }
 
+/**
+ * Renders the SidebarMenuItem component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function SidebarMenuItem({ className, ...props }: React.ComponentProps<"li">) {
   return (
     <li
@@ -495,6 +606,11 @@ const sidebarMenuButtonVariants = cva(
   },
 );
 
+/**
+ * Renders the SidebarMenuButton component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function SidebarMenuButton({
   asChild = false,
   isActive = false,
@@ -545,6 +661,11 @@ function SidebarMenuButton({
   );
 }
 
+/**
+ * Renders the SidebarMenuAction component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function SidebarMenuAction({
   className,
   asChild = false,
@@ -577,6 +698,11 @@ function SidebarMenuAction({
   );
 }
 
+/**
+ * Renders the SidebarMenuBadge component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function SidebarMenuBadge({
   className,
   ...props
@@ -599,6 +725,11 @@ function SidebarMenuBadge({
   );
 }
 
+/**
+ * Renders the SidebarMenuSkeleton component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function SidebarMenuSkeleton({
   className,
   showIcon = false,
@@ -637,6 +768,11 @@ function SidebarMenuSkeleton({
   );
 }
 
+/**
+ * Renders the SidebarMenuSub component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function SidebarMenuSub({ className, ...props }: React.ComponentProps<"ul">) {
   return (
     <ul
@@ -652,6 +788,11 @@ function SidebarMenuSub({ className, ...props }: React.ComponentProps<"ul">) {
   );
 }
 
+/**
+ * Renders the SidebarMenuSubItem component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function SidebarMenuSubItem({
   className,
   ...props
@@ -666,6 +807,11 @@ function SidebarMenuSubItem({
   );
 }
 
+/**
+ * Renders the SidebarMenuSubButton component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function SidebarMenuSubButton({
   asChild = false,
   size = "md",

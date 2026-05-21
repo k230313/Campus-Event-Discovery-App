@@ -1,3 +1,11 @@
+// ============================================
+// File:    index.js
+// Author:  Adamson Buliboli
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Implements index for the backend.
+// ============================================
+
 const path = require("path");
 const express = require("express");
 const cors = require("cors");
@@ -22,7 +30,16 @@ const app = express();
 const authSecret = getSecret();
 
 const { generateCsrfToken, doubleCsrfProtection } = doubleCsrf({
+  /**
+   * Asynchronously executes the get secret logic.
+   * @returns {*} Returns the resulting value.
+   */
   getSecret: () => authSecret,
+  /**
+   * Asynchronously executes the get session identifier logic.
+   * @param {*} req - Represents the req input.
+   * @returns {*} Returns the resulting value.
+   */
   getSessionIdentifier: (req) => (
     req.user?.id
       ? `user:${req.user.id}`
@@ -35,6 +52,11 @@ const { generateCsrfToken, doubleCsrfProtection } = doubleCsrf({
     secure: process.env.NODE_ENV === "production",
     httpOnly: true,
   },
+  /**
+   * Asynchronously executes the get csrf token from request logic.
+   * @param {*} req - Represents the req input.
+   * @returns {*} Returns the resulting value.
+   */
   getCsrfTokenFromRequest: (req) => req.headers["x-csrf-token"],
 });
 
@@ -73,6 +95,10 @@ app.use((err, _req, res, _next) => {
   res.status(getErrorStatus(err)).json(getErrorBody(err));
 });
 
+/**
+ * Executes the log transactional email config logic.
+ * @returns {*} Returns the resulting value.
+ */
 function logTransactionalEmailConfig() {
   const missing = [];
   if (!process.env.RESEND_API_KEY?.trim()) {

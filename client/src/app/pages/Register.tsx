@@ -1,3 +1,11 @@
+// ============================================
+// File:    Register.tsx
+// Author:  Navroop Kaur
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Displays the account registration form with role selection and captcha verification.
+// ============================================
+
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { UserPlus } from 'lucide-react';
@@ -8,6 +16,10 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { RadioGroup, RadioGroupItem } from '../components/ui/radio-group';
 import { useApp } from '../context/AppContext';
 
+/**
+ * Renders the account registration form with role selection and captcha verification.
+ * @returns {JSX.Element} Registration page for new student and organizer accounts.
+ */
 export function Register() {
   const TURNSTILE_SITE_KEY = '0x4AAAAAADN5Ecy-ORG9dtgF';
   const navigate = useNavigate();
@@ -25,6 +37,10 @@ export function Register() {
   const turnstileWidgetIdRef = useRef<string | null>(null);
 
   useEffect(() => {
+    /**
+     * Renders the Cloudflare Turnstile widget once the external script is available.
+     * @returns {void} Does not return a value.
+     */
     const maybeRenderWidget = () => {
       const turnstile = (window as any).turnstile;
 
@@ -34,6 +50,11 @@ export function Register() {
 
       turnstileWidgetIdRef.current = turnstile.render(turnstileContainerRef.current, {
         sitekey: TURNSTILE_SITE_KEY,
+        /**
+         * Stores the token returned by a successful captcha challenge.
+         * @param {string} token - Verified Turnstile token issued by Cloudflare.
+         * @returns {void} Does not return a value.
+         */
         callback: (token: string) => {
           setTurnstileToken(token);
           setError('');
@@ -61,6 +82,11 @@ export function Register() {
     };
   }, []);
 
+  /**
+   * Asynchronously submits the registration form after client-side validation succeeds.
+   * @param {React.FormEvent} e - Form submit event from the registration form.
+   * @returns {Promise<void>} Resolves after registration handling and UI updates complete.
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -235,4 +261,3 @@ export function Register() {
     </div>
   );
 }
-

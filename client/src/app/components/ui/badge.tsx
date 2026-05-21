@@ -1,3 +1,11 @@
+// ============================================
+// File:    badge.tsx
+// Author:  Navroop Kaur
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Renders the badge frontend component.
+// ============================================
+
 import * as React from "react";
 import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
@@ -25,6 +33,11 @@ const badgeVariants = cva(
   },
 );
 
+/**
+ * Renders the Badge component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function Badge({
   className,
   variant,

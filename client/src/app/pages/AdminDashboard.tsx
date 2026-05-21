@@ -1,3 +1,11 @@
+// ============================================
+// File:    AdminDashboard.tsx
+// Author:  Navroop Kaur
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Renders the Admin Dashboard page for the frontend application.
+// ============================================
+
 import { useApp } from '../context/AppContext';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Calendar, Users, Bookmark, TrendingUp, Shield } from 'lucide-react';
@@ -5,6 +13,10 @@ import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { AdminOverview } from '../types/admin';
 
+/**
+ * Renders the AdminDashboard component for the application interface.
+ * @returns {JSX.Element} Renders the component output.
+ */
 export function AdminDashboard() {
   const { user } = useApp();
   const navigate = useNavigate();
@@ -17,6 +29,10 @@ export function AdminDashboard() {
   }
 
   useEffect(() => {
+    /**
+     * Asynchronously executes the load overview logic.
+     * @returns {*} Returns the resulting value.
+     */
     async function loadOverview() {
       try {
         const response = await fetch('/api/admin/overview', {

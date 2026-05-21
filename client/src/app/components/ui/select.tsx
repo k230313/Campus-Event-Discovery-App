@@ -1,3 +1,11 @@
+// ============================================
+// File:    select.tsx
+// Author:  Navroop Kaur
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Renders the select frontend component.
+// ============================================
+
 "use client";
 
 import * as React from "react";
@@ -10,24 +18,44 @@ import {
 
 import { cn } from "./utils";
 
+/**
+ * Renders the Select component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function Select({
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Root>) {
   return <SelectPrimitive.Root data-slot="select" {...props} />;
 }
 
+/**
+ * Renders the SelectGroup component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function SelectGroup({
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Group>) {
   return <SelectPrimitive.Group data-slot="select-group" {...props} />;
 }
 
+/**
+ * Renders the SelectValue component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function SelectValue({
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Value>) {
   return <SelectPrimitive.Value data-slot="select-value" {...props} />;
 }
 
+/**
+ * Renders the SelectTrigger component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function SelectTrigger({
   className,
   size = "default",
@@ -54,6 +82,11 @@ function SelectTrigger({
   );
 }
 
+/**
+ * Renders the SelectContent component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function SelectContent({
   className,
   children,
@@ -89,6 +122,11 @@ function SelectContent({
   );
 }
 
+/**
+ * Renders the SelectLabel component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function SelectLabel({
   className,
   ...props
@@ -102,6 +140,11 @@ function SelectLabel({
   );
 }
 
+/**
+ * Renders the SelectItem component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function SelectItem({
   className,
   children,
@@ -126,6 +169,11 @@ function SelectItem({
   );
 }
 
+/**
+ * Renders the SelectSeparator component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function SelectSeparator({
   className,
   ...props
@@ -139,6 +187,11 @@ function SelectSeparator({
   );
 }
 
+/**
+ * Renders the SelectScrollUpButton component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function SelectScrollUpButton({
   className,
   ...props
@@ -157,6 +210,11 @@ function SelectScrollUpButton({
   );
 }
 
+/**
+ * Renders the SelectScrollDownButton component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function SelectScrollDownButton({
   className,
   ...props

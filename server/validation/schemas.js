@@ -1,5 +1,19 @@
+// ============================================
+// File:    schemas.js
+// Author:  Adamson Buliboli
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Implements schemas for the backend.
+// ============================================
+
 const { z } = require("zod");
 
+/**
+ * Asynchronously executes the non empty trimmed string logic.
+ * @param {*} label - Represents the label input.
+ * @param {*} maxLength - Represents the maxLength input.
+ * @returns {*} Returns the resulting value.
+ */
 const nonEmptyTrimmedString = (label, maxLength) => z.string()
   .trim()
   .min(1, `${label} is required`)
@@ -19,6 +33,11 @@ const eventIdSchema = z.union([z.string(), z.number()])
   .transform((value) => String(value).trim())
   .refine((value) => /^\d+$/.test(value), "eventId must be a numeric identifier");
 
+/**
+ * Asynchronously executes the optional nullable string logic.
+ * @param {*} maxLength - Represents the maxLength input.
+ * @returns {*} Returns the resulting value.
+ */
 const optionalNullableString = (maxLength) => z.preprocess(
   (value) => (value === "" ? undefined : value),
   z.string().trim().max(maxLength).optional().nullable()
@@ -71,6 +90,7 @@ const bookmarkCreateSchema = z.object({
 const registrationCreateSchema = z.object({
   eventId: eventIdSchema,
   attendeeType: z.enum(["attendee", "volunteer"]).optional(),
+  waitlistIfFull: z.boolean().optional(),
   options: z.object({
     foodOption: z.string().trim().max(100).optional(),
     seatNumber: z.number().int().positive().optional(),
@@ -99,8 +119,13 @@ const categorySchema = z.object({
 
 const eventStatusSchema = z.object({
   status: z.enum(["draft", "pending", "published", "rejected", "cancelled"], {
+    /**
+     * Asynchronously executes the error map logic.
+     * @returns {*} Returns the resulting value.
+     */
     errorMap: () => ({ message: "Invalid status" }),
   }),
+  reviewNotes: z.string().trim().max(5000, "reviewNotes is too long").optional(),
 });
 
 const eventWriteSchema = z.object({

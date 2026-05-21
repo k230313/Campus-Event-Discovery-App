@@ -1,9 +1,21 @@
+// ============================================
+// File:    security.js
+// Author:  Adamson Buliboli
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Implements security for the backend.
+// ============================================
+
 const loginAttempts = new Map();
 const requestWindows = new Map();
 
 const MAX_ATTEMPTS = 10;
 const WINDOW_MS = 15 * 60 * 1000;
 
+/**
+ * Executes the get allowed origins logic.
+ * @returns {*} Returns the resulting value.
+ */
 function getAllowedOrigins() {
   return [
     process.env.CLIENT_URL,
@@ -11,10 +23,20 @@ function getAllowedOrigins() {
   ].filter(Boolean);
 }
 
+/**
+ * Executes the cors options logic.
+ * @returns {*} Returns the resulting value.
+ */
 function corsOptions() {
   const allowedOrigins = getAllowedOrigins();
 
   return {
+    /**
+     * Asynchronously executes the origin logic.
+     * @param {*} origin - Represents the origin input.
+     * @param {*} callback - Represents the callback input.
+     * @returns {*} Returns the resulting value.
+     */
     origin(origin, callback) {
       if (!origin) {
         return callback(null, true);
@@ -33,6 +55,13 @@ function corsOptions() {
   };
 }
 
+/**
+ * Executes the security headers logic.
+ * @param {*} _req - Represents the _req input.
+ * @param {*} res - Represents the res input.
+ * @param {*} next - Represents the next input.
+ * @returns {*} Returns the resulting value.
+ */
 function securityHeaders(_req, res, next) {
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("X-Frame-Options", "DENY");
@@ -42,6 +71,13 @@ function securityHeaders(_req, res, next) {
   next();
 }
 
+/**
+ * Executes the auth rate limit logic.
+ * @param {*} req - Represents the req input.
+ * @param {*} res - Represents the res input.
+ * @param {*} next - Represents the next input.
+ * @returns {*} Returns the resulting value.
+ */
 function authRateLimit(req, res, next) {
   const ip = req.ip || req.socket?.remoteAddress || "unknown";
   const key = `${req.path}:${ip}`;
@@ -66,12 +102,22 @@ function authRateLimit(req, res, next) {
   next();
 }
 
+/**
+ * Executes the clear auth rate limit logic.
+ * @param {*} req - Represents the req input.
+ * @returns {*} Returns the resulting value.
+ */
 function clearAuthRateLimit(req) {
   const ip = req.ip || req.socket?.remoteAddress || "unknown";
   const key = `${req.path}:${ip}`;
   loginAttempts.delete(key);
 }
 
+/**
+ * Executes the create rate limit logic.
+ * @param {object} params - Function parameters.
+ * @returns {*} Returns the resulting value.
+ */
 function createRateLimit({ windowMs, maxRequests, keyPrefix, message }) {
   return (req, res, next) => {
     const ip = req.ip || req.socket?.remoteAddress || "unknown";

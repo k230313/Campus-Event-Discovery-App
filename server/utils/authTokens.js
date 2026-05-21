@@ -1,8 +1,20 @@
+// ============================================
+// File:    authTokens.js
+// Author:  Adamson Buliboli
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Implements auth Tokens for the backend.
+// ============================================
+
 const crypto = require("crypto");
 
 const TOKEN_TTL_SECONDS = 60 * 60 * 24 * 7;
 const MIN_SECRET_LENGTH = 32;
 
+/**
+ * Executes the get secret logic.
+ * @returns {*} Returns the resulting value.
+ */
 function getSecret() {
   const secret = process.env.AUTH_SECRET || process.env.JWT_SECRET;
 
@@ -17,18 +29,39 @@ function getSecret() {
   return secret;
 }
 
+/**
+ * Executes the encode logic.
+ * @param {*} value - Represents the value input.
+ * @returns {*} Returns the resulting value.
+ */
 function encode(value) {
   return Buffer.from(value).toString("base64url");
 }
 
+/**
+ * Executes the decode logic.
+ * @param {*} value - Represents the value input.
+ * @returns {*} Returns the resulting value.
+ */
 function decode(value) {
   return Buffer.from(value, "base64url").toString("utf8");
 }
 
+/**
+ * Executes the sign logic.
+ * @param {*} value - Represents the value input.
+ * @returns {*} Returns the resulting value.
+ */
 function sign(value) {
   return crypto.createHmac("sha256", getSecret()).update(value).digest("base64url");
 }
 
+/**
+ * Executes the create auth token logic.
+ * @param {*} payload - Represents the payload input.
+ * @param {*} expiresInSeconds - Represents the expiresInSeconds input.
+ * @returns {*} Returns the resulting value.
+ */
 function createAuthToken(payload, expiresInSeconds = TOKEN_TTL_SECONDS) {
   const enrichedPayload = {
     ...payload,
@@ -40,6 +73,11 @@ function createAuthToken(payload, expiresInSeconds = TOKEN_TTL_SECONDS) {
   return `${encodedPayload}.${signature}`;
 }
 
+/**
+ * Executes the verify auth token logic.
+ * @param {*} token - Represents the token input.
+ * @returns {*} Returns the resulting value.
+ */
 function verifyAuthToken(token) {
   if (!token || !token.includes(".")) {
     return null;

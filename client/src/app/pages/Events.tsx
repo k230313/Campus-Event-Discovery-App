@@ -1,3 +1,11 @@
+// ============================================
+// File:    Events.tsx
+// Author:  Navroop Kaur
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Renders the Events page for the frontend application.
+// ============================================
+
 import { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, Calendar, MapPin, Users, Bookmark, BookmarkCheck, Clock, Loader2 } from 'lucide-react';
@@ -9,6 +17,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { useApp } from '../context/AppContext';
 import { EventCategory } from '../types';
 
+/**
+ * Renders the Events component for the application interface.
+ * @returns {JSX.Element} Renders the component output.
+ */
 export function Events() {
   const { events, isBookmarked, addBookmark, removeBookmark, user } = useApp();
   const [searchQuery, setSearchQuery] = useState('');
@@ -58,6 +70,11 @@ export function Events() {
     });
   }, [events, searchQuery, categoryFilter, dateFilter]);
 
+  /**
+   * Asynchronously executes the handle bookmark toggle logic.
+   * @param {*} eventId - Represents the eventId input.
+   * @returns {*} Returns the resulting value.
+   */
   const handleBookmarkToggle = (eventId: string) => {
     if (!user) {
       alert('Please log in to bookmark events');
@@ -70,11 +87,21 @@ export function Events() {
     }
   };
 
+  /**
+   * Asynchronously executes the format date logic.
+   * @param {*} dateString - Represents the dateString input.
+   * @returns {*} Returns the resulting value.
+   */
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-AU', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
   };
 
+  /**
+   * Asynchronously executes the get category color logic.
+   * @param {*} category - Represents the category input.
+   * @returns {*} Returns the resulting value.
+   */
   const getCategoryColor = (category: EventCategory) => {
     const colors = {
       Academic: 'bg-blue-100 text-blue-800',
@@ -306,4 +333,3 @@ export function Events() {
     </div>
   );
 }
-

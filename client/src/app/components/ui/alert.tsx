@@ -1,3 +1,11 @@
+// ============================================
+// File:    alert.tsx
+// Author:  Navroop Kaur
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Renders the alert frontend component.
+// ============================================
+
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 
@@ -19,6 +27,11 @@ const alertVariants = cva(
   },
 );
 
+/**
+ * Renders the Alert component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function Alert({
   className,
   variant,
@@ -34,6 +47,11 @@ function Alert({
   );
 }
 
+/**
+ * Renders the AlertTitle component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function AlertTitle({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -47,6 +65,11 @@ function AlertTitle({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
+/**
+ * Renders the AlertDescription component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function AlertDescription({
   className,
   ...props

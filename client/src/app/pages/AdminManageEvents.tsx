@@ -1,16 +1,30 @@
+// ============================================
+// File:    AdminManageEvents.tsx
+// Author:  Navroop Kaur
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Renders the Admin Manage Events page for the frontend application.
+// ============================================
+
 import { useApp } from '../context/AppContext';
 import { Card, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { Input } from '../components/ui/input';
+import { Textarea } from '../components/ui/textarea';
 import { Calendar, Search, Edit, Trash2, Eye, CheckCircle, XCircle, Ban, Clock3 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 
+/**
+ * Renders the AdminManageEvents component for the application interface.
+ * @returns {JSX.Element} Renders the component output.
+ */
 export function AdminManageEvents() {
   const { user, events, deleteEvent, updateEventStatus } = useApp();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
+  const [reviewNotes, setReviewNotes] = useState<Record<string, string>>({});
 
   if (!user || user.role !== 'admin') {
     navigate('/');
@@ -23,14 +37,47 @@ export function AdminManageEvents() {
       e.organizerName.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  /**
+   * Asynchronously executes the handle delete logic.
+   * @param {*} eventId - Represents the eventId input.
+   * @param {*} eventTitle - Represents the eventTitle input.
+   * @returns {*} Returns the resulting value.
+   */
   const handleDelete = (eventId: string, eventTitle: string) => {
     if (confirm(`Are you sure you want to delete "${eventTitle}"? This action cannot be undone.`)) {
       deleteEvent(eventId);
     }
   };
 
+  /**
+   * Asynchronously executes the handle status change logic.
+   * @param {*} eventId - Represents the eventId input.
+   * @param {*} status - Represents the status input.
+   * @returns {*} Returns the resulting value.
+   */
   const handleStatusChange = async (eventId: string, status: 'draft' | 'pending' | 'published' | 'rejected' | 'cancelled') => {
-    await updateEventStatus(eventId, status);
+    const nextReviewNotes = reviewNotes[eventId] ?? eventNotesFallback(eventId);
+
+    if (status === 'rejected' && !nextReviewNotes.trim()) {
+      alert('A rejection reason is required.');
+      return;
+    }
+
+    await updateEventStatus(eventId, status, nextReviewNotes);
+
+    if (status === 'pending') {
+      setReviewNotes((current) => ({ ...current, [eventId]: '' }));
+    }
+  };
+
+  /**
+   * Asynchronously executes the event notes fallback logic.
+   * @param {*} eventId - Represents the eventId input.
+   * @returns {*} Returns the resulting value.
+   */
+  const eventNotesFallback = (eventId: string) => {
+    const event = events.find((entry) => entry.id === eventId);
+    return event?.reviewNotes ?? '';
   };
 
   return (
@@ -93,7 +140,16 @@ export function AdminManageEvents() {
                         <p>Organizer: {event.organizerName}</p>
                         <p>{new Date(event.date).toLocaleDateString()} at {event.startTime}</p>
                         <p>{event.rsvpCount} RSVPs • {event.viewCount} views</p>
+                        {event.reviewedAt && (
+                          <p>Reviewed: {new Date(event.reviewedAt).toLocaleString()}</p>
+                        )}
                       </div>
+                      {(event.reviewNotes || event.status === 'rejected') && (
+                        <div className="mt-3 rounded-md border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
+                          <p className="font-medium text-slate-900">Latest admin feedback</p>
+                          <p>{event.reviewNotes || 'No note provided.'}</p>
+                        </div>
+                      )}
                     </div>
 
                     <div className="md:col-span-2 space-y-2">
@@ -122,6 +178,12 @@ export function AdminManageEvents() {
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
+                      <Textarea
+                        value={reviewNotes[event.id] ?? event.reviewNotes ?? ''}
+                        onChange={(e) => setReviewNotes((current) => ({ ...current, [event.id]: e.target.value }))}
+                        placeholder="Add approval note or required rejection reason..."
+                        rows={3}
+                      />
                       <div className="flex flex-wrap gap-2">
                         {event.status !== 'published' && (
                           <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white" onClick={() => handleStatusChange(event.id, 'published')}>
@@ -155,4 +217,3 @@ export function AdminManageEvents() {
     </div>
   );
 }
-

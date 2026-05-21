@@ -1,9 +1,21 @@
+// ============================================
+// File:    Home.tsx
+// Author:  Navroop Kaur
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Renders the Home page for the frontend application.
+// ============================================
+
 import { Link } from 'react-router-dom';
 import { Calendar, Search, Bookmark, Users, ArrowRight, Sparkles, TrendingUp, Bell } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 
+/**
+ * Renders the Home component for the application interface.
+ * @returns {JSX.Element} Renders the component output.
+ */
 export function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-[#F0F3F9]">
@@ -181,4 +193,3 @@ export function Home() {
     </div>
   );
 }
-

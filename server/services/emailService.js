@@ -1,5 +1,18 @@
+// ============================================
+// File:    emailService.js
+// Author:  Adamson Buliboli
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Implements email Service for the backend.
+// ============================================
+
 const { Resend } = require("resend");
 
+/**
+ * Executes the create resend client logic.
+ * @param {*} overrideClient - Represents the overrideClient input.
+ * @returns {*} Returns the resulting value.
+ */
 function createResendClient(overrideClient) {
   if (overrideClient) {
     return overrideClient;
@@ -14,6 +27,10 @@ function createResendClient(overrideClient) {
   return new Resend(apiKey);
 }
 
+/**
+ * Executes the get email from logic.
+ * @returns {*} Returns the resulting value.
+ */
 function getEmailFrom() {
   const from = process.env.EMAIL_FROM?.trim();
   if (!from) {
@@ -27,6 +44,11 @@ function getEmailFrom() {
   return `CEDA <${from}>`;
 }
 
+/**
+ * Executes the format event date logic.
+ * @param {*} dateValue - Represents the dateValue input.
+ * @returns {*} Returns the resulting value.
+ */
 function formatEventDate(dateValue) {
   let date;
 
@@ -56,6 +78,11 @@ function formatEventDate(dateValue) {
   }).format(date);
 }
 
+/**
+ * Executes the normalize time parts logic.
+ * @param {*} timeValue - Represents the timeValue input.
+ * @returns {*} Returns the resulting value.
+ */
 function normalizeTimeParts(timeValue) {
   if (timeValue == null) {
     return { hour: 0, minute: 0 };
@@ -96,6 +123,11 @@ function normalizeTimeParts(timeValue) {
   throw new Error(`Invalid event time value: ${timeValue}`);
 }
 
+/**
+ * Executes the format event time logic.
+ * @param {*} timeValue - Represents the timeValue input.
+ * @returns {*} Returns the resulting value.
+ */
 function formatEventTime(timeValue) {
   const { hour, minute } = normalizeTimeParts(timeValue);
   const date = new Date(Date.UTC(2000, 0, 1, hour, minute, 0));
@@ -107,6 +139,11 @@ function formatEventTime(timeValue) {
   }).format(date);
 }
 
+/**
+ * Asynchronously executes the send password reset email logic.
+ * @param {object} params - Function parameters.
+ * @returns {*} Returns the resulting value.
+ */
 async function sendPasswordResetEmail({ to, resetUrl, idempotencyKey }) {
   const resend = createResendClient();
 
@@ -124,6 +161,11 @@ async function sendPasswordResetEmail({ to, resetUrl, idempotencyKey }) {
   });
 }
 
+/**
+ * Asynchronously executes the send verification email logic.
+ * @param {object} params - Function parameters.
+ * @returns {*} Returns the resulting value.
+ */
 async function sendVerificationEmail({ to, verificationUrl, idempotencyKey }) {
   const resend = createResendClient();
 

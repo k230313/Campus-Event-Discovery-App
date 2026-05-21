@@ -1,3 +1,11 @@
+// ============================================
+// File:    chart.tsx
+// Author:  Navroop Kaur
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Renders the chart frontend component.
+// ============================================
+
 "use client";
 
 import * as React from "react";
@@ -24,6 +32,10 @@ type ChartContextProps = {
 
 const ChartContext = React.createContext<ChartContextProps | null>(null);
 
+/**
+ * Executes the use chart logic.
+ * @returns {*} Returns the resulting value.
+ */
 function useChart() {
   const context = React.useContext(ChartContext);
 
@@ -34,6 +46,11 @@ function useChart() {
   return context;
 }
 
+/**
+ * Renders the ChartContainer component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function ChartContainer({
   id,
   className,
@@ -69,6 +86,11 @@ function ChartContainer({
   );
 }
 
+/**
+ * Renders the ChartStyle component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
   const colorConfig = Object.entries(config).filter(
     ([, config]) => config.theme || config.color,
@@ -104,6 +126,11 @@ ${colorConfig
 
 const ChartTooltip = RechartsPrimitive.Tooltip;
 
+/**
+ * Renders the ChartTooltipContent component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function ChartTooltipContent({
   active,
   payload,
@@ -250,6 +277,11 @@ function ChartTooltipContent({
 
 const ChartLegend = RechartsPrimitive.Legend;
 
+/**
+ * Renders the ChartLegendContent component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function ChartLegendContent({
   className,
   hideIcon = false,
@@ -305,6 +337,11 @@ function ChartLegendContent({
 }
 
 // Helper to extract item config from a payload.
+/**
+ * Executes the get payload config from payload logic.
+ * @param {object} params - Function parameters.
+ * @returns {*} Returns the resulting value.
+ */
 function getPayloadConfigFromPayload(
   config: ChartConfig,
   payload: unknown,

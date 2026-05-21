@@ -1,3 +1,11 @@
+// ============================================
+// File:    categoryRoutes.js
+// Author:  Adamson Buliboli
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Implements category Routes for the backend.
+// ============================================
+
 const express = require("express");
 const pool = require("../config/db");
 const { requireAuth, requireRole } = require("../middleware/auth");
@@ -7,6 +15,12 @@ const { categorySchema } = require("../validation/schemas");
 
 const router = express.Router();
 
+/**
+ * Asynchronously executes the route handler logic.
+ * @param {*} req - Represents the req input.
+ * @param {*} res - Represents the res input.
+ * @returns {*} Returns the resulting value.
+ */
 router.get("/", async (_req, res) => {
   try {
     const [rows] = await pool.query(
@@ -30,6 +44,12 @@ router.get("/", async (_req, res) => {
   }
 });
 
+/**
+ * Asynchronously executes the route handler logic.
+ * @param {*} req - Represents the req input.
+ * @param {*} res - Represents the res input.
+ * @returns {*} Returns the resulting value.
+ */
 router.post("/", requireAuth, requireRole("admin"), adminRateLimit, validateBody(categorySchema), async (req, res) => {
   const { name } = req.body;
 
@@ -61,6 +81,12 @@ router.post("/", requireAuth, requireRole("admin"), adminRateLimit, validateBody
   }
 });
 
+/**
+ * Asynchronously executes the route handler logic.
+ * @param {*} req - Represents the req input.
+ * @param {*} res - Represents the res input.
+ * @returns {*} Returns the resulting value.
+ */
 router.put("/:id", requireAuth, requireRole("admin"), adminRateLimit, validateBody(categorySchema), async (req, res) => {
   const { name } = req.body;
 
@@ -104,6 +130,12 @@ router.put("/:id", requireAuth, requireRole("admin"), adminRateLimit, validateBo
   }
 });
 
+/**
+ * Asynchronously executes the route handler logic.
+ * @param {*} req - Represents the req input.
+ * @param {*} res - Represents the res input.
+ * @returns {*} Returns the resulting value.
+ */
 router.delete("/:id", requireAuth, requireRole("admin"), adminRateLimit, async (req, res) => {
   try {
     const [countRows] = await pool.query(

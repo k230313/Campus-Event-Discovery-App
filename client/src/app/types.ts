@@ -1,3 +1,11 @@
+// ============================================
+// File:    types.ts
+// Author:  Adamson Buliboli
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Defines TypeScript types for types.
+// ============================================
+
 // Types for the Campus Event Discovery App
 
 export interface User {
@@ -26,12 +34,15 @@ export interface Event {
   organizerName: string;
   image?: string;
   status: 'draft' | 'pending' | 'published' | 'rejected' | 'cancelled';
+  reviewNotes?: string;
+  reviewedAt?: string;
   viewCount: number;
   rsvpCount: number;
   volunteersNeeded?: number;
   volunteersRegistered?: number;
   seatingCapacity?: number;
   seatsBooked?: number;
+  waitlistCount?: number;
   foodProvided?: boolean;
   foodOptions?: string[];
   notes?: string;
@@ -49,8 +60,16 @@ export interface Bookmark {
 export interface RSVP {
   userId: string;
   eventId: string;
+  status: 'registered' | 'waitlisted';
   attendeeType: 'attendee' | 'volunteer';
   selectedFoodOption?: string;
   seatNumber?: number;
   createdAt: string;
+}
+
+export interface EventAttendee {
+  userId: string;
+  name: string;
+  email: string;
+  registeredAt: string;
 }

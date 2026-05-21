@@ -1,3 +1,11 @@
+// ============================================
+// File:    eslint.config.js
+// Author:  Adamson Buliboli
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Configures ESLint rules for the frontend project.
+// ============================================
+
 import js from '@eslint/js'
 import globals from 'globals'
 import reactHooks from 'eslint-plugin-react-hooks'

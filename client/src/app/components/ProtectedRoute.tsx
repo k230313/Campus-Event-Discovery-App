@@ -1,3 +1,11 @@
+// ============================================
+// File:    ProtectedRoute.tsx
+// Author:  Navroop Kaur
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Renders the Protected Route frontend component.
+// ============================================
+
 import { Navigate, useLocation } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { User } from '../types';
@@ -8,6 +16,11 @@ interface ProtectedRouteProps {
   allowedRoles?: User['role'][];
 }
 
+/**
+ * Renders the ProtectedRoute component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 export function ProtectedRoute({
   children,
   requireAuth = true,

@@ -1,3 +1,11 @@
+// ============================================
+// File:    mockData.ts
+// Author:  Navroop Kaur
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Defines frontend data used by mock Data.
+// ============================================
+
 import { Event, User } from '../types';
 
 export const mockUser: User = {

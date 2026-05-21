@@ -55,6 +55,8 @@ CREATE TABLE IF NOT EXISTS events (
   registration_required TINYINT(1)                                   NOT NULL DEFAULT 0,
   status                ENUM('draft', 'pending', 'published', 'rejected', 'cancelled') NOT NULL DEFAULT 'draft',
   approved_by           INT                                          NULL,
+  review_notes          TEXT                                         NULL,
+  reviewed_at           DATETIME                                     NULL,
   notes                 TEXT                                         NULL,
   created_at            DATETIME                                     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at            DATETIME                                     NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -92,7 +94,7 @@ CREATE TABLE IF NOT EXISTS registrations (
   registration_id   INT                            NOT NULL AUTO_INCREMENT,
   student_id        INT                            NOT NULL,
   event_id          INT                            NOT NULL,
-  status            ENUM('registered', 'cancelled') NOT NULL DEFAULT 'registered',
+  status            ENUM('registered', 'waitlisted', 'cancelled') NOT NULL DEFAULT 'registered',
   registered_at     DATETIME                       NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at        DATETIME                       NOT NULL DEFAULT CURRENT_TIMESTAMP
                                                   ON UPDATE CURRENT_TIMESTAMP,

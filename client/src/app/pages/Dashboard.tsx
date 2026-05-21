@@ -1,3 +1,11 @@
+// ============================================
+// File:    Dashboard.tsx
+// Author:  Navroop Kaur
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Displays role-based dashboard views for students and organizers.
+// ============================================
+
 import { Link, useNavigate } from 'react-router-dom';
 import { Calendar, Bookmark, Users, Plus, Edit, Trash2, Eye, MapPin, Clock } from 'lucide-react';
 import { Button } from '../components/ui/button';
@@ -6,6 +14,10 @@ import { Badge } from '../components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { useApp } from '../context/AppContext';
 
+/**
+ * Renders the student or organizer dashboard based on the signed-in user's role.
+ * @returns {JSX.Element | null} Role-specific dashboard content, or null while redirecting unauthenticated users.
+ */
 export function Dashboard() {
   const navigate = useNavigate();
   const { user, events, bookmarks, rsvps, deleteEvent } = useApp();
@@ -24,12 +36,42 @@ export function Dashboard() {
   );
 
   const myEvents = events.filter(event => event.organizerId === user.id);
+  const totalWaitlisted = myEvents.reduce((sum, event) => sum + (event.waitlistCount || 0), 0);
+  const eventsWithCapacity = myEvents.filter((event) => (event.seatingCapacity || 0) > 0);
+  const averageFillRate = eventsWithCapacity.length > 0
+    ? Math.round(
+        eventsWithCapacity.reduce((sum, event) => {
+          const capacity = event.seatingCapacity || 0;
+          const confirmed = event.rsvpCount || 0;
+          return sum + Math.min(100, Math.round((confirmed / capacity) * 100));
+        }, 0) / eventsWithCapacity.length
+      )
+    : 0;
+  const topPerformingEvents = [...myEvents]
+    .sort((a, b) => {
+      if (b.rsvpCount !== a.rsvpCount) {
+        return b.rsvpCount - a.rsvpCount;
+      }
 
+      return (b.waitlistCount || 0) - (a.waitlistCount || 0);
+    })
+    .slice(0, 3);
+
+  /**
+   * Formats an event date for display in organizer dashboard cards.
+   * @param {string} dateString - ISO-style event date string.
+   * @returns {string} Human-readable Australian date string.
+   */
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-AU', { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
+  /**
+   * Confirms and deletes one of the organizer's events.
+   * @param {string} eventId - Identifier of the event to delete.
+   * @returns {void} Does not return a value.
+   */
   const handleDeleteEvent = (eventId: string) => {
     if (window.confirm('Are you sure you want to delete this event? This action cannot be undone.')) {
       deleteEvent(eventId);
@@ -109,6 +151,77 @@ export function Dashboard() {
                   {myEvents.reduce((sum, e) => sum + e.viewCount, 0)}
                 </CardTitle>
                 <CardDescription className="text-purple-700 font-medium">Total Views</CardDescription>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="grid lg:grid-cols-2 gap-6 mb-10">
+            <Card className="shadow-xl border-2">
+              <CardHeader className="bg-gradient-to-r from-slate-50 to-white border-b">
+                <CardTitle className="text-2xl text-[#1B2E55]">Event Analytics</CardTitle>
+                <CardDescription className="text-base">
+                  Performance snapshot across your current events
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="grid sm:grid-cols-3 gap-4">
+                  <div className="rounded-xl border border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 p-5">
+                    <p className="text-sm font-medium text-green-800 mb-2">Confirmed registrations</p>
+                    <p className="text-3xl font-bold text-green-900">
+                      {myEvents.reduce((sum, event) => sum + event.rsvpCount, 0)}
+                    </p>
+                  </div>
+                  <div className="rounded-xl border border-blue-200 bg-gradient-to-br from-blue-50 to-sky-50 p-5">
+                    <p className="text-sm font-medium text-blue-800 mb-2">Waitlisted students</p>
+                    <p className="text-3xl font-bold text-blue-900">{totalWaitlisted}</p>
+                  </div>
+                  <div className="rounded-xl border border-amber-200 bg-gradient-to-br from-amber-50 to-yellow-50 p-5">
+                    <p className="text-sm font-medium text-amber-800 mb-2">Average fill rate</p>
+                    <p className="text-3xl font-bold text-amber-900">{averageFillRate}%</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-xl border-2">
+              <CardHeader className="bg-gradient-to-r from-slate-50 to-white border-b">
+                <CardTitle className="text-2xl text-[#1B2E55]">Top Performing Events</CardTitle>
+                <CardDescription className="text-base">
+                  Ranked by confirmed registrations, then waitlist demand
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-6">
+                {topPerformingEvents.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">Create an event to start seeing analytics here.</p>
+                ) : (
+                  <div className="space-y-4">
+                    {topPerformingEvents.map((event, index) => {
+                      const capacity = event.seatingCapacity || 0;
+                      const fillRate = capacity > 0 ? Math.min(100, Math.round((event.rsvpCount / capacity) * 100)) : null;
+
+                      return (
+                        <div key={event.id} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                          <div className="flex items-start justify-between gap-4">
+                            <div>
+                              <div className="flex items-center gap-2 mb-1">
+                                <Badge className="bg-[#1B2E55] text-white">#{index + 1}</Badge>
+                                <p className="font-semibold text-[#1B2E55]">{event.title}</p>
+                              </div>
+                              <p className="text-sm text-muted-foreground">
+                                {event.rsvpCount} confirmed
+                                {(event.waitlistCount || 0) > 0 ? ` • ${event.waitlistCount} waitlisted` : ''}
+                                {fillRate !== null ? ` • ${fillRate}% full` : ''}
+                              </p>
+                            </div>
+                            <Link to={`/events/${event.id}`}>
+                              <Button variant="outline" size="sm">View</Button>
+                            </Link>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -240,7 +353,7 @@ export function Dashboard() {
               <CardHeader>
                 <CardTitle>Events I'm Attending</CardTitle>
                 <CardDescription>
-                  Events you have RSVP'd to
+                  Events you have registered for or joined the waitlist for
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -248,7 +361,7 @@ export function Dashboard() {
                   <div className="text-center py-12">
                     <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                     <p className="text-muted-foreground mb-4">
-                      You haven't RSVP'd to any events yet
+                      You haven't registered for any events yet
                     </p>
                     <Link to="/events">
                       <Button className="bg-[#EF9B28] hover:bg-[#EF9B28]/90 text-white">
@@ -272,6 +385,9 @@ export function Dashboard() {
                           <CardHeader>
                             <div className="flex items-center gap-2 mb-2">
                               <Badge>{event.category}</Badge>
+                              {rsvp?.status === 'waitlisted' && (
+                                <Badge variant="secondary">Waitlisted</Badge>
+                              )}
                               {rsvp?.attendeeType === 'volunteer' && (
                                 <Badge variant="secondary">Volunteering</Badge>
                               )}
@@ -391,4 +507,3 @@ export function Dashboard() {
     </div>
   );
 }
-

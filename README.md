@@ -36,6 +36,11 @@ Supporting documents:
 
 This repository is being developed progressively based on weekly deliverables.
 
+## Local Demo
+
+On Windows, you can start the local demo with [run-local-demo.bat](./run-local-demo.bat).
+It opens separate terminal windows for the backend and frontend. MySQL must already be running, and `server/.env` must already be configured.
+
 ## Changelog
 
 ### v3.3.0

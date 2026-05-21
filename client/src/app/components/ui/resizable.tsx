@@ -1,3 +1,11 @@
+// ============================================
+// File:    resizable.tsx
+// Author:  Navroop Kaur
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Renders the resizable frontend component.
+// ============================================
+
 "use client";
 
 import * as React from "react";
@@ -6,6 +14,11 @@ import * as ResizablePrimitive from "react-resizable-panels";
 
 import { cn } from "./utils";
 
+/**
+ * Renders the ResizablePanelGroup component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function ResizablePanelGroup({
   className,
   ...props
@@ -22,12 +35,22 @@ function ResizablePanelGroup({
   );
 }
 
+/**
+ * Renders the ResizablePanel component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function ResizablePanel({
   ...props
 }: React.ComponentProps<typeof ResizablePrimitive.Panel>) {
   return <ResizablePrimitive.Panel data-slot="resizable-panel" {...props} />;
 }
 
+/**
+ * Renders the ResizableHandle component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function ResizableHandle({
   withHandle,
   className,

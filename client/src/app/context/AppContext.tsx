@@ -1,37 +1,128 @@
+// ============================================
+// File:    AppContext.tsx
+// Author:  Adamson Buliboli
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Provides shared frontend state and API actions for auth, events, bookmarks, and registrations.
+// ============================================
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Event, Bookmark, RSVP } from '../types';
+import { User, Event, Bookmark, RSVP, EventAttendee } from '../types';
 import { apiFetch, clearCsrfToken, csrfFetch } from '../services/api';
 
 interface AppContextType {
   user: User | null;
+  /**
+   * Stores the authenticated user in React state and local storage.
+   * @param {User | null} nextUser - Authenticated user to persist, or null to clear the session.
+   * @returns {void} Does not return a value.
+   */
   setCurrentUser: (nextUser: User | null) => void;
+  /**
+   * Authenticates a user with the backend and updates local session state.
+   * @param {string} email - Email address submitted on the login form.
+   * @param {string} password - Plain-text password submitted on the login form.
+   * @returns {Promise<{ user: User | null; error: string | null }>} Login result containing either a user or an error.
+   */
   login: (email: string, password: string) => Promise<{ user: User | null; error: string | null }>;
+  /**
+   * Clears the current session both locally and on the backend.
+   * @returns {void} Does not return a value.
+   */
   logout: () => void;
+  /**
+   * Submits a new account registration request to the backend.
+   * @param {string} name - Full name supplied during registration.
+   * @param {string} email - Email address supplied during registration.
+   * @param {string} password - Plain-text password supplied during registration.
+   * @param {'student' | 'organizer'} role - Role selected by the new user.
+   * @param {string} turnstileToken - Cloudflare Turnstile token for captcha verification.
+   * @returns {Promise<{ user: User | null; message: string | null; error: string | null }>} Registration result message or error.
+   */
   register: (name: string, email: string, password: string, role: 'student' | 'organizer', turnstileToken: string) => Promise<{ user: User | null; message: string | null; error: string | null }>;
   events: Event[];
   bookmarks: Bookmark[];
   rsvps: RSVP[];
+  /**
+   * Saves an event to the current user's bookmarks.
+   * @param {string} eventId - Event identifier to bookmark.
+   * @returns {Promise<void>} Resolves after the bookmark request finishes.
+   */
   addBookmark: (eventId: string) => Promise<void>;
+  /**
+   * Removes an event from the current user's bookmarks.
+   * @param {string} eventId - Event identifier to remove.
+   * @returns {Promise<void>} Resolves after the bookmark is removed.
+   */
   removeBookmark: (eventId: string) => Promise<void>;
+  /**
+   * Checks whether the current user has bookmarked an event.
+   * @param {string} eventId - Event identifier to inspect.
+   * @returns {boolean} True when the event is bookmarked.
+   */
   isBookmarked: (eventId: string) => boolean;
   addRSVP: (
     eventId: string,
     attendeeType: 'attendee' | 'volunteer',
-    options?: { foodOption?: string; seatNumber?: number }
-  ) => Promise<{ confirmationEmailStatus: 'sent' | 'failed' }>;
+    options?: { foodOption?: string; seatNumber?: number; waitlistIfFull?: boolean }
+  ) => Promise<{ confirmationEmailStatus: 'sent' | 'failed'; registrationStatus: 'registered' | 'waitlisted' }>;
+  /**
+   * Cancels the current student's registration for an event.
+   * @param {string} eventId - Event identifier to unregister from.
+   * @returns {Promise<void>} Resolves after the cancellation flow completes.
+   */
   removeRSVP: (eventId: string) => Promise<void>;
+  /**
+   * Checks whether the current student already has a registration for an event.
+   * @param {string} eventId - Event identifier to inspect.
+   * @returns {boolean} True when the user has a matching registration entry.
+   */
   hasRSVP: (eventId: string) => boolean;
+  /**
+   * Creates a new organizer event through the backend API.
+   * @param {Omit<Event, 'id' | 'organizerId' | 'organizerName' | 'viewCount' | 'rsvpCount' | 'createdAt'>} event - Event data captured from the creation form.
+   * @returns {Promise<{ event: Event | null; error: string | null }>} Created event or an error message.
+   */
   createEvent: (event: Omit<Event, 'id' | 'organizerId' | 'organizerName' | 'viewCount' | 'rsvpCount' | 'createdAt'>) => Promise<{ event: Event | null; error: string | null }>;
+  /**
+   * Updates an existing event and synchronizes the local event list.
+   * @param {string} eventId - Event identifier to update.
+   * @param {Partial<Event>} updates - Partial event fields to merge and persist.
+   * @returns {Promise<void>} Resolves after the update flow completes.
+   */
   updateEvent: (eventId: string, updates: Partial<Event>) => Promise<void>;
-  updateEventStatus: (eventId: string, status: Event['status']) => Promise<void>;
+  /**
+   * Applies an admin moderation status change to an event.
+   * @param {string} eventId - Event identifier to update.
+   * @param {Event['status']} status - Target moderation status.
+   * @param {string} [reviewNotes] - Optional approval note or rejection reason.
+   * @returns {Promise<void>} Resolves after the moderation update completes.
+   */
+  updateEventStatus: (eventId: string, status: Event['status'], reviewNotes?: string) => Promise<void>;
+  /**
+   * Deletes an event and removes its local references from related UI state.
+   * @param {string} eventId - Event identifier to delete.
+   * @returns {Promise<void>} Resolves after the delete flow completes.
+   */
   deleteEvent: (eventId: string) => Promise<void>;
+  /**
+   * Loads the attendee list for an organizer-owned or admin-managed event.
+   * @param {string} eventId - Event identifier to inspect.
+   * @returns {Promise<{ eventTitle: string; attendees: EventAttendee[] }>} Event title and current attendee list.
+   */
+  getEventAttendees: (eventId: string) => Promise<{ eventTitle: string; attendees: EventAttendee[] }>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 const USER_STORAGE_KEY = 'ceda_user';
 const LEGACY_AUTH_TOKEN_KEY = 'ceda_auth_token';
 
+/**
+ * Normalizes an API event payload into the frontend event model.
+ * @param {any} apiEvent - Raw event payload returned by the backend.
+ * @returns {Event} Normalized event object used throughout the UI.
+ */
 function normalizeEvent(apiEvent: any): Event {
   return {
     id: String(apiEvent.id),
@@ -46,12 +137,15 @@ function normalizeEvent(apiEvent: any): Event {
     organizerName: apiEvent.organiser_name || apiEvent.organizerName || 'Kent Institute',
     image: apiEvent.image || undefined,
     status: apiEvent.status || 'published',
+    reviewNotes: apiEvent.reviewNotes ?? undefined,
+    reviewedAt: apiEvent.reviewedAt ?? undefined,
     viewCount: Number(apiEvent.viewCount || 0),
     rsvpCount: Number(apiEvent.rsvpCount || 0),
     volunteersNeeded: apiEvent.volunteersNeeded ?? undefined,
     volunteersRegistered: apiEvent.volunteersRegistered ?? undefined,
     seatingCapacity: apiEvent.seatingCapacity ?? apiEvent.capacity ?? undefined,
     seatsBooked: apiEvent.seatsBooked ?? undefined,
+    waitlistCount: apiEvent.waitlistCount ?? undefined,
     foodProvided: Boolean(apiEvent.foodProvided),
     foodOptions: apiEvent.foodOptions ?? undefined,
     notes: apiEvent.notes ?? undefined,
@@ -59,6 +153,11 @@ function normalizeEvent(apiEvent: any): Event {
   };
 }
 
+/**
+ * Normalizes an API user payload into the frontend user model.
+ * @param {any} apiUser - Raw user payload returned by the backend.
+ * @returns {User} Normalized user object used throughout the UI.
+ */
 function normalizeUser(apiUser: any): User {
   return {
     id: String(apiUser.id),
@@ -68,6 +167,12 @@ function normalizeUser(apiUser: any): User {
   };
 }
 
+/**
+ * Asynchronously extracts a readable error message from an API response body.
+ * @param {Response} response - Fetch response returned by the backend.
+ * @param {string} fallback - Fallback message to use when parsing fails.
+ * @returns {Promise<string>} Best available user-facing error message.
+ */
 async function getApiErrorMessage(response: Response, fallback: string) {
   try {
     const data = await response.json();
@@ -86,6 +191,12 @@ async function getApiErrorMessage(response: Response, fallback: string) {
   return fallback;
 }
 
+/**
+ * Asynchronously performs an API request with a client-side timeout.
+ * @param {RequestInfo | URL} input - Request target passed to fetch.
+ * @param {number} timeoutMs - Timeout window in milliseconds.
+ * @returns {Promise<Response>} API response when the request completes before timing out.
+ */
 async function fetchWithTimeout(input: RequestInfo | URL, timeoutMs = 5000) {
   const controller = new AbortController();
   const timeout = window.setTimeout(() => controller.abort(), timeoutMs);
@@ -97,6 +208,11 @@ async function fetchWithTimeout(input: RequestInfo | URL, timeoutMs = 5000) {
   }
 }
 
+/**
+ * Renders the application context provider and exposes shared stateful actions to descendants.
+ * @param {{ children: React.ReactNode }} props - Provider children that consume application state.
+ * @returns {JSX.Element} Context provider wrapping the supplied children.
+ */
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
@@ -104,6 +220,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
   const [rsvps, setRSVPs] = useState<RSVP[]>([]);
 
+  /**
+   * Updates the in-memory and persisted authenticated user state.
+   * @param {User | null} nextUser - User object to persist, or null to clear it.
+   * @returns {void} Does not return a value.
+   */
   function setCurrentUser(nextUser: User | null) {
     setUser(nextUser);
 
@@ -150,6 +271,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       });
   }, []);
 
+  /**
+   * Asynchronously loads the current event list from the backend.
+   * @returns {Promise<void>} Resolves after the event list has been refreshed.
+   */
   async function loadEvents() {
     try {
       const response = await apiFetch('/api/events');
@@ -177,6 +302,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [rsvps]);
 
   useEffect(() => {
+    /**
+     * Asynchronously loads bookmark and registration data for the current user.
+     * @returns {Promise<void>} Resolves after user-specific data has been refreshed.
+     */
     async function loadUserData() {
       if (!user) {
         setBookmarks([]);
@@ -226,6 +355,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     loadUserData();
   }, [user]);
 
+  /**
+   * Asynchronously logs a user in and stores the returned session user locally.
+   * @param {string} email - Email address entered on the login form.
+   * @param {string} password - Password entered on the login form.
+   * @returns {Promise<{ user: User | null; error: string | null }>} Login result containing either a user or an error.
+   */
   const login = async (email: string, password: string): Promise<{ user: User | null; error: string | null }> => {
     if (!email || !password) {
       return { user: null, error: 'Email and password are required' };
@@ -256,6 +391,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  /**
+   * Clears the local session and triggers the backend logout endpoint.
+   * @returns {void} Does not return a value.
+   */
   const logout = () => {
     csrfFetch('/api/auth/logout', { method: 'POST' }).catch((error) => {
       console.error('Logout request failed:', error);
@@ -266,6 +405,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     navigate('/login');
   };
 
+  /**
+   * Asynchronously registers a new account and returns the backend's confirmation message.
+   * @param {string} name - Full name entered during registration.
+   * @param {string} email - Email address entered during registration.
+   * @param {string} password - Password entered during registration.
+   * @param {'student' | 'organizer'} role - Role selected during registration.
+   * @param {string} turnstileToken - Turnstile verification token from the client.
+   * @returns {Promise<{ user: User | null; message: string | null; error: string | null }>} Registration message or error.
+   */
   const register = async (
     name: string,
     email: string,
@@ -300,6 +448,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  /**
+   * Asynchronously creates a bookmark for the current user.
+   * @param {string} eventId - Event identifier to bookmark.
+   * @returns {Promise<void>} Resolves after the bookmark attempt completes.
+   */
   const addBookmark = async (eventId: string) => {
     if (!user || (user.role !== 'student' && user.role !== 'organizer') || bookmarks.some((b) => b.eventId === eventId && b.userId === user.id)) return;
 
@@ -321,6 +474,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  /**
+   * Asynchronously removes a bookmark for the current user.
+   * @param {string} eventId - Event identifier to unbookmark.
+   * @returns {Promise<void>} Resolves after the bookmark removal completes.
+   */
   const removeBookmark = async (eventId: string) => {
     if (!user || (user.role !== 'student' && user.role !== 'organizer')) return;
 
@@ -339,14 +497,26 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  /**
+   * Checks whether the current user has already bookmarked a given event.
+   * @param {string} eventId - Event identifier to inspect.
+   * @returns {boolean} True when the event is currently bookmarked.
+   */
   const isBookmarked = (eventId: string): boolean => {
     return bookmarks.some((b) => b.eventId === eventId && b.userId === user?.id);
   };
 
+  /**
+   * Asynchronously registers the current student for an event or places them on the waitlist.
+   * @param {string} eventId - Event identifier to register for.
+   * @param {'attendee' | 'volunteer'} attendeeType - Registration type selected by the student.
+   * @param {{ foodOption?: string; seatNumber?: number; waitlistIfFull?: boolean }} [options] - Optional registration details and waitlist preference.
+   * @returns {Promise<{ confirmationEmailStatus: 'sent' | 'failed'; registrationStatus: 'registered' | 'waitlisted' }>} Registration status and attendee email result.
+   */
   const addRSVP = async (
     eventId: string,
     attendeeType: 'attendee' | 'volunteer',
-    options?: { foodOption?: string; seatNumber?: number }
+    options?: { foodOption?: string; seatNumber?: number; waitlistIfFull?: boolean }
   ) => {
     if (!user || user.role !== 'student') {
       throw new Error('Only students can register for events');
@@ -357,10 +527,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
+      const { waitlistIfFull = false, ...registrationOptions } = options || {};
       const response = await csrfFetch('/api/registrations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ eventId, attendeeType, options }),
+        body: JSON.stringify({ eventId, attendeeType, waitlistIfFull, options: registrationOptions }),
       });
 
       if (!response.ok) {
@@ -374,16 +545,21 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         event.id === eventId
           ? {
               ...event,
-              rsvpCount: event.rsvpCount + 1,
+              rsvpCount: data.status === 'registered' ? event.rsvpCount + 1 : event.rsvpCount,
               volunteersRegistered: attendeeType === 'volunteer'
-                ? (event.volunteersRegistered || 0) + 1
+                ? data.status === 'registered'
+                  ? (event.volunteersRegistered || 0) + 1
+                  : event.volunteersRegistered
                 : event.volunteersRegistered,
-              seatsBooked: options?.seatNumber ? (event.seatsBooked || 0) + 1 : event.seatsBooked,
+              seatsBooked: options?.seatNumber && data.status === 'registered'
+                ? (event.seatsBooked || 0) + 1
+                : event.seatsBooked,
             }
           : event
       )));
       return {
         confirmationEmailStatus: data.confirmationEmailStatus === 'sent' ? 'sent' : 'failed',
+        registrationStatus: data.status === 'waitlisted' ? 'waitlisted' : 'registered',
       };
     } catch (error) {
       console.error('Add RSVP failed:', error);
@@ -391,6 +567,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  /**
+   * Asynchronously cancels the current student's registration for an event.
+   * @param {string} eventId - Event identifier to unregister from.
+   * @returns {Promise<void>} Resolves after the cancellation flow completes.
+   */
   const removeRSVP = async (eventId: string) => {
     if (!user || user.role !== 'student') return;
 
@@ -411,11 +592,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         event.id === eventId
           ? {
               ...event,
-              rsvpCount: Math.max(0, event.rsvpCount - 1),
-              volunteersRegistered: existing.attendeeType === 'volunteer'
+              rsvpCount: existing.status === 'registered' ? Math.max(0, event.rsvpCount - 1) : event.rsvpCount,
+              volunteersRegistered: existing.attendeeType === 'volunteer' && existing.status === 'registered'
                 ? Math.max(0, (event.volunteersRegistered || 0) - 1)
                 : event.volunteersRegistered,
-              seatsBooked: existing.seatNumber ? Math.max(0, (event.seatsBooked || 0) - 1) : event.seatsBooked,
+              seatsBooked: existing.seatNumber && existing.status === 'registered'
+                ? Math.max(0, (event.seatsBooked || 0) - 1)
+                : event.seatsBooked,
             }
           : event
       )));
@@ -424,10 +607,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  /**
+   * Checks whether the current student already has a registration for an event.
+   * @param {string} eventId - Event identifier to inspect.
+   * @returns {boolean} True when the user has a matching registration entry.
+   */
   const hasRSVP = (eventId: string): boolean => {
     return rsvps.some((r) => r.eventId === eventId && r.userId === user?.id);
   };
 
+  /**
+   * Asynchronously submits a new organizer event to the backend.
+   * @param {Omit<Event, 'id' | 'organizerId' | 'organizerName' | 'viewCount' | 'rsvpCount' | 'createdAt'>} eventData - Event data collected from the creation form.
+   * @returns {Promise<{ event: Event | null; error: string | null }>} Created event or an error message.
+   */
   const createEvent = async (eventData: Omit<Event, 'id' | 'organizerId' | 'organizerName' | 'viewCount' | 'rsvpCount' | 'createdAt'>): Promise<{ event: Event | null; error: string | null }> => {
     if (!user || user.role !== 'organizer') {
       return { event: null, error: 'You must be logged in as an organizer to create events.' };
@@ -473,6 +666,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  /**
+   * Asynchronously updates an existing event and refreshes the local list with the saved version.
+   * @param {string} eventId - Event identifier to update.
+   * @param {Partial<Event>} updates - Partial event data to merge before saving.
+   * @returns {Promise<void>} Resolves after the update flow completes.
+   */
   const updateEvent = async (eventId: string, updates: Partial<Event>) => {
     const current = events.find((event) => event.id === eventId);
     if (!current) return;
@@ -511,6 +710,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  /**
+   * Asynchronously deletes an event and removes its related local state entries.
+   * @param {string} eventId - Event identifier to delete.
+   * @returns {Promise<void>} Resolves after the delete flow completes.
+   */
   const deleteEvent = async (eventId: string) => {
     try {
       const response = await csrfFetch(`/api/events/${eventId}`, {
@@ -528,12 +732,38 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setRSVPs(rsvps.filter((rsvp) => rsvp.eventId !== eventId));
   };
 
-  const updateEventStatus = async (eventId: string, status: Event['status']) => {
+  /**
+   * Asynchronously fetches the attendee list for a specific organizer/admin event view.
+   * @param {string} eventId - Event identifier whose attendee list should be loaded.
+   * @returns {Promise<{ eventTitle: string; attendees: EventAttendee[] }>} Event title and attendee collection.
+   */
+  const getEventAttendees = async (eventId: string) => {
+    const response = await apiFetch(`/api/registrations/events/${eventId}/attendees`);
+
+    if (!response.ok) {
+      throw new Error(await getApiErrorMessage(response, 'Failed to fetch event attendees'));
+    }
+
+    const data = await response.json();
+    return {
+      eventTitle: data.eventTitle,
+      attendees: Array.isArray(data.attendees) ? data.attendees : [],
+    };
+  };
+
+  /**
+   * Asynchronously updates an event's moderation status from the admin UI.
+   * @param {string} eventId - Event identifier to update.
+   * @param {Event['status']} status - Next moderation status to apply.
+   * @param {string} [reviewNotes] - Optional approval note or rejection reason.
+   * @returns {Promise<void>} Resolves after the moderation update completes.
+   */
+  const updateEventStatus = async (eventId: string, status: Event['status'], reviewNotes?: string) => {
     try {
       const response = await csrfFetch(`/api/events/${eventId}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status }),
+        body: JSON.stringify({ status, reviewNotes }),
       });
 
       if (!response.ok) {
@@ -569,6 +799,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         updateEvent,
         updateEventStatus,
         deleteEvent,
+        getEventAttendees,
       }}
     >
       {children}
@@ -576,6 +807,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
+/**
+ * Returns the shared application context and enforces provider usage.
+ * @returns {AppContextType} Shared application state and actions.
+ */
 export function useApp() {
   const context = useContext(AppContext);
   if (context === undefined) {

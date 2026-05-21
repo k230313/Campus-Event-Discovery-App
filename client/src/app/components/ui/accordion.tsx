@@ -1,3 +1,11 @@
+// ============================================
+// File:    accordion.tsx
+// Author:  Navroop Kaur
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Renders the accordion frontend component.
+// ============================================
+
 "use client";
 
 import * as React from "react";
@@ -6,12 +14,22 @@ import { ChevronDownIcon } from "lucide-react";
 
 import { cn } from "./utils";
 
+/**
+ * Renders the Accordion component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function Accordion({
   ...props
 }: React.ComponentProps<typeof AccordionPrimitive.Root>) {
   return <AccordionPrimitive.Root data-slot="accordion" {...props} />;
 }
 
+/**
+ * Renders the AccordionItem component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function AccordionItem({
   className,
   ...props
@@ -25,6 +43,11 @@ function AccordionItem({
   );
 }
 
+/**
+ * Renders the AccordionTrigger component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function AccordionTrigger({
   className,
   children,
@@ -47,6 +70,11 @@ function AccordionTrigger({
   );
 }
 
+/**
+ * Renders the AccordionContent component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function AccordionContent({
   className,
   children,

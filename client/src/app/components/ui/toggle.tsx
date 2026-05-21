@@ -1,3 +1,11 @@
+// ============================================
+// File:    toggle.tsx
+// Author:  Navroop Kaur
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Renders the toggle frontend component.
+// ============================================
+
 "use client";
 
 import * as React from "react";
@@ -28,6 +36,11 @@ const toggleVariants = cva(
   },
 );
 
+/**
+ * Renders the Toggle component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function Toggle({
   className,
   variant,

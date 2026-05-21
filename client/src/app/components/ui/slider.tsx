@@ -1,3 +1,11 @@
+// ============================================
+// File:    slider.tsx
+// Author:  Navroop Kaur
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Renders the slider frontend component.
+// ============================================
+
 "use client";
 
 import * as React from "react";
@@ -5,6 +13,11 @@ import * as SliderPrimitive from "@radix-ui/react-slider";
 
 import { cn } from "./utils";
 
+/**
+ * Renders the Slider component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function Slider({
   className,
   defaultValue,

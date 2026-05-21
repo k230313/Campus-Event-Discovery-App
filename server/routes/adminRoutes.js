@@ -1,3 +1,11 @@
+// ============================================
+// File:    adminRoutes.js
+// Author:  Adamson Buliboli
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Implements admin Routes for the backend.
+// ============================================
+
 const express = require("express");
 const pool = require("../config/db");
 const { ADMIN_UNLOCK_TTL_MS, requireAuth, requireRole } = require("../middleware/auth");
@@ -9,6 +17,12 @@ const { adminUnlockSchema } = require("../validation/schemas");
 
 const router = express.Router();
 
+/**
+ * Asynchronously executes the route handler logic.
+ * @param {*} req - Represents the req input.
+ * @param {*} res - Represents the res input.
+ * @returns {*} Returns the resulting value.
+ */
 router.post("/unlock", requireAuth, requireRole("admin"), adminRateLimit, validateBody(adminUnlockSchema), async (req, res) => {
   if (!process.env.MASTER_PASSWORD_HASH) {
     console.error("[ADMIN] MASTER_PASSWORD_HASH env var not set");
@@ -42,6 +56,12 @@ router.post("/unlock", requireAuth, requireRole("admin"), adminRateLimit, valida
   }
 });
 
+/**
+ * Asynchronously executes the route handler logic.
+ * @param {*} req - Represents the req input.
+ * @param {*} res - Represents the res input.
+ * @returns {*} Returns the resulting value.
+ */
 router.get("/overview", requireAuth, requireRole("admin"), adminRateLimit, async (_req, res) => {
   try {
     const [[userCounts]] = await pool.query(

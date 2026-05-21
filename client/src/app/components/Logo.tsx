@@ -1,3 +1,16 @@
+// ============================================
+// File:    Logo.tsx
+// Author:  Navroop Kaur
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Renders the Logo frontend component.
+// ============================================
+
+/**
+ * Renders the Logo component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 export function Logo({ className = "h-10 w-auto" }: { className?: string }) {
   return (
     <svg

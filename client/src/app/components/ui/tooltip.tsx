@@ -1,3 +1,11 @@
+// ============================================
+// File:    tooltip.tsx
+// Author:  Navroop Kaur
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Renders the tooltip frontend component.
+// ============================================
+
 "use client";
 
 import * as React from "react";
@@ -5,6 +13,11 @@ import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 
 import { cn } from "./utils";
 
+/**
+ * Renders the TooltipProvider component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function TooltipProvider({
   delayDuration = 0,
   ...props
@@ -18,6 +31,11 @@ function TooltipProvider({
   );
 }
 
+/**
+ * Renders the Tooltip component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function Tooltip({
   ...props
 }: React.ComponentProps<typeof TooltipPrimitive.Root>) {
@@ -28,12 +46,22 @@ function Tooltip({
   );
 }
 
+/**
+ * Renders the TooltipTrigger component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function TooltipTrigger({
   ...props
 }: React.ComponentProps<typeof TooltipPrimitive.Trigger>) {
   return <TooltipPrimitive.Trigger data-slot="tooltip-trigger" {...props} />;
 }
 
+/**
+ * Renders the TooltipContent component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function TooltipContent({
   className,
   sideOffset = 0,

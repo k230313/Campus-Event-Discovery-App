@@ -1,3 +1,11 @@
+// ============================================
+// File:    tabs.tsx
+// Author:  Navroop Kaur
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Renders the tabs frontend component.
+// ============================================
+
 "use client";
 
 import * as React from "react";
@@ -5,6 +13,11 @@ import * as TabsPrimitive from "@radix-ui/react-tabs";
 
 import { cn } from "./utils";
 
+/**
+ * Renders the Tabs component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function Tabs({
   className,
   ...props
@@ -18,6 +31,11 @@ function Tabs({
   );
 }
 
+/**
+ * Renders the TabsList component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function TabsList({
   className,
   ...props
@@ -34,6 +52,11 @@ function TabsList({
   );
 }
 
+/**
+ * Renders the TabsTrigger component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function TabsTrigger({
   className,
   ...props
@@ -50,6 +73,11 @@ function TabsTrigger({
   );
 }
 
+/**
+ * Renders the TabsContent component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function TabsContent({
   className,
   ...props

@@ -1,3 +1,11 @@
+// ============================================
+// File:    scroll-area.tsx
+// Author:  Navroop Kaur
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Renders the scroll area frontend component.
+// ============================================
+
 "use client";
 
 import * as React from "react";
@@ -5,6 +13,11 @@ import * as ScrollAreaPrimitive from "@radix-ui/react-scroll-area";
 
 import { cn } from "./utils";
 
+/**
+ * Renders the ScrollArea component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function ScrollArea({
   className,
   children,
@@ -28,6 +41,11 @@ function ScrollArea({
   );
 }
 
+/**
+ * Renders the ScrollBar component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function ScrollBar({
   className,
   orientation = "vertical",

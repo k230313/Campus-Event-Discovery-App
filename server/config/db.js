@@ -1,3 +1,11 @@
+// ============================================
+// File:    db.js
+// Author:  Adamson Buliboli
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Implements db for the backend.
+// ============================================
+
 const path = require("path");
 const mysql = require("mysql2/promise");
 require("dotenv").config({ path: path.join(__dirname, "..", ".env") });

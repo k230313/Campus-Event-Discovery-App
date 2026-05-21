@@ -1,3 +1,11 @@
+// ============================================
+// File:    openai.ts
+// Author:  Adamson Buliboli
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Provides frontend service logic for openai.
+// ============================================
+
 import { Event } from '../types';
 import { csrfFetch } from './api';
 
@@ -8,6 +16,7 @@ export interface ChatResponse {
     title: string;
     date?: string;
   }>;
+  degraded?: boolean;
 }
 
 export async function generateAIResponse(
@@ -39,5 +48,6 @@ export async function generateAIResponse(
   return {
     reply: data.reply,
     events: Array.isArray(data?.events) ? data.events : [],
+    degraded: Boolean(data?.degraded),
   };
 }

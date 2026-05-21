@@ -1,7 +1,20 @@
+// ============================================
+// File:    textarea.tsx
+// Author:  Navroop Kaur
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Renders the textarea frontend component.
+// ============================================
+
 import * as React from "react";
 
 import { cn } from "./utils";
 
+/**
+ * Renders the Textarea component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function Textarea({ className, ...props }: React.ComponentProps<"textarea">) {
   return (
     <textarea

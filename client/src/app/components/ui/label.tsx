@@ -1,3 +1,11 @@
+// ============================================
+// File:    label.tsx
+// Author:  Navroop Kaur
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Renders the label frontend component.
+// ============================================
+
 "use client";
 
 import * as React from "react";
@@ -5,6 +13,11 @@ import * as LabelPrimitive from "@radix-ui/react-label";
 
 import { cn } from "./utils";
 
+/**
+ * Renders the Label component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function Label({
   className,
   ...props

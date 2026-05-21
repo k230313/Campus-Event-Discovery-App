@@ -1,3 +1,11 @@
+// ============================================
+// File:    Login.tsx
+// Author:  Navroop Kaur
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Displays the login form and routes authenticated users to the correct dashboard.
+// ============================================
+
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { LogIn } from 'lucide-react';
@@ -7,6 +15,10 @@ import { Label } from '../components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../components/ui/card';
 import { useApp } from '../context/AppContext';
 
+/**
+ * Renders the login form used by students, organizers, and admins.
+ * @returns {JSX.Element} Auth page with credential inputs and session error feedback.
+ */
 export function Login() {
   const navigate = useNavigate();
   const { login } = useApp();
@@ -15,6 +27,11 @@ export function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
+  /**
+   * Asynchronously submits the login form and redirects the user to their role-specific dashboard.
+   * @param {React.FormEvent} e - Form submit event from the login form.
+   * @returns {Promise<void>} Resolves after authentication and navigation handling complete.
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -123,4 +140,3 @@ export function Login() {
     </div>
   );
 }
-

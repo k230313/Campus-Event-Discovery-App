@@ -1,15 +1,28 @@
+// ============================================
+// File:    RegistrationConfirmation.tsx
+// Author:  Navroop Kaur
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Renders the Registration Confirmation page for the frontend application.
+// ============================================
+
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { CheckCircle, Calendar, Home, User } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 import { useEffect } from 'react';
 
+/**
+ * Renders the RegistrationConfirmation component for the application interface.
+ * @returns {JSX.Element} Renders the component output.
+ */
 export function RegistrationConfirmation() {
   const location = useLocation();
   const navigate = useNavigate();
   const eventTitle = location.state?.eventTitle || 'the event';
   const attendeeType = location.state?.attendeeType || 'attendee';
   const confirmationEmailStatus = location.state?.confirmationEmailStatus === 'sent' ? 'sent' : 'failed';
+  const registrationStatus = location.state?.registrationStatus === 'waitlisted' ? 'waitlisted' : 'registered';
 
   useEffect(() => {
     // Redirect to events if no state is passed
@@ -26,8 +39,12 @@ export function RegistrationConfirmation() {
             <div className="h-24 w-24 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
               <CheckCircle className="h-16 w-16 text-green-600" />
             </div>
-            <h1 className="text-3xl font-bold text-white mb-2">Registration Successful!</h1>
-            <p className="text-green-50 text-lg">You're all set for the event</p>
+            <h1 className="text-3xl font-bold text-white mb-2">
+              {registrationStatus === 'waitlisted' ? 'Waitlist Joined!' : 'Registration Successful!'}
+            </h1>
+            <p className="text-green-50 text-lg">
+              {registrationStatus === 'waitlisted' ? 'Your place in line has been saved' : "You're all set for the event"}
+            </p>
           </div>
 
           <CardContent className="p-8 space-y-6">
@@ -41,7 +58,9 @@ export function RegistrationConfirmation() {
                   <div>
                     <p className="font-semibold text-[#1B2E55]">Confirmation Email</p>
                     <p className="text-sm text-muted-foreground">
-                      {confirmationEmailStatus === 'sent'
+                      {registrationStatus === 'waitlisted'
+                        ? 'You have been added to the waitlist. No confirmation email is sent for waitlist entries right now.'
+                        : confirmationEmailStatus === 'sent'
                         ? 'We sent a confirmation email with the event details to your registered email address.'
                         : 'Your booking is confirmed, but we could not send the confirmation email right now.'}
                     </p>
@@ -55,7 +74,9 @@ export function RegistrationConfirmation() {
                   <div>
                     <p className="font-semibold text-[#1B2E55]">Manage Registration</p>
                     <p className="text-sm text-muted-foreground">
-                      You can review this booking at any time from My Events in your dashboard
+                      {registrationStatus === 'waitlisted'
+                        ? 'You can review or cancel your waitlist entry at any time from My Events in your dashboard'
+                        : 'You can review this booking at any time from My Events in your dashboard'}
                     </p>
                   </div>
                 </div>
@@ -83,6 +104,9 @@ export function RegistrationConfirmation() {
                   </p>
                   <p className="text-sm text-green-800 mt-1">
                     <strong>Event:</strong> {eventTitle}
+                  </p>
+                  <p className="text-sm text-green-800 mt-1">
+                    <strong>Status:</strong> {registrationStatus === 'waitlisted' ? 'Waitlisted' : 'Registered'}
                   </p>
                 </div>
               </div>
@@ -117,4 +141,3 @@ export function RegistrationConfirmation() {
     </div>
   );
 }
-

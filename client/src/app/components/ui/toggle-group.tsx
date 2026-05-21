@@ -1,3 +1,11 @@
+// ============================================
+// File:    toggle-group.tsx
+// Author:  Navroop Kaur
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Renders the toggle group frontend component.
+// ============================================
+
 "use client";
 
 import * as React from "react";
@@ -14,6 +22,11 @@ const ToggleGroupContext = React.createContext<
   variant: "default",
 });
 
+/**
+ * Renders the ToggleGroup component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function ToggleGroup({
   className,
   variant,
@@ -40,6 +53,11 @@ function ToggleGroup({
   );
 }
 
+/**
+ * Renders the ToggleGroupItem component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function ToggleGroupItem({
   className,
   children,

@@ -1,3 +1,11 @@
+// ============================================
+// File:    ContactUs.tsx
+// Author:  Navroop Kaur
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Renders the Contact Us page for the frontend application.
+// ============================================
+
 import { Mail, Phone, MapPin, Send } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
@@ -6,6 +14,10 @@ import { Textarea } from '../components/ui/textarea';
 import { Label } from '../components/ui/label';
 import { useState } from 'react';
 
+/**
+ * Renders the ContactUs component for the application interface.
+ * @returns {JSX.Element} Renders the component output.
+ */
 export function ContactUs() {
   const [formData, setFormData] = useState({
     name: '',
@@ -14,6 +26,11 @@ export function ContactUs() {
     message: '',
   });
 
+  /**
+   * Asynchronously executes the handle submit logic.
+   * @param {*} e - Represents the e input.
+   * @returns {*} Returns the resulting value.
+   */
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     alert('Thank you for your message! We will get back to you soon.');

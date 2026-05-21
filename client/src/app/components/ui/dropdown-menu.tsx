@@ -1,3 +1,11 @@
+// ============================================
+// File:    dropdown-menu.tsx
+// Author:  Navroop Kaur
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Renders the dropdown menu frontend component.
+// ============================================
+
 "use client";
 
 import * as React from "react";
@@ -6,12 +14,22 @@ import { CheckIcon, ChevronRightIcon, CircleIcon } from "lucide-react";
 
 import { cn } from "./utils";
 
+/**
+ * Renders the DropdownMenu component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function DropdownMenu({
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Root>) {
   return <DropdownMenuPrimitive.Root data-slot="dropdown-menu" {...props} />;
 }
 
+/**
+ * Renders the DropdownMenuPortal component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function DropdownMenuPortal({
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Portal>) {
@@ -20,6 +38,11 @@ function DropdownMenuPortal({
   );
 }
 
+/**
+ * Renders the DropdownMenuTrigger component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function DropdownMenuTrigger({
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Trigger>) {
@@ -31,6 +54,11 @@ function DropdownMenuTrigger({
   );
 }
 
+/**
+ * Renders the DropdownMenuContent component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function DropdownMenuContent({
   className,
   sideOffset = 4,
@@ -51,6 +79,11 @@ function DropdownMenuContent({
   );
 }
 
+/**
+ * Renders the DropdownMenuGroup component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function DropdownMenuGroup({
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Group>) {
@@ -59,6 +92,11 @@ function DropdownMenuGroup({
   );
 }
 
+/**
+ * Renders the DropdownMenuItem component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function DropdownMenuItem({
   className,
   inset,
@@ -82,6 +120,11 @@ function DropdownMenuItem({
   );
 }
 
+/**
+ * Renders the DropdownMenuCheckboxItem component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function DropdownMenuCheckboxItem({
   className,
   children,
@@ -108,6 +151,11 @@ function DropdownMenuCheckboxItem({
   );
 }
 
+/**
+ * Renders the DropdownMenuRadioGroup component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function DropdownMenuRadioGroup({
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.RadioGroup>) {
@@ -119,6 +167,11 @@ function DropdownMenuRadioGroup({
   );
 }
 
+/**
+ * Renders the DropdownMenuRadioItem component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function DropdownMenuRadioItem({
   className,
   children,
@@ -143,6 +196,11 @@ function DropdownMenuRadioItem({
   );
 }
 
+/**
+ * Renders the DropdownMenuLabel component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function DropdownMenuLabel({
   className,
   inset,
@@ -163,6 +221,11 @@ function DropdownMenuLabel({
   );
 }
 
+/**
+ * Renders the DropdownMenuSeparator component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function DropdownMenuSeparator({
   className,
   ...props
@@ -176,6 +239,11 @@ function DropdownMenuSeparator({
   );
 }
 
+/**
+ * Renders the DropdownMenuShortcut component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function DropdownMenuShortcut({
   className,
   ...props
@@ -192,12 +260,22 @@ function DropdownMenuShortcut({
   );
 }
 
+/**
+ * Renders the DropdownMenuSub component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function DropdownMenuSub({
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Sub>) {
   return <DropdownMenuPrimitive.Sub data-slot="dropdown-menu-sub" {...props} />;
 }
 
+/**
+ * Renders the DropdownMenuSubTrigger component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function DropdownMenuSubTrigger({
   className,
   inset,
@@ -222,6 +300,11 @@ function DropdownMenuSubTrigger({
   );
 }
 
+/**
+ * Renders the DropdownMenuSubContent component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function DropdownMenuSubContent({
   className,
   ...props

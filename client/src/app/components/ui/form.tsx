@@ -1,3 +1,11 @@
+// ============================================
+// File:    form.tsx
+// Author:  Navroop Kaur
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Renders the form frontend component.
+// ============================================
+
 "use client";
 
 import * as React from "react";
@@ -42,6 +50,10 @@ const FormField = <
   );
 };
 
+/**
+ * Asynchronously executes the use form field logic.
+ * @returns {*} Returns the resulting value.
+ */
 const useFormField = () => {
   const fieldContext = React.useContext(FormFieldContext);
   const itemContext = React.useContext(FormItemContext);
@@ -73,6 +85,11 @@ const FormItemContext = React.createContext<FormItemContextValue>(
   {} as FormItemContextValue,
 );
 
+/**
+ * Renders the FormItem component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function FormItem({ className, ...props }: React.ComponentProps<"div">) {
   const id = React.useId();
 
@@ -87,6 +104,11 @@ function FormItem({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
+/**
+ * Renders the FormLabel component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function FormLabel({
   className,
   ...props
@@ -104,6 +126,11 @@ function FormLabel({
   );
 }
 
+/**
+ * Renders the FormControl component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function FormControl({ ...props }: React.ComponentProps<typeof Slot>) {
   const { error, formItemId, formDescriptionId, formMessageId } =
     useFormField();
@@ -123,6 +150,11 @@ function FormControl({ ...props }: React.ComponentProps<typeof Slot>) {
   );
 }
 
+/**
+ * Renders the FormDescription component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function FormDescription({ className, ...props }: React.ComponentProps<"p">) {
   const { formDescriptionId } = useFormField();
 
@@ -136,6 +168,11 @@ function FormDescription({ className, ...props }: React.ComponentProps<"p">) {
   );
 }
 
+/**
+ * Renders the FormMessage component for the application interface.
+ * @param {object} props - Component props.
+ * @returns {JSX.Element} Renders the component output.
+ */
 function FormMessage({ className, ...props }: React.ComponentProps<"p">) {
   const { error, formMessageId } = useFormField();
   const body = error ? String(error?.message ?? "") : props.children;

@@ -1,3 +1,11 @@
+// ============================================
+// File:    Reports.tsx
+// Author:  Navroop Kaur
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Renders the Reports page for the frontend application.
+// ============================================
+
 import { useApp } from '../context/AppContext';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
@@ -6,6 +14,10 @@ import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { AdminOverview } from '../types/admin';
 
+/**
+ * Renders the Reports component for the application interface.
+ * @returns {JSX.Element} Renders the component output.
+ */
 export function Reports() {
   const { user } = useApp();
   const navigate = useNavigate();
@@ -18,6 +30,10 @@ export function Reports() {
   }
 
   useEffect(() => {
+    /**
+     * Asynchronously executes the load overview logic.
+     * @returns {*} Returns the resulting value.
+     */
     async function loadOverview() {
       try {
         const response = await fetch('/api/admin/overview', {
@@ -45,6 +61,11 @@ export function Reports() {
   const totalRegistrations = totals?.totalRegistrations ?? 0;
   const avgRegistrationsPerEvent = totalEvents > 0 ? (totalRegistrations / totalEvents).toFixed(1) : '0.0';
 
+  /**
+   * Asynchronously executes the handle export logic.
+   * @param {*} type - Represents the type input.
+   * @returns {*} Returns the resulting value.
+   */
   const handleExport = (type: string) => {
     alert(`${type} export is not implemented yet. Use the on-screen summary for testing.`);
   };

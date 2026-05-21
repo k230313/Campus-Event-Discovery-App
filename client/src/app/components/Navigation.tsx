@@ -1,3 +1,11 @@
+// ============================================
+// File:    Navigation.tsx
+// Author:  Navroop Kaur
+// Date:    May 2026
+// Course:  CPRO306 - Capstone Project
+// Desc:    Renders the Navigation frontend component.
+// ============================================
+
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Calendar, LayoutDashboard, LogIn, LogOut, UserPlus, Home, PlusCircle, Bookmark, Users, User, Shield, BarChart, Tag, FileText, Mail, Info } from 'lucide-react';
 import { Button } from './ui/button';
@@ -5,13 +13,26 @@ import { Logo } from './Logo';
 import { useApp } from '../context/AppContext';
 import { Badge } from './ui/badge';
 
+/**
+ * Renders the primary navigation bar and role-specific menu actions.
+ * @returns {JSX.Element} Header navigation tailored to the current authentication state.
+ */
 export function Navigation() {
   const { user, logout } = useApp();
   const location = useLocation();
   const navigate = useNavigate();
 
+  /**
+   * Checks whether a navigation path matches the current route.
+   * @param {string} path - Route path to compare against the active location.
+   * @returns {boolean} True when the supplied path is active.
+   */
   const isActive = (path: string) => location.pathname === path;
 
+  /**
+   * Logs out the current user and returns them to the login screen.
+   * @returns {void} Does not return a value.
+   */
   const handleLogout = () => {
     logout();
     navigate('/login', { replace: true });
@@ -326,4 +347,3 @@ export function Navigation() {
     </nav>
   );
 }
-
