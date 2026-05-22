@@ -22,6 +22,7 @@ test("contactSchema accepts a valid contact form payload", () => {
     email: "Student@Example.com ",
     subject: " Need Help ",
     message: " I need help with my booking. ",
+    turnstileToken: "contact-token",
   });
 
   assert.equal(result.success, true);
@@ -41,6 +42,22 @@ test("contactSchema rejects an empty message", () => {
     email: "student@example.com",
     subject: "Need Help",
     message: "   ",
+    turnstileToken: "contact-token",
+  });
+
+  assert.equal(result.success, false);
+});
+
+/**
+ * Executes the test case logic.
+ * @returns {*} Returns the resulting value.
+ */
+test("contactSchema rejects a missing Turnstile token", () => {
+  const result = contactSchema.safeParse({
+    name: "Student Name",
+    email: "student@example.com",
+    subject: "Need Help",
+    message: "I need help with my booking.",
   });
 
   assert.equal(result.success, false);

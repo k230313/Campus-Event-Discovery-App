@@ -75,6 +75,7 @@ const contactSchema = z.object({
   email: emailSchema,
   subject: nonEmptyTrimmedString("Subject", 150),
   message: nonEmptyTrimmedString("Message", 5000),
+  turnstileToken: tokenSchema,
 });
 
 const verifyEmailSchema = z.object({

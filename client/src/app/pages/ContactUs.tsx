@@ -12,7 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Input } from '../components/ui/input';
 import { Textarea } from '../components/ui/textarea';
 import { Label } from '../components/ui/label';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { csrfFetch } from '../services/api';
 
 /**
@@ -20,6 +20,7 @@ import { csrfFetch } from '../services/api';
  * @returns {JSX.Element} Renders the component output.
  */
 export function ContactUs() {
+  const TURNSTILE_SITE_KEY = '0x4AAAAAADN5Ecy-ORG9dtgF';
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -34,6 +35,58 @@ export function ContactUs() {
     message: '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState('');
+  const turnstileContainerRef = useRef<HTMLDivElement | null>(null);
+  const turnstileWidgetIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    /**
+     * Renders the Cloudflare Turnstile widget once the external script is available.
+     * @returns {void} Does not return a value.
+     */
+    const maybeRenderWidget = () => {
+      const turnstile = (window as any).turnstile;
+
+      if (!turnstile || !turnstileContainerRef.current || turnstileWidgetIdRef.current) {
+        return;
+      }
+
+      turnstileWidgetIdRef.current = turnstile.render(turnstileContainerRef.current, {
+        sitekey: TURNSTILE_SITE_KEY,
+        /**
+         * Stores the token returned by a successful captcha challenge.
+         * @param {string} token - Verified Turnstile token issued by Cloudflare.
+         * @returns {void} Does not return a value.
+         */
+        callback: (token: string) => {
+          setTurnstileToken(token);
+          setSubmitState({ type: 'idle', message: '' });
+        },
+        'expired-callback': () => {
+          setTurnstileToken('');
+        },
+        'error-callback': () => {
+          setTurnstileToken('');
+          setSubmitState({
+            type: 'error',
+            message: 'Captcha verification failed. Please try again.',
+          });
+        },
+      });
+    };
+
+    maybeRenderWidget();
+    const intervalId = window.setInterval(maybeRenderWidget, 500);
+
+    return () => {
+      window.clearInterval(intervalId);
+      const turnstile = (window as any).turnstile;
+      if (turnstile && turnstileWidgetIdRef.current !== null) {
+        turnstile.remove(turnstileWidgetIdRef.current);
+        turnstileWidgetIdRef.current = null;
+      }
+    };
+  }, []);
 
   /**
    * Submits the contact form to the backend contact endpoint.
@@ -42,6 +95,14 @@ export function ContactUs() {
    */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!turnstileToken) {
+      setSubmitState({
+        type: 'error',
+        message: 'Please complete the captcha challenge.',
+      });
+      return;
+    }
 
     setIsSubmitting(true);
     setSubmitState({ type: 'idle', message: '' });
@@ -52,7 +113,10 @@ export function ContactUs() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          turnstileToken,
+        }),
       });
 
       const payload = await response.json().catch(() => ({}));
@@ -66,6 +130,12 @@ export function ContactUs() {
           type: 'error',
           message: errorMessage,
         });
+
+        const turnstile = (window as any).turnstile;
+        if (turnstile && turnstileWidgetIdRef.current !== null) {
+          turnstile.reset(turnstileWidgetIdRef.current);
+        }
+        setTurnstileToken('');
         return;
       }
 
@@ -74,11 +144,21 @@ export function ContactUs() {
         message: 'Thank you for your message. We will get back to you soon.',
       });
       setFormData({ name: '', email: '', subject: '', message: '' });
+      const turnstile = (window as any).turnstile;
+      if (turnstile && turnstileWidgetIdRef.current !== null) {
+        turnstile.reset(turnstileWidgetIdRef.current);
+      }
+      setTurnstileToken('');
     } catch (_error) {
       setSubmitState({
         type: 'error',
         message: 'We could not send your message right now. Please try again later.',
       });
+      const turnstile = (window as any).turnstile;
+      if (turnstile && turnstileWidgetIdRef.current !== null) {
+        turnstile.reset(turnstileWidgetIdRef.current);
+      }
+      setTurnstileToken('');
     } finally {
       setIsSubmitting(false);
     }
@@ -146,6 +226,10 @@ export function ContactUs() {
                       onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                       required
                     />
+                  </div>
+                  <div>
+                    <Label>Verification</Label>
+                    <div ref={turnstileContainerRef} />
                   </div>
                   <Button
                     type="submit"

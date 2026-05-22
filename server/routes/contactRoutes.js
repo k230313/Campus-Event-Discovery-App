@@ -10,6 +10,7 @@ const express = require("express");
 const { contactRateLimit } = require("../middleware/security");
 const { validateBody } = require("../middleware/validate");
 const { sendContactMessageEmail } = require("../services/emailService");
+const { verifyTurnstileToken } = require("../utils/turnstile");
 const { contactSchema } = require("../validation/schemas");
 
 const router = express.Router();
@@ -39,9 +40,19 @@ router.post("/", contactRateLimit, validateBody(contactSchema), async (req, res)
     email,
     subject,
     message,
+    turnstileToken,
   } = req.body;
 
   try {
+    const turnstileValid = await verifyTurnstileToken(
+      String(turnstileToken),
+      req.ip || req.socket?.remoteAddress || ""
+    );
+
+    if (!turnstileValid) {
+      return res.status(400).json({ error: "Captcha verification failed" });
+    }
+
     await sendContactMessageEmail({
       name,
       email,

@@ -361,7 +361,7 @@ router.get("/:id", async (req, res) => {
       return res.status(404).json({ error: "Event not found" });
     }
 
-    return res.json(rows[0]);
+    return res.json(sanitizeEventForViewer(rows[0], req.user));
   } catch (error) {
     console.error("GET /api/events/:id error:", error);
     return res.status(500).json({ error: "Failed to fetch event" });

@@ -12,6 +12,7 @@ const rateLimit = require("express-rate-limit");
 const pool = require("../config/db");
 const { hashPassword, verifyPassword } = require("../utils/passwords");
 const { createAuthToken } = require("../utils/authTokens");
+const { verifyTurnstileToken } = require("../utils/turnstile");
 const { AUTH_COOKIE_NAME, requireAuth } = require("../middleware/auth");
 const { authRateLimit, clearAuthRateLimit } = require("../middleware/security");
 const { validateBody } = require("../middleware/validate");
@@ -32,6 +33,7 @@ const registrationRateLimit = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
+const GENERIC_REGISTRATION_MESSAGE = "If registration can proceed, please check your email to verify your account before logging in. If you already have an account, use the login or reset password page.";
 
 /**
  * Converts a database role value into the frontend-facing role name.
@@ -141,44 +143,6 @@ async function loadUserById(userId) {
 }
 
 /**
- * Asynchronously verifies a Cloudflare Turnstile token with the verification API.
- * @param {string} token - Client-side Turnstile token.
- * @param {string} remoteIp - Request IP address forwarded to Turnstile.
- * @returns {Promise<boolean>} True when the token is accepted by Cloudflare.
- */
-async function verifyTurnstileToken(token, remoteIp) {
-  try {
-    const secret = process.env.TURNSTILE_SECRET_KEY;
-
-    if (!secret) {
-      throw new Error("TURNSTILE_SECRET_KEY is not configured");
-    }
-
-    const response = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: new URLSearchParams({
-        secret,
-        response: token,
-        remoteip: remoteIp || "",
-      }),
-    });
-
-    if (!response.ok) {
-      return false;
-    }
-
-    const data = await response.json();
-    return Boolean(data.success);
-  } catch (error) {
-    console.error("[verifyTurnstileToken] Failed:", error.message);
-    throw error;
-  }
-}
-
-/**
  * Returns the standard cookie options used for the auth session cookie.
  * @returns {object} Cookie configuration shared by auth routes.
  */
@@ -262,7 +226,7 @@ router.post("/register", registrationRateLimit, authRateLimit, validateBody(regi
     );
 
     if (existingRows.length) {
-      return res.status(409).json({ error: "An account with that email already exists" });
+      return res.status(200).json({ message: GENERIC_REGISTRATION_MESSAGE });
     }
 
     const passwordHash = await hashPassword(password);
@@ -296,7 +260,7 @@ router.post("/register", registrationRateLimit, authRateLimit, validateBody(regi
 
     clearAuthRateLimit(req);
     return res.status(201).json({
-      message: "Registration successful. Please check your email to verify your account before logging in.",
+      message: GENERIC_REGISTRATION_MESSAGE,
     });
   } catch (error) {
     console.error("POST /api/auth/register error:", error);
