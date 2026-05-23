@@ -6,28 +6,29 @@
 // Desc:    Renders the Reports page for the frontend application.
 // ============================================
 
-import { useApp } from '../context/AppContext';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { BarChart, Users, Calendar, Download, FileText, Bookmark, Clock3 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { AdminOverview } from '../types/admin';
+import { apiFetch } from '../services/api';
+
+const REPORT_EXPORT_SLUGS: Record<string, string> = {
+  'Event Summary Report': 'event-summary',
+  'User Engagement Report': 'user-engagement',
+  'Category Performance': 'category-performance',
+  'Operational Snapshot': 'operational-snapshot',
+};
 
 /**
  * Renders the Reports component for the application interface.
  * @returns {JSX.Element} Renders the component output.
  */
 export function Reports() {
-  const { user } = useApp();
-  const navigate = useNavigate();
   const [overview, setOverview] = useState<AdminOverview | null>(null);
   const [loading, setLoading] = useState(true);
-
-  if (!user || user.role !== 'admin') {
-    navigate('/');
-    return null;
-  }
+  const [exportingReport, setExportingReport] = useState<string | null>(null);
+  const [exportError, setExportError] = useState<string | null>(null);
 
   useEffect(() => {
     /**
@@ -61,13 +62,45 @@ export function Reports() {
   const totalRegistrations = totals?.totalRegistrations ?? 0;
   const avgRegistrationsPerEvent = totalEvents > 0 ? (totalRegistrations / totalEvents).toFixed(1) : '0.0';
 
-  /**
-   * Asynchronously executes the handle export logic.
-   * @param {*} type - Represents the type input.
-   * @returns {*} Returns the resulting value.
-   */
-  const handleExport = (type: string) => {
-    alert(`${type} export is not implemented yet. Use the on-screen summary for testing.`);
+  const handleExport = async (title: string) => {
+    const slug = REPORT_EXPORT_SLUGS[title];
+    if (!slug) {
+      return;
+    }
+
+    setExportingReport(title);
+    setExportError(null);
+
+    try {
+      const response = await apiFetch(`/api/admin/reports/${slug}`);
+
+      if (!response.ok) {
+        throw new Error('Failed to export report');
+      }
+
+      const blob = await response.blob();
+      const disposition = response.headers.get('Content-Disposition');
+      let filename = `ceda-${slug}.csv`;
+      const match = disposition?.match(/filename="([^"]+)"/);
+
+      if (match?.[1]) {
+        filename = match[1];
+      }
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Report export failed:', error);
+      setExportError(`Failed to export ${title}. Please try again.`);
+    } finally {
+      setExportingReport(null);
+    }
   };
 
   return (
@@ -142,6 +175,9 @@ export function Reports() {
                 <CardTitle className="text-xl text-[#1B2E55]">Available Reports</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
+                {exportError && (
+                  <p className="text-sm text-red-600 mb-2">{exportError}</p>
+                )}
                 {[
                   ['Event Summary Report', 'Current event and status summary'],
                   ['User Engagement Report', 'Registrations and bookmarks summary'],
@@ -156,9 +192,14 @@ export function Reports() {
                         <p className="text-sm text-muted-foreground">{description}</p>
                       </div>
                     </div>
-                    <Button variant="outline" size="sm" onClick={() => handleExport(title)}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={exportingReport !== null}
+                      onClick={() => void handleExport(title)}
+                    >
                       <Download className="h-4 w-4 mr-2" />
-                      Export
+                      {exportingReport === title ? 'Exporting...' : 'Export'}
                     </Button>
                   </div>
                 ))}
