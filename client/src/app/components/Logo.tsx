@@ -11,13 +11,23 @@
  * @param {object} props - Component props.
  * @returns {JSX.Element} Renders the component output.
  */
-export function Logo({ className = "h-10 w-auto" }: { className?: string }) {
+export function Logo({
+  className = "h-10 w-auto",
+  "aria-hidden": ariaHidden,
+}: {
+  className?: string;
+  "aria-hidden"?: boolean | "true" | "false";
+}) {
   return (
     <svg
       viewBox="0 0 200 60"
       className={className}
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      role={ariaHidden ? undefined : "img"}
+      aria-label={ariaHidden ? undefined : "CEDA Campus Events"}
+      aria-hidden={ariaHidden}
+      focusable="false"
     >
       {/* Background Circle for C */}
       <circle cx="30" cy="30" r="24" fill="#EF9B28" opacity="0.2" />

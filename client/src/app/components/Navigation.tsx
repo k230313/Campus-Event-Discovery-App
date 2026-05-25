@@ -54,8 +54,8 @@ export function Navigation() {
       <div className="container mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-6">
-            <Link to="/" className="flex items-center">
-              <Logo className="h-10 w-auto brightness-0 invert" />
+            <Link to="/" className="flex items-center" aria-label="CEDA home">
+              <Logo className="h-10 w-auto brightness-0 invert" aria-hidden="true" focusable="false" />
             </Link>
 
             <div className="hidden md:flex items-center gap-1">

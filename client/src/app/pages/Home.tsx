@@ -49,18 +49,25 @@ export function Home() {
               Your centralized platform for all Kent Institute campus events. Never miss out on workshops, networking opportunities, and social gatherings.
             </p>
             <div className="flex gap-4 justify-center flex-wrap">
-              <Link to="/events">
-                <Button size="lg" className="bg-[#EF9B28] hover:bg-[#EF9B28]/90 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
-                  <Calendar className="mr-2 h-5 w-5" />
+              <Button
+                asChild
+                size="lg"
+                className="bg-[#B45309] hover:bg-[#92400E] text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+              >
+                <Link to="/events">
+                  <Calendar className="mr-2 h-5 w-5" aria-hidden="true" />
                   Browse Events
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
-              </Link>
-              <Link to="/register">
-                <Button size="lg" variant="outline" className="bg-transparent text-white border-2 border-white hover:bg-white hover:text-[#1B2E55] shadow-lg transition-all duration-300 hover:scale-105">
-                  Get Started
-                </Button>
-              </Link>
+                  <ArrowRight className="ml-2 h-5 w-5" aria-hidden="true" />
+                </Link>
+              </Button>
+              <Button
+                asChild
+                size="lg"
+                variant="outline"
+                className="bg-transparent text-white border-2 border-white hover:bg-white hover:text-[#1B2E55] shadow-lg transition-all duration-300 hover:scale-105"
+              >
+                <Link to="/register">Get Started</Link>
+              </Button>
             </div>
 
             {/* Stats Section */}
@@ -174,18 +181,25 @@ export function Home() {
               Join hundreds of students discovering and participating in campus events. Your next opportunity awaits!
             </p>
             <div className="flex gap-4 justify-center flex-wrap">
-              <Link to="/events">
-                <Button size="lg" className="bg-[#EF9B28] hover:bg-[#EF9B28]/90 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
-                  <TrendingUp className="mr-2 h-5 w-5" />
+              <Button
+                asChild
+                size="lg"
+                className="bg-[#B45309] hover:bg-[#92400E] text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+              >
+                <Link to="/events">
+                  <TrendingUp className="mr-2 h-5 w-5" aria-hidden="true" />
                   Explore Events Now
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
-              </Link>
-              <Link to="/register">
-                <Button size="lg" variant="outline" className="bg-transparent text-white border-2 border-white hover:bg-white hover:text-[#1B2E55] shadow-lg transition-all duration-300 hover:scale-105">
-                  Create Account
-                </Button>
-              </Link>
+                  <ArrowRight className="ml-2 h-5 w-5" aria-hidden="true" />
+                </Link>
+              </Button>
+              <Button
+                asChild
+                size="lg"
+                variant="outline"
+                className="bg-transparent text-white border-2 border-white hover:bg-white hover:text-[#1B2E55] shadow-lg transition-all duration-300 hover:scale-105"
+              >
+                <Link to="/register">Create Account</Link>
+              </Button>
             </div>
           </div>
         </div>

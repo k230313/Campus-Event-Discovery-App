@@ -131,9 +131,10 @@ export function ChatBot() {
         <Button
           onClick={() => setIsOpen(true)}
           size="lg"
-          className="fixed bottom-6 right-6 h-16 w-16 rounded-full shadow-2xl bg-gradient-to-br from-[#EF9B28] to-[#d68a20] hover:from-[#d68a20] hover:to-[#EF9B28] hover:scale-110 transition-all duration-300 z-50"
+          aria-label="Open CEDA chat assistant"
+          className="fixed bottom-6 right-6 h-16 w-16 rounded-full shadow-2xl bg-gradient-to-br from-[#B45309] to-[#92400E] hover:from-[#92400E] hover:to-[#B45309] hover:scale-110 transition-all duration-300 z-50 text-white"
         >
-          <MessageCircle className="h-7 w-7" />
+          <MessageCircle className="h-7 w-7" aria-hidden="true" />
         </Button>
       )}
 
@@ -155,9 +156,10 @@ export function ChatBot() {
               variant="ghost"
               size="sm"
               onClick={() => setIsOpen(false)}
+              aria-label="Close chat assistant"
               className="text-white hover:bg-white/20"
             >
-              <X className="h-4 w-4" />
+              <X className="h-4 w-4" aria-hidden="true" />
             </Button>
           </div>
 
