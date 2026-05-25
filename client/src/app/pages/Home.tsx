@@ -12,6 +12,9 @@ import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 
+const heroSecondaryCtaClass =
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium h-10 px-6 border-2 border-white bg-white text-[#1B2E55] hover:bg-[#E8EDF5] hover:text-[#1B2E55] shadow-lg transition-all duration-300 hover:scale-105 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-white/80';
+
 /**
  * Renders the Home component for the application interface.
  * @returns {JSX.Element} Renders the component output.
@@ -60,13 +63,9 @@ export function Home() {
                   <ArrowRight className="ml-2 h-5 w-5" aria-hidden="true" />
                 </Link>
               </Button>
-              <Button
-                asChild
-                size="lg"
-                className="border-2 border-white bg-transparent text-white hover:bg-white hover:text-[#1B2E55] dark:border-white dark:bg-transparent dark:text-white dark:hover:bg-white dark:hover:text-[#1B2E55] shadow-lg transition-all duration-300 hover:scale-105"
-              >
-                <Link to="/register">Get Started</Link>
-              </Button>
+              <Link to="/register" className={heroSecondaryCtaClass}>
+                Get Started
+              </Link>
             </div>
 
             {/* Stats Section */}
@@ -191,13 +190,9 @@ export function Home() {
                   <ArrowRight className="ml-2 h-5 w-5" aria-hidden="true" />
                 </Link>
               </Button>
-              <Button
-                asChild
-                size="lg"
-                className="border-2 border-white bg-transparent text-white hover:bg-white hover:text-[#1B2E55] dark:border-white dark:bg-transparent dark:text-white dark:hover:bg-white dark:hover:text-[#1B2E55] shadow-lg transition-all duration-300 hover:scale-105"
-              >
-                <Link to="/register">Create Account</Link>
-              </Button>
+              <Link to="/register" className={heroSecondaryCtaClass}>
+                Create Account
+              </Link>
             </div>
           </div>
         </div>
