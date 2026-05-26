@@ -18,6 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Switch } from '../components/ui/switch';
 import { useApp } from '../context/AppContext';
 import { Category, EventCategory } from '../types';
+import { toast } from 'sonner';
 
 /**
  * Renders the event creation page for organizers.
@@ -125,6 +126,7 @@ export function CreateEvent() {
     const result = await createEvent(eventData);
 
     if (result.event) {
+      toast.success(status === 'draft' ? 'Draft saved successfully.' : 'Event submitted successfully.');
       navigate('/dashboard');
     } else {
       setError(result.error || 'Event creation failed. Please check your details and try again.');

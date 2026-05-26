@@ -40,6 +40,7 @@ import { Unauthorized } from './pages/Unauthorized';
 import { Settings } from './pages/Settings';
 import { RegistrationConfirmation } from './pages/RegistrationConfirmation';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { Toaster } from 'sonner';
 
 /**
  * Renders the application's global providers, shared layout, and route tree.
@@ -94,6 +95,7 @@ export default function App() {
           </main>
           <Footer />
           <ChatBot />
+          <Toaster richColors position="top-right" />
         </div>
       </AppProvider>
     </BrowserRouter>

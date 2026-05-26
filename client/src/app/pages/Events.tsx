@@ -16,6 +16,8 @@ import { Badge } from '../components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { useApp } from '../context/AppContext';
 import { EventCategory } from '../types';
+import { classifyEventTiming } from '../lib/eventUiState';
+import { toast } from 'sonner';
 
 /**
  * Renders the Events component for the application interface.
@@ -48,22 +50,17 @@ export function Events() {
       const matchesCategory = categoryFilter === 'All' || event.category === categoryFilter;
 
       // Date filter
-      const eventDate = new Date(event.date);
-      const today = new Date('2026-05-06');
-      const oneWeekFromNow = new Date(today);
-      oneWeekFromNow.setDate(today.getDate() + 7);
-      const oneMonthFromNow = new Date(today);
-      oneMonthFromNow.setMonth(today.getMonth() + 1);
+      const timing = classifyEventTiming(event.date);
 
       let matchesDate = true;
       if (dateFilter === 'upcoming') {
-        matchesDate = eventDate >= today;
+        matchesDate = timing.isUpcoming;
       } else if (dateFilter === 'past') {
-        matchesDate = eventDate < today;
+        matchesDate = timing.isPast;
       } else if (dateFilter === 'this-week') {
-        matchesDate = eventDate >= today && eventDate <= oneWeekFromNow;
+        matchesDate = timing.isThisWeek;
       } else if (dateFilter === 'this-month') {
-        matchesDate = eventDate >= today && eventDate <= oneMonthFromNow;
+        matchesDate = timing.isThisMonth;
       }
 
       return matchesSearch && matchesCategory && matchesDate;
@@ -77,7 +74,7 @@ export function Events() {
    */
   const handleBookmarkToggle = (eventId: string) => {
     if (!user) {
-      alert('Please log in to bookmark events');
+      toast.error('Please log in to bookmark events.');
       return;
     }
     if (isBookmarked(eventId)) {

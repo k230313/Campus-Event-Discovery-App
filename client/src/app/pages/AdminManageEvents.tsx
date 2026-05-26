@@ -15,6 +15,7 @@ import { Textarea } from '../components/ui/textarea';
 import { Calendar, Search, Edit, Trash2, Eye, CheckCircle, XCircle, Ban, Clock3 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 /**
  * Renders the AdminManageEvents component for the application interface.
@@ -43,9 +44,15 @@ export function AdminManageEvents() {
    * @param {*} eventTitle - Represents the eventTitle input.
    * @returns {*} Returns the resulting value.
    */
-  const handleDelete = (eventId: string, eventTitle: string) => {
+  const handleDelete = async (eventId: string, eventTitle: string) => {
     if (confirm(`Are you sure you want to delete "${eventTitle}"? This action cannot be undone.`)) {
-      deleteEvent(eventId);
+      const result = await deleteEvent(eventId);
+      if (result.success) {
+        toast.success(`"${eventTitle}" deleted successfully.`);
+        return;
+      }
+
+      toast.error(result.error || `Failed to delete "${eventTitle}".`);
     }
   };
 
@@ -59,11 +66,26 @@ export function AdminManageEvents() {
     const nextReviewNotes = reviewNotes[eventId] ?? eventNotesFallback(eventId);
 
     if (status === 'rejected' && !nextReviewNotes.trim()) {
-      alert('A rejection reason is required.');
+      toast.error('A rejection reason is required.');
       return;
     }
 
-    await updateEventStatus(eventId, status, nextReviewNotes);
+    const result = await updateEventStatus(eventId, status, nextReviewNotes);
+
+    if (!result.event) {
+      toast.error(result.error || 'Failed to update event status.');
+      return;
+    }
+
+    toast.success(
+      status === 'published'
+        ? 'Event approved successfully.'
+        : status === 'rejected'
+        ? 'Event rejected successfully.'
+        : status === 'cancelled'
+        ? 'Event cancelled successfully.'
+        : 'Event marked as pending successfully.'
+    );
 
     if (status === 'pending') {
       setReviewNotes((current) => ({ ...current, [eventId]: '' }));

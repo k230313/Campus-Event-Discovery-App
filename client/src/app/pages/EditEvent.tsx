@@ -18,6 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Switch } from '../components/ui/switch';
 import { useApp } from '../context/AppContext';
 import { Category, EventCategory } from '../types';
+import { toast } from 'sonner';
 
 /**
  * Renders the event editing page for organizers and admins.
@@ -135,7 +136,7 @@ export function EditEvent() {
    * @param {React.FormEvent} e - Form submit event from the edit-event page.
    * @returns {void} Does not return a value.
    */
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const updates = {
@@ -155,8 +156,15 @@ export function EditEvent() {
       notes: notes || undefined,
     };
 
-    updateEvent(event.id, updates);
-    navigate('/dashboard');
+    const result = await updateEvent(event.id, updates);
+
+    if (result.event) {
+      toast.success('Event updated successfully.');
+      navigate('/dashboard');
+      return;
+    }
+
+    toast.error(result.error || 'Failed to update event.');
   };
 
   return (

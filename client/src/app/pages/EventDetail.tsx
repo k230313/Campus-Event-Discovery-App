@@ -16,6 +16,8 @@ import { RadioGroup, RadioGroupItem } from '../components/ui/radio-group';
 import { Label } from '../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { useApp } from '../context/AppContext';
+import { classifyEventTiming } from '../lib/eventUiState';
+import { toast } from 'sonner';
 
 /**
  * Renders the detailed event view with registration and bookmarking actions.
@@ -59,13 +61,13 @@ export function EventDetail() {
    */
   const handleRSVP = async () => {
     if (!user) {
-      alert('Please log in to RSVP');
+      toast.error('Please log in to RSVP.');
       navigate('/login');
       return;
     }
 
     if (hasRSVP(event.id)) {
-      alert('You have already RSVP\'d to this event');
+      toast.error("You have already RSVP'd to this event.");
       return;
     }
 
@@ -90,7 +92,7 @@ export function EventDetail() {
         },
       });
     } catch (error) {
-      alert(error instanceof Error ? error.message : 'Failed to register for event');
+      toast.error(error instanceof Error ? error.message : 'Failed to register for event');
     }
   };
 
@@ -100,7 +102,7 @@ export function EventDetail() {
    */
   const handleBookmarkToggle = () => {
     if (!user) {
-      alert('Please log in to bookmark events');
+      toast.error('Please log in to bookmark events.');
       navigate('/login');
       return;
     }
@@ -115,9 +117,7 @@ export function EventDetail() {
   const availableVolunteerSpots = (event.volunteersNeeded || 0) - (event.volunteersRegistered || 0);
 
   // Check if event is in the past
-  const eventDate = new Date(event.date);
-  const today = new Date('2026-05-06');
-  const isEventPast = eventDate < today;
+  const { isPast: isEventPast } = classifyEventTiming(event.date);
 
   // Check if event is at full capacity
   const isFullCapacity = event.seatingCapacity ? availableSeats <= 0 : false;
@@ -382,7 +382,7 @@ export function EventDetail() {
                                 },
                               });
                             } catch (error) {
-                              alert(error instanceof Error ? error.message : 'Failed to join waitlist');
+                              toast.error(error instanceof Error ? error.message : 'Failed to join waitlist');
                             }
                           }}
                           className="bg-amber-500 hover:bg-amber-600 text-white"

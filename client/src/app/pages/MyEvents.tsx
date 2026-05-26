@@ -13,6 +13,7 @@ import { Badge } from '../components/ui/badge';
 import { Calendar, MapPin, Users, Ticket, User, UserMinus } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 /**
  * Renders the MyEvents component for the application interface.
@@ -48,11 +49,18 @@ export function MyEvents() {
    * @param {*} eventTitle - Represents the eventTitle input.
    * @returns {*} Returns the resulting value.
    */
-  const handleUnregister = (eventId: string, eventTitle: string) => {
+  const handleUnregister = async (eventId: string, eventTitle: string) => {
     if (confirm(`Are you sure you want to unregister from "${eventTitle}"?`)) {
       setUnregisteringEventId(eventId);
-      removeRSVP(eventId);
-      setTimeout(() => setUnregisteringEventId(null), 500);
+      const result = await removeRSVP(eventId);
+      setUnregisteringEventId(null);
+
+      if (result.success) {
+        toast.success(`You have unregistered from "${eventTitle}".`);
+        return;
+      }
+
+      toast.error(result.error || `Failed to unregister from "${eventTitle}".`);
     }
   };
 

@@ -10,6 +10,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, Event, Bookmark, RSVP, EventAttendee } from '../types';
 import { apiFetch, clearCsrfToken, csrfFetch } from '../services/api';
+import { applyEventDeletionResult } from '../lib/eventUiState';
 
 interface AppContextType {
   user: User | null;
@@ -70,9 +71,9 @@ interface AppContextType {
   /**
    * Cancels the current student's registration for an event.
    * @param {string} eventId - Event identifier to unregister from.
-   * @returns {Promise<void>} Resolves after the cancellation flow completes.
+   * @returns {Promise<{ success: boolean; error: string | null }>} Outcome of the cancellation flow.
    */
-  removeRSVP: (eventId: string) => Promise<void>;
+  removeRSVP: (eventId: string) => Promise<{ success: boolean; error: string | null }>;
   /**
    * Checks whether the current student already has a registration for an event.
    * @param {string} eventId - Event identifier to inspect.
@@ -89,23 +90,23 @@ interface AppContextType {
    * Updates an existing event and synchronizes the local event list.
    * @param {string} eventId - Event identifier to update.
    * @param {Partial<Event>} updates - Partial event fields to merge and persist.
-   * @returns {Promise<void>} Resolves after the update flow completes.
+   * @returns {Promise<{ event: Event | null; error: string | null }>} Updated event or an error message.
    */
-  updateEvent: (eventId: string, updates: Partial<Event>) => Promise<void>;
+  updateEvent: (eventId: string, updates: Partial<Event>) => Promise<{ event: Event | null; error: string | null }>;
   /**
    * Applies an admin moderation status change to an event.
    * @param {string} eventId - Event identifier to update.
    * @param {Event['status']} status - Target moderation status.
    * @param {string} [reviewNotes] - Optional approval note or rejection reason.
-   * @returns {Promise<void>} Resolves after the moderation update completes.
+   * @returns {Promise<{ event: Event | null; error: string | null }>} Updated event or an error message.
    */
-  updateEventStatus: (eventId: string, status: Event['status'], reviewNotes?: string) => Promise<void>;
+  updateEventStatus: (eventId: string, status: Event['status'], reviewNotes?: string) => Promise<{ event: Event | null; error: string | null }>;
   /**
    * Deletes an event and removes its local references from related UI state.
    * @param {string} eventId - Event identifier to delete.
-   * @returns {Promise<void>} Resolves after the delete flow completes.
+   * @returns {Promise<{ success: boolean; error: string | null }>} Outcome of the delete flow.
    */
-  deleteEvent: (eventId: string) => Promise<void>;
+  deleteEvent: (eventId: string) => Promise<{ success: boolean; error: string | null }>;
   /**
    * Loads the attendee list for an organizer-owned or admin-managed event.
    * @param {string} eventId - Event identifier to inspect.
@@ -570,13 +571,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   /**
    * Asynchronously cancels the current student's registration for an event.
    * @param {string} eventId - Event identifier to unregister from.
-   * @returns {Promise<void>} Resolves after the cancellation flow completes.
+   * @returns {Promise<{ success: boolean; error: string | null }>} Outcome of the cancellation flow.
    */
-  const removeRSVP = async (eventId: string) => {
-    if (!user || user.role !== 'student') return;
+  const removeRSVP = async (eventId: string): Promise<{ success: boolean; error: string | null }> => {
+    if (!user || user.role !== 'student') {
+      return { success: false, error: 'You must be logged in as a student to unregister.' };
+    }
 
     const existing = rsvps.find((r) => r.userId === user.id && r.eventId === eventId);
-    if (!existing) return;
+    if (!existing) {
+      return { success: false, error: 'Registration not found.' };
+    }
 
     try {
       const response = await csrfFetch(`/api/registrations/${eventId}`, {
@@ -584,7 +589,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to unregister from event');
+        return {
+          success: false,
+          error: await getApiErrorMessage(response, 'Failed to unregister from event'),
+        };
       }
 
       setRSVPs((current) => current.filter((r) => !(r.eventId === eventId && r.userId === user.id)));
@@ -602,8 +610,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             }
           : event
       )));
+      return { success: true, error: null };
     } catch (error) {
       console.error('Remove RSVP failed:', error);
+      return { success: false, error: 'Failed to unregister from event' };
     }
   };
 
@@ -670,11 +680,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
    * Asynchronously updates an existing event and refreshes the local list with the saved version.
    * @param {string} eventId - Event identifier to update.
    * @param {Partial<Event>} updates - Partial event data to merge before saving.
-   * @returns {Promise<void>} Resolves after the update flow completes.
+   * @returns {Promise<{ event: Event | null; error: string | null }>} Updated event or an error message.
    */
-  const updateEvent = async (eventId: string, updates: Partial<Event>) => {
+  const updateEvent = async (eventId: string, updates: Partial<Event>): Promise<{ event: Event | null; error: string | null }> => {
     const current = events.find((event) => event.id === eventId);
-    if (!current) return;
+    if (!current) {
+      return { event: null, error: 'Event not found' };
+    }
 
     const merged = { ...current, ...updates };
 
@@ -699,37 +711,48 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update event');
+        return {
+          event: null,
+          error: await getApiErrorMessage(response, 'Failed to update event'),
+        };
       }
 
       const updated = await response.json();
-      setEvents(events.map((event) => event.id === eventId ? normalizeEvent(updated) : event));
+      const normalizedEvent = normalizeEvent(updated);
+      setEvents(events.map((event) => event.id === eventId ? normalizedEvent : event));
+      return { event: normalizedEvent, error: null };
     } catch (error) {
       console.error('Update event failed:', error);
-      setEvents(events.map((event) => event.id === eventId ? merged : event));
+      return { event: null, error: 'Failed to update event' };
     }
   };
 
   /**
    * Asynchronously deletes an event and removes its related local state entries.
    * @param {string} eventId - Event identifier to delete.
-   * @returns {Promise<void>} Resolves after the delete flow completes.
+   * @returns {Promise<{ success: boolean; error: string | null }>} Outcome of the delete flow.
    */
-  const deleteEvent = async (eventId: string) => {
+  const deleteEvent = async (eventId: string): Promise<{ success: boolean; error: string | null }> => {
     try {
       const response = await csrfFetch(`/api/events/${eventId}`, {
         method: 'DELETE',
       });
       if (!response.ok) {
-        throw new Error('Failed to delete event');
+        return {
+          success: false,
+          error: await getApiErrorMessage(response, 'Failed to delete event'),
+        };
       }
+
+      const nextState = applyEventDeletionResult({ events, bookmarks, rsvps }, eventId, true);
+      setEvents(nextState.events);
+      setBookmarks(nextState.bookmarks);
+      setRSVPs(nextState.rsvps);
+      return { success: true, error: null };
     } catch (error) {
       console.error('Delete event failed:', error);
+      return { success: false, error: 'Failed to delete event' };
     }
-
-    setEvents(events.filter((event) => event.id !== eventId));
-    setBookmarks(bookmarks.filter((bookmark) => bookmark.eventId !== eventId));
-    setRSVPs(rsvps.filter((rsvp) => rsvp.eventId !== eventId));
   };
 
   /**
@@ -756,9 +779,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
    * @param {string} eventId - Event identifier to update.
    * @param {Event['status']} status - Next moderation status to apply.
    * @param {string} [reviewNotes] - Optional approval note or rejection reason.
-   * @returns {Promise<void>} Resolves after the moderation update completes.
+   * @returns {Promise<{ event: Event | null; error: string | null }>} Updated event or an error message.
    */
-  const updateEventStatus = async (eventId: string, status: Event['status'], reviewNotes?: string) => {
+  const updateEventStatus = async (eventId: string, status: Event['status'], reviewNotes?: string): Promise<{ event: Event | null; error: string | null }> => {
     try {
       const response = await csrfFetch(`/api/events/${eventId}/status`, {
         method: 'PATCH',
@@ -767,14 +790,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update event status');
+        return {
+          event: null,
+          error: await getApiErrorMessage(response, 'Failed to update event status'),
+        };
       }
 
       const updated = await response.json();
-      setEvents((current) => current.map((event) => event.id === eventId ? normalizeEvent(updated) : event));
+      const normalizedEvent = normalizeEvent(updated);
+      setEvents((current) => current.map((event) => event.id === eventId ? normalizedEvent : event));
+      return { event: normalizedEvent, error: null };
     } catch (error) {
       console.error('Update event status failed:', error);
       await loadEvents();
+      return { event: null, error: 'Failed to update event status' };
     }
   };
 

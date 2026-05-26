@@ -16,6 +16,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import { Calendar, Edit, Trash2, Eye, Users, PlusCircle, Download } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import type { EventAttendee } from '../types';
+import { toast } from 'sonner';
 
 /**
  * Renders the organizer event-management page with attendee viewing and CSV export tools.
@@ -43,9 +44,15 @@ export function ManageEvents() {
    * @param {string} eventTitle - Event title shown in the confirmation prompt.
    * @returns {void} Does not return a value.
    */
-  const handleDelete = (eventId: string, eventTitle: string) => {
+  const handleDelete = async (eventId: string, eventTitle: string) => {
     if (confirm(`Are you sure you want to delete "${eventTitle}"? This action cannot be undone.`)) {
-      deleteEvent(eventId);
+      const result = await deleteEvent(eventId);
+      if (result.success) {
+        toast.success(`"${eventTitle}" deleted successfully.`);
+        return;
+      }
+
+      toast.error(result.error || `Failed to delete "${eventTitle}".`);
     }
   };
 

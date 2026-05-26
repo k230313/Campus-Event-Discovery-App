@@ -13,6 +13,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from '../components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { useApp } from '../context/AppContext';
+import { toast } from 'sonner';
 
 /**
  * Renders the student or organizer dashboard based on the signed-in user's role.
@@ -72,9 +73,15 @@ export function Dashboard() {
    * @param {string} eventId - Identifier of the event to delete.
    * @returns {void} Does not return a value.
    */
-  const handleDeleteEvent = (eventId: string) => {
+  const handleDeleteEvent = async (eventId: string, eventTitle: string) => {
     if (window.confirm('Are you sure you want to delete this event? This action cannot be undone.')) {
-      deleteEvent(eventId);
+      const result = await deleteEvent(eventId);
+      if (result.success) {
+        toast.success(`"${eventTitle}" deleted successfully.`);
+        return;
+      }
+
+      toast.error(result.error || `Failed to delete "${eventTitle}".`);
     }
   };
 
@@ -307,7 +314,7 @@ export function Dashboard() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handleDeleteEvent(event.id)}
+                            onClick={() => handleDeleteEvent(event.id, event.title)}
                             className="text-red-600 hover:text-red-700"
                           >
                             <Trash2 className="h-4 w-4" />
