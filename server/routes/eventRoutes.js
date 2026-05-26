@@ -116,6 +116,23 @@ function getEffectiveWriteStatus({ userRole, existingStatus = null, requestedSta
 }
 
 /**
+ * Determines whether an organizer is allowed to create or edit an event for the supplied date.
+ * @param {string} eventDate - ISO-style event date string (`YYYY-MM-DD`).
+ * @param {Date} [now=new Date()] - Current time override used by tests.
+ * @returns {boolean} True when the date is today or in the future.
+ */
+function organizerCanWriteEventDate(eventDate, now = new Date()) {
+  const [year, month, day] = String(eventDate || "").split("-").map(Number);
+  const eventDay = new Date(year, (month || 1) - 1, day || 1);
+  eventDay.setHours(0, 0, 0, 0);
+
+  const today = new Date(now);
+  today.setHours(0, 0, 0, 0);
+
+  return eventDay >= today;
+}
+
+/**
  * Builds the moderation metadata that accompanies an admin status decision.
  * @param {object} params - Inputs describing the new status, review notes, and acting admin.
  * @returns {{status: string, approvedBy: number|null, reviewNotes: string|null, reviewedAt: Date|null}} Moderation fields to persist.
@@ -407,6 +424,10 @@ router.post("/", requireAuth, requireRole("organizer", "admin"), generalWriteRat
       fallbackStatus: "draft",
     });
 
+    if (req.user.role === "organizer" && !organizerCanWriteEventDate(date)) {
+      return res.status(400).json({ errors: ["date cannot be in the past for organizer events"] });
+    }
+
     if (!allowedStatuses.includes(requestedStatus)) {
       return res.status(403).json({ error: "You are not allowed to use that event status" });
     }
@@ -494,6 +515,10 @@ router.put("/:id", requireAuth, requireRole("organizer", "admin"), generalWriteR
       requestedStatus: status,
       fallbackStatus: "draft",
     });
+
+    if (req.user.role === "organizer" && !organizerCanWriteEventDate(date)) {
+      return res.status(400).json({ errors: ["date cannot be in the past for organizer events"] });
+    }
 
     if (!allowedStatuses.includes(requestedStatus)) {
       return res.status(403).json({ error: "You are not allowed to use that event status" });
@@ -589,5 +614,6 @@ router.delete("/:id", requireAuth, requireRole("organizer", "admin"), generalWri
 module.exports = router;
 module.exports.canViewEvent = canViewEvent;
 module.exports.getEffectiveWriteStatus = getEffectiveWriteStatus;
+module.exports.organizerCanWriteEventDate = organizerCanWriteEventDate;
 module.exports.getModerationUpdate = getModerationUpdate;
 module.exports.sanitizeEventForViewer = sanitizeEventForViewer;

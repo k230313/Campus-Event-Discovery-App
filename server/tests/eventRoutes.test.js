@@ -11,6 +11,7 @@ const assert = require("node:assert/strict");
 
 const {
   getEffectiveWriteStatus,
+  organizerCanWriteEventDate,
   canViewEvent,
   getModerationUpdate,
   sanitizeEventForViewer,
@@ -48,6 +49,28 @@ test("organizer edits to a previously published event are forced back to pending
       fallbackStatus: "draft",
     }),
     "pending"
+  );
+});
+
+/**
+ * Executes the test case logic.
+ * @returns {*} Returns the resulting value.
+ */
+test("organizers cannot create or edit events in the past", () => {
+  assert.equal(
+    organizerCanWriteEventDate("2026-05-25", new Date(2026, 4, 26, 12, 0, 0)),
+    false
+  );
+});
+
+/**
+ * Executes the test case logic.
+ * @returns {*} Returns the resulting value.
+ */
+test("organizers can still create or edit events scheduled for today", () => {
+  assert.equal(
+    organizerCanWriteEventDate("2026-05-26", new Date(2026, 4, 26, 12, 0, 0)),
+    true
   );
 });
 
