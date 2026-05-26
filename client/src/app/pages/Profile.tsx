@@ -370,13 +370,6 @@ export function Profile() {
                     </Button>
                   </div>
                 )}
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-[#1B2E55]">Two-Factor Authentication</p>
-                    <p className="text-sm text-muted-foreground">Add an extra layer of security</p>
-                  </div>
-                  <Button variant="outline" size="sm">Enable</Button>
-                </div>
               </div>
             </CardContent>
           </Card>
