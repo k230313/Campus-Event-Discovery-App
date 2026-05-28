@@ -15,6 +15,7 @@ import { Label } from '../components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../components/ui/card';
 import { RadioGroup, RadioGroupItem } from '../components/ui/radio-group';
 import { useApp } from '../context/AppContext';
+import { PageMeta } from '../components/PageMeta';
 
 /**
  * Renders the account registration form with role selection and captcha verification.
@@ -135,6 +136,10 @@ export function Register() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#1B2E55] to-[#2a4575] flex items-center justify-center px-4 py-12">
+      <PageMeta
+        title="Register | Campus Event Discovery App"
+        description="Create a Campus Event Discovery App account to browse events, bookmark opportunities, and manage organizer workflows at Kent Institute."
+      />
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <div className="flex items-center justify-center mb-4">

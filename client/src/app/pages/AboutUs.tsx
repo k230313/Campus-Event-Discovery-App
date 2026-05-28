@@ -8,6 +8,7 @@
 
 import { Calendar, Users, Target, Award } from 'lucide-react';
 import { Card, CardContent } from '../components/ui/card';
+import { PageMeta } from '../components/PageMeta';
 
 /**
  * Renders the AboutUs component for the application interface.
@@ -16,6 +17,10 @@ import { Card, CardContent } from '../components/ui/card';
 export function AboutUs() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-[#F0F3F9]">
+      <PageMeta
+        title="About CEDA | Campus Event Discovery App"
+        description="Learn about the Campus Event Discovery App, its mission to centralize Kent Institute events, and the value it brings to students and organizers."
+      />
       {/* Hero Section */}
       <div className="bg-gradient-to-br from-[#1B2E55] via-[#2a4575] to-[#1B2E55] text-white py-16">
         <div className="container mx-auto px-4">

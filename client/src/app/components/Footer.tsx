@@ -115,6 +115,11 @@ export function Footer() {
                   Terms & Conditions
                 </Link>
               </li>
+              <li>
+                <Link to="/sitemap" className={footerLinkClassName}>
+                  Sitemap
+                </Link>
+              </li>
             </ul>
           </div>
 

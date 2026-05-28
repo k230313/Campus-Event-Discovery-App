@@ -14,6 +14,7 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../components/ui/card';
 import { useApp } from '../context/AppContext';
+import { PageMeta } from '../components/PageMeta';
 
 /**
  * Renders the login form used by students, organizers, and admins.
@@ -58,6 +59,10 @@ export function Login() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#1B2E55] to-[#2a4575] flex items-center justify-center px-4 py-12">
+      <PageMeta
+        title="Login | Campus Event Discovery App"
+        description="Log in to your Campus Event Discovery App account to manage registrations, organize events, and access role-specific dashboards."
+      />
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <div className="flex items-center justify-center mb-4">

@@ -39,6 +39,7 @@ import { NotFound } from './pages/NotFound';
 import { Unauthorized } from './pages/Unauthorized';
 import { Settings } from './pages/Settings';
 import { RegistrationConfirmation } from './pages/RegistrationConfirmation';
+import { SiteMap } from './pages/SiteMap';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { Toaster } from 'sonner';
 
@@ -67,6 +68,7 @@ export default function App() {
               <Route path="/verify-email" element={<VerifyEmail />} />
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/terms-conditions" element={<TermsConditions />} />
+              <Route path="/sitemap" element={<SiteMap />} />
               <Route path="/unauthorized" element={<Unauthorized />} />
               <Route path="/registration-confirmation" element={<RegistrationConfirmation />} />
 

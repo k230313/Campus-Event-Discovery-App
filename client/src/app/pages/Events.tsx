@@ -18,6 +18,7 @@ import { useApp } from '../context/AppContext';
 import { EventCategory } from '../types';
 import { classifyEventTiming } from '../lib/eventUiState';
 import { toast } from 'sonner';
+import { PageMeta } from '../components/PageMeta';
 
 /**
  * Renders the Events component for the application interface.
@@ -113,6 +114,10 @@ export function Events() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#F0F3F9] to-white">
+      <PageMeta
+        title="Browse Events | Campus Event Discovery App"
+        description="Browse upcoming and past Kent Institute campus events, then filter by category, timing, and keywords to find the right opportunity."
+      />
       <div className="relative bg-gradient-to-br from-[#1B2E55] via-[#2a4575] to-[#1B2E55] text-white py-16 overflow-hidden">
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute top-0 right-0 w-96 h-96 bg-[#EF9B28]/10 rounded-full blur-3xl"></div>
@@ -207,7 +212,7 @@ export function Events() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="absolute top-3 right-3 bg-white/95 hover:bg-white shadow-lg backdrop-blur-sm transition-all duration-300 hover:scale-110"
+                  className="absolute top-3 right-3 border border-white/80 bg-white/95 text-slate-700 shadow-lg supports-[backdrop-filter:blur(0px)]:bg-white/85 supports-[backdrop-filter:blur(0px)]:backdrop-blur-sm hover:bg-white transition-all duration-300 hover:scale-110"
                   onClick={() => handleBookmarkToggle(event.id)}
                 >
                   {isBookmarked(event.id) ? (

@@ -170,7 +170,7 @@ export function EventDetail() {
                     variant="ghost"
                     size="icon"
                     onClick={handleBookmarkToggle}
-                    className="bg-white/95 hover:bg-white shadow-xl backdrop-blur-sm h-12 w-12 transition-all duration-300 hover:scale-110"
+                    className="h-12 w-12 border border-white/80 bg-white/95 text-slate-700 shadow-xl supports-[backdrop-filter:blur(0px)]:bg-white/85 supports-[backdrop-filter:blur(0px)]:backdrop-blur-sm hover:bg-white transition-all duration-300 hover:scale-110"
                   >
                     {isBookmarked(event.id) ? (
                       <BookmarkCheck className="h-6 w-6 text-[#EF9B28]" />

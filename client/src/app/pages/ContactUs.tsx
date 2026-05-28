@@ -14,6 +14,7 @@ import { Textarea } from '../components/ui/textarea';
 import { Label } from '../components/ui/label';
 import { useEffect, useRef, useState } from 'react';
 import { csrfFetch } from '../services/api';
+import { PageMeta } from '../components/PageMeta';
 
 /**
  * Renders the ContactUs component for the application interface.
@@ -166,6 +167,10 @@ export function ContactUs() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-[#F0F3F9]">
+      <PageMeta
+        title="Contact Us | Campus Event Discovery App"
+        description="Contact the Campus Event Discovery App team for event support, general questions, or platform assistance at Kent Institute."
+      />
       {/* Hero Section */}
       <div className="bg-gradient-to-br from-[#1B2E55] via-[#2a4575] to-[#1B2E55] text-white py-16">
         <div className="container mx-auto px-4">

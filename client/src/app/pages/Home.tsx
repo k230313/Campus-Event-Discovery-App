@@ -11,6 +11,7 @@ import { Calendar, Search, Bookmark, Users, ArrowRight, Sparkles, TrendingUp, Be
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
+import { PageMeta } from '../components/PageMeta';
 
 const heroSecondaryCtaClass =
   'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-base font-medium h-10 px-6 border-2 border-white bg-white text-[#1B2E55] hover:bg-[#E8EDF5] hover:text-[#1B2E55] shadow-lg transition-all duration-300 hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white focus-visible:ring-[3px] focus-visible:ring-white/80';
@@ -22,6 +23,10 @@ const heroSecondaryCtaClass =
 export function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-[#F0F3F9]">
+      <PageMeta
+        title="Campus Event Discovery App | Home"
+        description="Discover campus events, browse student activities, and join Kent Institute workshops, networking sessions, and community gatherings through CEDA."
+      />
       {/* Hero Section */}
       <div className="relative bg-gradient-to-br from-[#1B2E55] via-[#2a4575] to-[#1B2E55] text-white py-24 overflow-hidden">
         {/* Background Image */}
