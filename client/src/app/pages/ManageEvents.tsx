@@ -300,7 +300,7 @@ export function ManageEvents() {
       </div>
 
       <Dialog open={attendeeDialogOpen} onOpenChange={setAttendeeDialogOpen}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="max-w-3xl overflow-hidden">
           <DialogHeader>
             <DialogTitle>Attendees for {selectedEventTitle || 'event'}</DialogTitle>
             <DialogDescription>
@@ -327,20 +327,20 @@ export function ManageEvents() {
                   No attendees have registered for this event yet.
                 </div>
               ) : (
-                <Table>
+                <Table className="table-fixed">
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Registered</TableHead>
+                      <TableHead className="w-[30%] whitespace-normal">Name</TableHead>
+                      <TableHead className="w-[42%] whitespace-normal">Email</TableHead>
+                      <TableHead className="w-[28%] whitespace-normal">Registered</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {selectedAttendees.map((attendee) => (
                       <TableRow key={`${attendee.userId}-${attendee.registeredAt}`}>
-                        <TableCell className="font-medium">{attendee.name}</TableCell>
-                        <TableCell>{attendee.email}</TableCell>
-                        <TableCell>{new Date(attendee.registeredAt).toLocaleString()}</TableCell>
+                        <TableCell className="font-medium break-words whitespace-normal align-top">{attendee.name}</TableCell>
+                        <TableCell className="break-words whitespace-normal align-top">{attendee.email}</TableCell>
+                        <TableCell className="break-words whitespace-normal align-top">{new Date(attendee.registeredAt).toLocaleString()}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

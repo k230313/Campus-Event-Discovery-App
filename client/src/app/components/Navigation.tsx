@@ -187,9 +187,9 @@ export function Navigation() {
                     Login
                   </Link>
                 </Button>
-                <Button asChild className="bg-[#EF9B28] hover:bg-[#D97706] text-[#1B2E55] font-semibold">
+                <Button asChild className="gap-1.5 bg-[#EF9B28] hover:bg-[#D97706] text-[#1B2E55] font-semibold">
                   <Link to="/register">
-                    <UserPlus className="h-4 w-4 mr-2" aria-hidden="true" />
+                    <UserPlus className="h-4 w-4" aria-hidden="true" />
                     Sign Up
                   </Link>
                 </Button>
