@@ -6,6 +6,7 @@
 // Desc:    Renders the Navigation frontend component.
 // ============================================
 
+import type { ElementType, ReactNode } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Calendar, LayoutDashboard, LogIn, LogOut, UserPlus, Home, PlusCircle, Bookmark, Users, User, Shield, BarChart, Tag, FileText, Mail, Info } from 'lucide-react';
 import { Button } from './ui/button';
@@ -49,244 +50,86 @@ export function Navigation() {
     navigate('/login', { replace: true });
   };
 
+  /**
+   * Renders a navigation link with shared button styling while keeping valid interactive HTML.
+   * @param {object} props - Link configuration for a single navigation action.
+   * @returns {JSX.Element} Styled route link for the top navigation.
+   */
+  const NavActionLink = ({
+    to,
+    icon: Icon,
+    children,
+  }: {
+    to: string;
+    icon: ElementType;
+    children: ReactNode;
+  }) => (
+    <Button
+      asChild
+      variant="ghost"
+      className={getNavButtonClasses(to)}
+    >
+      <Link to={to}>
+        <Icon className="h-4 w-4 mr-2" aria-hidden="true" />
+        {children}
+      </Link>
+    </Button>
+  );
+
   return (
     <nav className="border-b bg-[#1B2E55]">
       <div className="container mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-6">
-            <Link to="/" className="flex items-center" aria-label="CEDA home">
-              <Logo className="h-10 w-auto brightness-0 invert" aria-hidden="true" focusable="false" />
+            <Link to="/" className="flex items-center" aria-label="Campus Events home">
+              <Logo className="h-10 w-auto brightness-0 invert" aria-hidden="true" />
             </Link>
 
             <div className="hidden md:flex items-center gap-1">
               {/* Not Logged In Navigation */}
               {!user && (
                 <>
-                  <Link to="/">
-                    <Button
-                      variant="ghost"
-                      className={getNavButtonClasses('/')}
-                    >
-                      <Home className="h-4 w-4 mr-2" />
-                      Home
-                    </Button>
-                  </Link>
-                  <Link to="/events">
-                    <Button
-                      variant="ghost"
-                      className={getNavButtonClasses('/events')}
-                    >
-                      <Calendar className="h-4 w-4 mr-2" />
-                      Browse Events
-                    </Button>
-                  </Link>
-                  <Link to="/about">
-                    <Button
-                      variant="ghost"
-                      className={getNavButtonClasses('/about')}
-                    >
-                      <Info className="h-4 w-4 mr-2" />
-                      About Us
-                    </Button>
-                  </Link>
-                  <Link to="/contact">
-                    <Button
-                      variant="ghost"
-                      className={getNavButtonClasses('/contact')}
-                    >
-                      <Mail className="h-4 w-4 mr-2" />
-                      Contact Us
-                    </Button>
-                  </Link>
+                  <NavActionLink to="/" icon={Home}>Home</NavActionLink>
+                  <NavActionLink to="/events" icon={Calendar}>Browse Events</NavActionLink>
+                  <NavActionLink to="/about" icon={Info}>About Us</NavActionLink>
+                  <NavActionLink to="/contact" icon={Mail}>Contact Us</NavActionLink>
                 </>
               )}
 
               {/* Student Navigation */}
               {user && user.role === 'student' && (
                 <>
-                  <Link to="/">
-                    <Button
-                      variant="ghost"
-                      className={getNavButtonClasses('/')}
-                    >
-                      <Home className="h-4 w-4 mr-2" />
-                      Home
-                    </Button>
-                  </Link>
-                  <Link to="/events">
-                    <Button
-                      variant="ghost"
-                      className={getNavButtonClasses('/events')}
-                    >
-                      <Calendar className="h-4 w-4 mr-2" />
-                      Browse Events
-                    </Button>
-                  </Link>
-                  <Link to="/my-bookmarks">
-                    <Button
-                      variant="ghost"
-                      className={getNavButtonClasses('/my-bookmarks')}
-                    >
-                      <Bookmark className="h-4 w-4 mr-2" />
-                      My Bookmarks
-                    </Button>
-                  </Link>
-                  <Link to="/my-events">
-                    <Button
-                      variant="ghost"
-                      className={getNavButtonClasses('/my-events')}
-                    >
-                      <FileText className="h-4 w-4 mr-2" />
-                      My Events
-                    </Button>
-                  </Link>
-                  <Link to="/profile">
-                    <Button
-                      variant="ghost"
-                      className={getNavButtonClasses('/profile')}
-                    >
-                      <User className="h-4 w-4 mr-2" />
-                      Profile
-                    </Button>
-                  </Link>
+                  <NavActionLink to="/" icon={Home}>Home</NavActionLink>
+                  <NavActionLink to="/events" icon={Calendar}>Browse Events</NavActionLink>
+                  <NavActionLink to="/my-bookmarks" icon={Bookmark}>My Bookmarks</NavActionLink>
+                  <NavActionLink to="/my-events" icon={FileText}>My Events</NavActionLink>
+                  <NavActionLink to="/profile" icon={User}>Profile</NavActionLink>
                 </>
               )}
 
               {/* Organizer Navigation */}
               {user && user.role === 'organizer' && (
                 <>
-                  <Link to="/">
-                    <Button
-                      variant="ghost"
-                      className={getNavButtonClasses('/')}
-                    >
-                      <Home className="h-4 w-4 mr-2" />
-                      Home
-                    </Button>
-                  </Link>
-                  <Link to="/events">
-                    <Button
-                      variant="ghost"
-                      className={getNavButtonClasses('/events')}
-                    >
-                      <Calendar className="h-4 w-4 mr-2" />
-                      Browse Events
-                    </Button>
-                  </Link>
-                  <Link to="/my-bookmarks">
-                    <Button
-                      variant="ghost"
-                      className={getNavButtonClasses('/my-bookmarks')}
-                    >
-                      <Bookmark className="h-4 w-4 mr-2" />
-                      My Bookmarks
-                    </Button>
-                  </Link>
-                  <Link to="/dashboard">
-                    <Button
-                      variant="ghost"
-                      className={getNavButtonClasses('/dashboard')}
-                    >
-                      <LayoutDashboard className="h-4 w-4 mr-2" />
-                      Dashboard
-                    </Button>
-                  </Link>
-                  <Link to="/create-event">
-                    <Button
-                      variant="ghost"
-                      className={getNavButtonClasses('/create-event')}
-                    >
-                      <PlusCircle className="h-4 w-4 mr-2" />
-                      Create Event
-                    </Button>
-                  </Link>
-                  <Link to="/manage-events">
-                    <Button
-                      variant="ghost"
-                      className={getNavButtonClasses('/manage-events')}
-                    >
-                      <Calendar className="h-4 w-4 mr-2" />
-                      Manage Events
-                    </Button>
-                  </Link>
-                  <Link to="/profile">
-                    <Button
-                      variant="ghost"
-                      className={getNavButtonClasses('/profile')}
-                    >
-                      <User className="h-4 w-4 mr-2" />
-                      Profile
-                    </Button>
-                  </Link>
+                  <NavActionLink to="/" icon={Home}>Home</NavActionLink>
+                  <NavActionLink to="/events" icon={Calendar}>Browse Events</NavActionLink>
+                  <NavActionLink to="/my-bookmarks" icon={Bookmark}>My Bookmarks</NavActionLink>
+                  <NavActionLink to="/dashboard" icon={LayoutDashboard}>Dashboard</NavActionLink>
+                  <NavActionLink to="/create-event" icon={PlusCircle}>Create Event</NavActionLink>
+                  <NavActionLink to="/manage-events" icon={Calendar}>Manage Events</NavActionLink>
+                  <NavActionLink to="/profile" icon={User}>Profile</NavActionLink>
                 </>
               )}
 
               {/* Admin Navigation */}
               {user && user.role === 'admin' && (
                 <>
-                  <Link to="/">
-                    <Button
-                      variant="ghost"
-                      className={getNavButtonClasses('/')}
-                    >
-                      <Home className="h-4 w-4 mr-2" />
-                      Home
-                    </Button>
-                  </Link>
-                  <Link to="/events">
-                    <Button
-                      variant="ghost"
-                      className={getNavButtonClasses('/events')}
-                    >
-                      <Calendar className="h-4 w-4 mr-2" />
-                      Browse Events
-                    </Button>
-                  </Link>
-                  <Link to="/admin-dashboard">
-                    <Button
-                      variant="ghost"
-                      className={getNavButtonClasses('/admin-dashboard')}
-                    >
-                      <Shield className="h-4 w-4 mr-2" />
-                      Admin Dashboard
-                    </Button>
-                  </Link>
-                  <Link to="/manage-users">
-                    <Button
-                      variant="ghost"
-                      className={getNavButtonClasses('/manage-users')}
-                    >
-                      <Users className="h-4 w-4 mr-2" />
-                      Manage Users
-                    </Button>
-                  </Link>
-                  <Link to="/admin-manage-events">
-                    <Button
-                      variant="ghost"
-                      className={getNavButtonClasses('/admin-manage-events')}
-                    >
-                      <Calendar className="h-4 w-4 mr-2" />
-                      Manage Events
-                    </Button>
-                  </Link>
-                  <Link to="/categories">
-                    <Button
-                      variant="ghost"
-                      className={getNavButtonClasses('/categories')}
-                    >
-                      <Tag className="h-4 w-4 mr-2" />
-                      Categories
-                    </Button>
-                  </Link>
-                  <Link to="/reports">
-                    <Button
-                      variant="ghost"
-                      className={getNavButtonClasses('/reports')}
-                    >
-                      <BarChart className="h-4 w-4 mr-2" />
-                      Reports
-                    </Button>
-                  </Link>
+                  <NavActionLink to="/" icon={Home}>Home</NavActionLink>
+                  <NavActionLink to="/events" icon={Calendar}>Browse Events</NavActionLink>
+                  <NavActionLink to="/admin-dashboard" icon={Shield}>Admin Dashboard</NavActionLink>
+                  <NavActionLink to="/manage-users" icon={Users}>Manage Users</NavActionLink>
+                  <NavActionLink to="/admin-manage-events" icon={Calendar}>Manage Events</NavActionLink>
+                  <NavActionLink to="/categories" icon={Tag}>Categories</NavActionLink>
+                  <NavActionLink to="/reports" icon={BarChart}>Reports</NavActionLink>
                 </>
               )}
             </div>
@@ -338,18 +181,18 @@ export function Navigation() {
               </>
             ) : (
               <>
-                <Link to="/login">
-                  <Button variant="ghost" className="text-white hover:text-white hover:bg-white/20">
-                    <LogIn className="h-4 w-4 mr-2" />
+                <Button asChild variant="ghost" className="text-white hover:text-white hover:bg-white/20">
+                  <Link to="/login">
+                    <LogIn className="h-4 w-4 mr-2" aria-hidden="true" />
                     Login
-                  </Button>
-                </Link>
-                <Link to="/register">
-                  <Button className="bg-[#EF9B28] hover:bg-[#EF9B28]/90 text-white">
-                    <UserPlus className="h-4 w-4 mr-2" />
+                  </Link>
+                </Button>
+                <Button asChild className="bg-[#EF9B28] hover:bg-[#D97706] text-[#1B2E55] font-semibold">
+                  <Link to="/register">
+                    <UserPlus className="h-4 w-4 mr-2" aria-hidden="true" />
                     Sign Up
-                  </Button>
-                </Link>
+                  </Link>
+                </Button>
               </>
             )}
           </div>

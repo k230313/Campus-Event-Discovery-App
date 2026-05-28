@@ -13,7 +13,7 @@ import { Card, CardContent } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 
 const heroSecondaryCtaClass =
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium h-10 px-6 border-2 border-white bg-white text-[#1B2E55] hover:bg-[#E8EDF5] hover:text-[#1B2E55] shadow-lg transition-all duration-300 hover:scale-105 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-white/80';
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-base font-medium h-10 px-6 border-2 border-white bg-white text-[#1B2E55] hover:bg-[#E8EDF5] hover:text-[#1B2E55] shadow-lg transition-all duration-300 hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white focus-visible:ring-[3px] focus-visible:ring-white/80';
 
 /**
  * Renders the Home component for the application interface.
@@ -29,6 +29,8 @@ export function Home() {
           <img
             src="https://images.unsplash.com/photo-1612277107663-a65c0f67be64?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1920"
             alt="Campus background"
+            width={1920}
+            height={1280}
             className="w-full h-full object-cover opacity-50"
           />
           <div className="absolute inset-0 bg-gradient-to-br from-[#1B2E55]/50 via-[#2a4575]/40 to-[#1B2E55]/50"></div>
@@ -72,15 +74,15 @@ export function Home() {
             <div className="grid grid-cols-3 gap-8 mt-16 max-w-2xl mx-auto">
               <div className="text-center">
                 <div className="text-4xl font-bold text-[#EF9B28] mb-2">8+</div>
-                <div className="text-sm text-white/70">Active Events</div>
+                <div className="text-base text-white/90">Active Events</div>
               </div>
               <div className="text-center">
                 <div className="text-4xl font-bold text-[#EF9B28] mb-2">500+</div>
-                <div className="text-sm text-white/70">Students</div>
+                <div className="text-base text-white/90">Students</div>
               </div>
               <div className="text-center">
                 <div className="text-4xl font-bold text-[#EF9B28] mb-2">50+</div>
-                <div className="text-sm text-white/70">Organizers</div>
+                <div className="text-base text-white/90">Organizers</div>
               </div>
             </div>
           </div>
@@ -91,13 +93,13 @@ export function Home() {
       <div className="py-20 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <Badge className="mb-4 bg-[#1B2E55]/10 text-[#1B2E55] border-[#1B2E55]/20">
+            <Badge className="mb-4 bg-[#1B2E55] text-white border-[#1B2E55]">
               Features
             </Badge>
             <h2 className="text-4xl font-bold mb-4 text-[#1B2E55]">
               Why Use CEDA?
             </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-lg text-slate-700 max-w-2xl mx-auto">
               Everything you need to stay connected with campus life
             </p>
           </div>
@@ -109,7 +111,7 @@ export function Home() {
                     <Calendar className="h-8 w-8 text-white" />
                   </div>
                   <h3 className="font-bold text-lg mb-3 text-[#1B2E55]">Centralized Events</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
+                  <p className="text-base text-slate-700 leading-relaxed">
                     All campus events in one place. No more scattered information across different platforms.
                   </p>
                 </div>
@@ -123,7 +125,7 @@ export function Home() {
                     <Search className="h-8 w-8 text-white" />
                   </div>
                   <h3 className="font-bold text-lg mb-3 text-[#1B2E55]">Easy Discovery</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
+                  <p className="text-base text-slate-700 leading-relaxed">
                     Search and filter events by category, date, and location with our powerful search tools.
                   </p>
                 </div>
@@ -137,7 +139,7 @@ export function Home() {
                     <Bookmark className="h-8 w-8 text-white" />
                   </div>
                   <h3 className="font-bold text-lg mb-3 text-[#1B2E55]">Save & Track</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
+                  <p className="text-base text-slate-700 leading-relaxed">
                     Bookmark events you're interested in and track your RSVPs in your personal dashboard.
                   </p>
                 </div>
@@ -151,7 +153,7 @@ export function Home() {
                     <Users className="h-8 w-8 text-white" />
                   </div>
                   <h3 className="font-bold text-lg mb-3 text-[#1B2E55]">Get Involved</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
+                  <p className="text-base text-slate-700 leading-relaxed">
                     RSVP, volunteer, and connect with fellow students to build your network.
                   </p>
                 </div>
