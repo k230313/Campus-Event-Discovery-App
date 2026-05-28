@@ -10,6 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@dicebear/collection": "^9.4.2",
+    "@dicebear/core": "^9.4.2",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@mui/icons-material": "^7.3.5",
@@ -70,8 +72,8 @@
     "vaul": "^1.1.2"
   },
   "devDependencies": {
-    "@tailwindcss/vite": "^4.1.12",
     "@eslint/js": "^9.39.4",
+    "@tailwindcss/vite": "^4.1.12",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^6.0.1",

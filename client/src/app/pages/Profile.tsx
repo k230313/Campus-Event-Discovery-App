@@ -16,6 +16,7 @@ import { User, Mail, Shield, Calendar, Edit } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { csrfFetch } from '../services/api';
+import { UserAvatar } from '../components/UserAvatar';
 
 /**
  * Renders the Profile component for the application interface.
@@ -161,8 +162,19 @@ export function Profile() {
             {/* Profile Card */}
             <Card className="md:col-span-2 border-2">
               <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-2xl text-[#1B2E55]">Personal Information</CardTitle>
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="flex items-center gap-4">
+                    <UserAvatar
+                      name={user.name}
+                      email={user.email}
+                      size={88}
+                      className="h-[88px] w-[88px]"
+                    />
+                    <div>
+                      <CardTitle className="text-2xl text-[#1B2E55]">{user.name}</CardTitle>
+                      <p className="mt-1 text-sm text-muted-foreground">{user.email}</p>
+                    </div>
+                  </div>
                   {!isEditing && (
                     <Button
                       variant="outline"
