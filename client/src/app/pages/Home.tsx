@@ -32,11 +32,11 @@ export function Home() {
         {/* Background Image */}
         <div className="absolute inset-0 overflow-hidden">
           <img
-            src="https://images.unsplash.com/photo-1612277107663-a65c0f67be64?crop=entropy&cs=tinysrgb&fit=max&fm=webp&q=80&w=1440"
+            src="https://images.unsplash.com/photo-1612277107663-a65c0f67be64?crop=entropy&cs=tinysrgb&fit=max&fm=webp&q=60&w=1280"
             srcSet={[
-              'https://images.unsplash.com/photo-1612277107663-a65c0f67be64?crop=entropy&cs=tinysrgb&fit=max&fm=webp&q=80&w=960 960w',
-              'https://images.unsplash.com/photo-1612277107663-a65c0f67be64?crop=entropy&cs=tinysrgb&fit=max&fm=webp&q=80&w=1440 1440w',
-              'https://images.unsplash.com/photo-1612277107663-a65c0f67be64?crop=entropy&cs=tinysrgb&fit=max&fm=webp&q=80&w=1920 1920w',
+              'https://images.unsplash.com/photo-1612277107663-a65c0f67be64?crop=entropy&cs=tinysrgb&fit=max&fm=webp&q=60&w=640 640w',
+              'https://images.unsplash.com/photo-1612277107663-a65c0f67be64?crop=entropy&cs=tinysrgb&fit=max&fm=webp&q=60&w=960 960w',
+              'https://images.unsplash.com/photo-1612277107663-a65c0f67be64?crop=entropy&cs=tinysrgb&fit=max&fm=webp&q=60&w=1280 1280w',
             ].join(', ')}
             sizes="100vw"
             alt="Campus background"
