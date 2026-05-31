@@ -15,6 +15,7 @@ import { Label } from '../components/ui/label';
 import { useEffect, useRef, useState } from 'react';
 import { csrfFetch } from '../services/api';
 import { PageMeta } from '../components/PageMeta';
+import { useTurnstileScript } from '../hooks/useTurnstileScript';
 
 /**
  * Renders the ContactUs component for the application interface.
@@ -39,6 +40,7 @@ export function ContactUs() {
   const [turnstileToken, setTurnstileToken] = useState('');
   const turnstileContainerRef = useRef<HTMLDivElement | null>(null);
   const turnstileWidgetIdRef = useRef<string | null>(null);
+  const { isReady: isTurnstileReady, loadError: turnstileLoadError } = useTurnstileScript();
 
   useEffect(() => {
     /**
@@ -76,18 +78,18 @@ export function ContactUs() {
       });
     };
 
-    maybeRenderWidget();
-    const intervalId = window.setInterval(maybeRenderWidget, 500);
+    if (isTurnstileReady) {
+      maybeRenderWidget();
+    }
 
     return () => {
-      window.clearInterval(intervalId);
       const turnstile = (window as any).turnstile;
       if (turnstile && turnstileWidgetIdRef.current !== null) {
         turnstile.remove(turnstileWidgetIdRef.current);
         turnstileWidgetIdRef.current = null;
       }
     };
-  }, []);
+  }, [isTurnstileReady]);
 
   /**
    * Submits the contact form to the backend contact endpoint.
@@ -234,7 +236,12 @@ export function ContactUs() {
                   </div>
                   <div>
                     <Label>Verification</Label>
-                    <div ref={turnstileContainerRef} />
+                    <div ref={turnstileContainerRef} className="min-h-16" />
+                    {turnstileLoadError ? (
+                      <p className="text-sm text-red-600 mt-2">{turnstileLoadError}</p>
+                    ) : !isTurnstileReady ? (
+                      <p className="text-sm text-muted-foreground mt-2">Loading captcha...</p>
+                    ) : null}
                   </div>
                   <Button
                     type="submit"

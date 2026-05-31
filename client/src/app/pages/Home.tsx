@@ -32,10 +32,19 @@ export function Home() {
         {/* Background Image */}
         <div className="absolute inset-0 overflow-hidden">
           <img
-            src="https://images.unsplash.com/photo-1612277107663-a65c0f67be64?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1920"
+            src="https://images.unsplash.com/photo-1612277107663-a65c0f67be64?crop=entropy&cs=tinysrgb&fit=max&fm=webp&q=80&w=1440"
+            srcSet={[
+              'https://images.unsplash.com/photo-1612277107663-a65c0f67be64?crop=entropy&cs=tinysrgb&fit=max&fm=webp&q=80&w=960 960w',
+              'https://images.unsplash.com/photo-1612277107663-a65c0f67be64?crop=entropy&cs=tinysrgb&fit=max&fm=webp&q=80&w=1440 1440w',
+              'https://images.unsplash.com/photo-1612277107663-a65c0f67be64?crop=entropy&cs=tinysrgb&fit=max&fm=webp&q=80&w=1920 1920w',
+            ].join(', ')}
+            sizes="100vw"
             alt="Campus background"
             width={1920}
             height={1280}
+            loading="eager"
+            fetchPriority="high"
+            decoding="async"
             className="w-full h-full object-cover opacity-50"
           />
           <div className="absolute inset-0 bg-gradient-to-br from-[#1B2E55]/50 via-[#2a4575]/40 to-[#1B2E55]/50"></div>

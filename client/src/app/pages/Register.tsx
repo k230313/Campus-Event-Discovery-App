@@ -16,6 +16,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { RadioGroup, RadioGroupItem } from '../components/ui/radio-group';
 import { useApp } from '../context/AppContext';
 import { PageMeta } from '../components/PageMeta';
+import { useTurnstileScript } from '../hooks/useTurnstileScript';
 
 /**
  * Renders the account registration form with role selection and captcha verification.
@@ -36,6 +37,7 @@ export function Register() {
   const [turnstileToken, setTurnstileToken] = useState('');
   const turnstileContainerRef = useRef<HTMLDivElement | null>(null);
   const turnstileWidgetIdRef = useRef<string | null>(null);
+  const { isReady: isTurnstileReady, loadError: turnstileLoadError } = useTurnstileScript();
 
   useEffect(() => {
     /**
@@ -70,18 +72,18 @@ export function Register() {
       });
     };
 
-    maybeRenderWidget();
-    const intervalId = window.setInterval(maybeRenderWidget, 500);
+    if (isTurnstileReady) {
+      maybeRenderWidget();
+    }
 
     return () => {
-      window.clearInterval(intervalId);
       const turnstile = (window as any).turnstile;
       if (turnstile && turnstileWidgetIdRef.current !== null) {
         turnstile.remove(turnstileWidgetIdRef.current);
         turnstileWidgetIdRef.current = null;
       }
     };
-  }, []);
+  }, [isTurnstileReady]);
 
   /**
    * Asynchronously submits the registration form after client-side validation succeeds.
@@ -160,6 +162,11 @@ export function Register() {
                 <p className="text-sm text-red-800">{error}</p>
               </div>
             )}
+            {turnstileLoadError && !error ? (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+                <p className="text-sm text-red-800">{turnstileLoadError}</p>
+              </div>
+            ) : null}
             {success && (
               <div className="p-3 bg-green-50 border border-green-200 rounded-md">
                 <p className="text-sm text-green-800">{success}</p>
@@ -234,7 +241,10 @@ export function Register() {
 
             <div className="space-y-2">
               <Label>Verification</Label>
-              <div ref={turnstileContainerRef} />
+              <div ref={turnstileContainerRef} className="min-h-16" />
+              {!isTurnstileReady && !turnstileLoadError ? (
+                <p className="text-sm text-muted-foreground">Loading captcha...</p>
+              ) : null}
             </div>
           </CardContent>
 
