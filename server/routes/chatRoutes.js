@@ -18,7 +18,7 @@ const SYSTEM_PROMPT = "Answer only from provided campus events. Use conversation
 const CHAT_CACHE_TTL_MS = 10 * 60 * 1000;
 const chatResponseCache = new Map();
 
-const CHAT_FALLBACK_PREFIX = "CEDA Assistant is temporarily in limited mode";
+const CHAT_FALLBACK_MESSAGE = "Dear human, we’re broke students and our AI budget is approximately zero. The chatbot is running on a very limited free-tier quota shared by everyone, so it has entered limited mode for now.";
 
 /**
  * Executes the normalize history logic.
@@ -197,10 +197,10 @@ function buildFallbackReply(relatedEvents) {
       })
       .join("; ");
 
-    return `${CHAT_FALLBACK_PREFIX} due to service limits. You can still check these events: ${eventSummary}.`;
+    return `${CHAT_FALLBACK_MESSAGE} You can still check these events: ${eventSummary}.`;
   }
 
-  return `${CHAT_FALLBACK_PREFIX} due to service limits. Please browse the Events page or try your question again shortly.`;
+  return `${CHAT_FALLBACK_MESSAGE} Please try again later or browse the Events page like it’s 2012.`;
 }
 
 /**
