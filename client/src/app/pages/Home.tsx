@@ -73,7 +73,7 @@ export function Home() {
                   <ArrowRight className="ml-2 h-5 w-5" aria-hidden="true" />
                 </Link>
               </Button>
-              <Link to="/register" className={heroSecondaryCtaClass}>
+              <Link to="/login" className={heroSecondaryCtaClass}>
                 Get Started
               </Link>
             </div>

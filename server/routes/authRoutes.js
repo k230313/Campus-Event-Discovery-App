@@ -26,6 +26,7 @@ const {
 } = require("../validation/schemas");
 
 const router = express.Router();
+const DEMO_ACCOUNT_EMAIL = "student@test.com";
 const registrationRateLimit = rateLimit({
   windowMs: 60 * 60 * 1000,
   max: 5,
@@ -330,6 +331,10 @@ router.post("/forgot-password", authRateLimit, validateBody(forgotPasswordSchema
   }
 
   try {
+    if (email === DEMO_ACCOUNT_EMAIL) {
+      return res.json({ message: "If an account exists for that email, a reset link has been sent." });
+    }
+
     const [rows] = await pool.query(
       "SELECT user_id, email FROM users WHERE email = ? LIMIT 1",
       [email]

@@ -35,6 +35,7 @@ export function Settings() {
   const [theme, setTheme] = useState('Light');
   const [saveSuccess, setSaveSuccess] = useState('');
   const [saveError, setSaveError] = useState('');
+  const isSharedDemoAccount = user?.email?.toLowerCase() === 'student@test.com';
 
   if (!user) {
     navigate('/login');
@@ -252,7 +253,17 @@ export function Settings() {
                 <Switch checked={showRsvpStatus} onCheckedChange={setShowRsvpStatus} />
               </div>
               <div className="pt-4 border-t">
-                <Button variant="outline" className="w-full" onClick={() => navigate('/profile')}>
+                {isSharedDemoAccount ? (
+                  <p className="mb-3 text-sm text-amber-700">
+                    Hey man, this is the shared demo account. Password changes are locked for the showcase.
+                  </p>
+                ) : null}
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => navigate('/profile')}
+                  disabled={isSharedDemoAccount}
+                >
                   Change Password
                 </Button>
               </div>

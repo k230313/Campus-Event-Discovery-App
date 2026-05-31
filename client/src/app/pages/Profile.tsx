@@ -42,6 +42,7 @@ export function Profile() {
   const [passwordError, setPasswordError] = useState('');
   const [passwordSuccess, setPasswordSuccess] = useState('');
   const [isSavingPassword, setIsSavingPassword] = useState(false);
+  const isSharedDemoAccount = user?.email?.toLowerCase() === 'student@test.com';
 
   if (!user) {
     navigate('/login');
@@ -317,6 +318,11 @@ export function Profile() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
+                {isSharedDemoAccount && (
+                  <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                    Hey man, this is the shared demo account. Password changes are locked for the showcase.
+                  </div>
+                )}
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="font-medium text-[#1B2E55]">Password</p>
@@ -330,6 +336,7 @@ export function Profile() {
                       setPasswordError('');
                       setPasswordSuccess('');
                     }}
+                    disabled={isSharedDemoAccount}
                   >
                     {showPasswordForm ? 'Cancel' : 'Change Password'}
                   </Button>

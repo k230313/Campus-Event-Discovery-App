@@ -19,6 +19,7 @@ const {
 } = require("../validation/schemas");
 
 const router = express.Router();
+const DEMO_ACCOUNT_EMAIL = "student@test.com";
 
 /**
  * Executes the to client role logic.
@@ -134,6 +135,10 @@ router.patch("/me", requireAuth, validateBody(profileUpdateSchema), async (req, 
 router.patch("/me/password", requireAuth, validateBody(passwordUpdateSchema), async (req, res) => {
   const currentPassword = String(req.body?.currentPassword || "");
   const newPassword = String(req.body?.newPassword || "");
+
+  if (String(req.user?.email || "").trim().toLowerCase() === DEMO_ACCOUNT_EMAIL) {
+    return res.status(403).json({ error: "This demo account password cannot be changed." });
+  }
 
   if (!currentPassword || !newPassword) {
     return res.status(400).json({ error: "Current password and new password are required" });
