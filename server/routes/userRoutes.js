@@ -75,6 +75,10 @@ router.patch("/me", requireAuth, validateBody(profileUpdateSchema), async (req, 
   const fullName = String(req.body?.full_name || "").trim();
   const normalizedEmail = String(req.body?.email || "").trim().toLowerCase();
 
+  if (String(req.user?.email || "").trim().toLowerCase() === DEMO_ACCOUNT_EMAIL) {
+    return res.status(403).json({ error: "This demo account profile cannot be changed." });
+  }
+
   if (!fullName) {
     return res.status(400).json({ error: "Full name is required" });
   }

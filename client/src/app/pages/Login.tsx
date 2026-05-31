@@ -9,6 +9,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { LogIn } from 'lucide-react';
+import { toast } from 'sonner';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
@@ -41,6 +42,9 @@ export function Login() {
     try {
       const result = await login(email, password);
       if (result.user) {
+        if (result.user.email.toLowerCase() === 'student@test.com') {
+          toast('Hello human! You’ve entered the shared demo account. Account changes are locked for the showcase. Please be kind :((');
+        }
         const destination = result.user.role === 'admin'
           ? '/admin-dashboard'
           : result.user.role === 'organizer'

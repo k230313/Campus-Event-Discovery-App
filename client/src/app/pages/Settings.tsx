@@ -255,7 +255,7 @@ export function Settings() {
               <div className="pt-4 border-t">
                 {isSharedDemoAccount ? (
                   <p className="mb-3 text-sm text-amber-700">
-                    Hey man, this is the shared demo account. Password changes are locked for the showcase.
+                    Tiny tragedy prevented: password and account changes are disabled here because this is the shared demo account.
                   </p>
                 ) : null}
                 <Button

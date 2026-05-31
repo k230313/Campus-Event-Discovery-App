@@ -63,6 +63,12 @@ export function Profile() {
   const handleSave = async () => {
     setProfileError('');
     setProfileSuccess('');
+
+    if (isSharedDemoAccount) {
+      setProfileError('This demo account profile cannot be changed.');
+      return;
+    }
+
     setIsSavingProfile(true);
 
     try {
@@ -181,6 +187,7 @@ export function Profile() {
                       variant="outline"
                       size="sm"
                       onClick={() => setIsEditing(true)}
+                      disabled={isSharedDemoAccount}
                     >
                       <Edit className="h-4 w-4 mr-2" />
                       Edit
@@ -199,13 +206,18 @@ export function Profile() {
                     {profileSuccess}
                   </div>
                 )}
+                {isSharedDemoAccount && (
+                  <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                    Friendly warning from the demo gods: this shared account is read-only for profile changes. Please don’t customize the test human.
+                  </div>
+                )}
                 <div>
                   <Label htmlFor="name">Full Name</Label>
                   <Input
                     id="name"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    disabled={!isEditing}
+                    disabled={!isEditing || isSharedDemoAccount}
                   />
                 </div>
                 <div>
@@ -215,7 +227,7 @@ export function Profile() {
                     type="email"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    disabled={!isEditing}
+                    disabled={!isEditing || isSharedDemoAccount}
                   />
                 </div>
                 <div>
@@ -320,7 +332,7 @@ export function Profile() {
               <div className="space-y-4">
                 {isSharedDemoAccount && (
                   <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-                    Hey man, this is the shared demo account. Password changes are locked for the showcase.
+                    Tiny tragedy prevented: password and account changes are disabled here because this is the shared demo account.
                   </div>
                 )}
                 <div className="flex items-center justify-between">
